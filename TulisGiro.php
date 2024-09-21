@@ -25,20 +25,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $nama_penerima = filter_input(INPUT_POST, 'nama_penerima', FILTER_SANITIZE_STRING);
     $bank_penerima = filter_input(INPUT_POST, 'bank_penerima', FILTER_SANITIZE_STRING);
     $ac_penerima = filter_input(INPUT_POST, 'ac_penerima', FILTER_SANITIZE_STRING);
+    $Keterangan = filter_input(INPUT_POST, 'Keterangan', FILTER_SANITIZE_STRING); // New field
 
     // Validate inputs
     if (empty($selected_giro_number) || empty($tanggal_giro) || empty($tanggal_jatuh_tempo) || empty($nominal) || empty($nama_penerima) || empty($bank_penerima) || empty($ac_penerima)) {
         echo "<script>alert('Error: All fields are required.');</script>";
     } else {
         // Prepare statement to insert into the detail_giro table
-        $stmt = $conn->prepare("INSERT INTO detail_giro (nogiro, tanggal_giro, tanggal_jatuh_tempo, nominal, nama_penerima, bank_penerima, ac_penerima, created_by, created_at) 
-             VALUES (?, ?, ?, ?, ?, ?, ?, 'system', NOW())");
+        $stmt = $conn->prepare("INSERT INTO detail_giro (nogiro, tanggal_giro, tanggal_jatuh_tempo, nominal, nama_penerima, bank_penerima, ac_penerima, Keterangan, StatGiro, created_by, created_at) 
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Issued', 'system', NOW())");
 
         if (!$stmt) {
             echo "<script>alert('Error preparing statement: " . $conn->error . "');</script>";
         } else {
             // Bind parameters
-            $stmt->bind_param("sssssss", $selected_giro_number, $tanggal_giro, $tanggal_jatuh_tempo, $nominal, $nama_penerima, $bank_penerima, $ac_penerima);
+            $stmt->bind_param("ssssssss", $selected_giro_number, $tanggal_giro, $tanggal_jatuh_tempo, $nominal, $nama_penerima, $bank_penerima, $ac_penerima, $Keterangan);
 
             // Execute statement
             if ($stmt->execute()) {
@@ -69,7 +70,7 @@ $conn->close();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Input Data Giro</title>
+    <title>Issued Giro</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -100,7 +101,7 @@ $conn->close();
             border: 1px solid #ced4da;
             border-radius: 4px;
         }
-        input[type="submit"] {
+        input[type="submit"], .back-button {
             background-color: #007bff;
             color: white;
             padding: 10px;
@@ -108,9 +109,16 @@ $conn->close();
             border-radius: 4px;
             cursor: pointer;
             margin-top: 10px;
+            display: inline-block;
+            text-align: center;
+            width: calc(100% - 20px);
         }
-        input[type="submit"]:hover {
+        input[type="submit"]:hover, .back-button:hover {
             background-color: #0056b3;
+        }
+        .back-button {
+            background-color: #6c757d; /* Gray color */
+            margin-top: 20px; /* Additional margin for separation */
         }
     </style>
     <script>
@@ -129,10 +137,17 @@ $conn->close();
                 acNumberInput.value = '';
             }
         }
+
+        function setDefaultDueDate() {
+            const tanggalGiro = document.getElementById('tanggal_giro');
+            const tanggalJatuhTempo = document.getElementById('tanggal_jatuh_tempo');
+
+            tanggalJatuhTempo.value = tanggalGiro.value;
+        }
     </script>
 </head>
 <body>
-    <h1>Input Data Giro</h1>
+    <h1>Issued Giro</h1>
     <form method="POST" action="">
         <label for="giro_number">No Giro:</label>
         <select id="giro_number" name="giro_number" required onchange="updateBankAndAccount()">
@@ -149,7 +164,7 @@ $conn->close();
         <input type="text" id="ac_number" name="ac_number" required readonly><br><br>
 
         <label for="tanggal_giro">Tanggal Giro:</label>
-        <input type="date" id="tanggal_giro" name="tanggal_giro" required><br><br>
+        <input type="date" id="tanggal_giro" name="tanggal_giro" required onchange="setDefaultDueDate()"><br><br>
 
         <label for="tanggal_jatuh_tempo">Tanggal Jatuh Tempo:</label>
         <input type="date" id="tanggal_jatuh_tempo" name="tanggal_jatuh_tempo" required><br><br>
@@ -166,7 +181,11 @@ $conn->close();
         <label for="ac_penerima">Account Penerima:</label>
         <input type="text" id="ac_penerima" name="ac_penerima" required><br><br>
 
+        <label for="Keterangan">Keterangan:</label>
+        <input type="text" id="Keterangan" name="Keterangan"><br><br> <!-- New Remarks field -->
+
         <input type="submit" value="Submit">
+        <a href="dashboard.php" class="back-button">Kembali</a>
     </form>
 </body>
 </html>

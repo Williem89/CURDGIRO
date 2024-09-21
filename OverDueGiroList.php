@@ -1,13 +1,14 @@
 <?php
 include 'koneksi.php';
 
-$three_days_ahead = date('Y-m-d', strtotime('+3 days'));
-$stmt = $connection->prepare("
+// Calculate the current date
+$current_date = date('Y-m-d');
+$stmt = $conn->prepare("
     SELECT nogiro, tanggal_jatuh_tempo, nominal 
     FROM detail_giro 
-    WHERE StatGiro = 'Issued' AND tanggal_jatuh_tempo <= ?
+    WHERE StatGiro = 'Issued' AND tanggal_jatuh_tempo < ?
 ");
-$stmt->bind_param("s", $three_days_ahead);
+$stmt->bind_param("s", $current_date);
 $stmt->execute();
 $result = $stmt->get_result();
 
@@ -17,7 +18,7 @@ while ($row = $result->fetch_assoc()) {
 }
 
 $stmt->close();
-$connection->close();
+$conn->close();
 ?>
 
 <!DOCTYPE html>
@@ -25,10 +26,10 @@ $connection->close();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Daftar Giro Issued</title>
+    <title>Daftar Giro Lewat Jatuh Tempo</title>
 </head>
 <body>
-    <h1>Daftar Giro Issued yang Jatuh Tempo dalam 3 Hari</h1>
+    <h1>Daftar Giro yang Lewat Jatuh Tempo</h1>
     <table border="1">
         <tr>
             <th>No Giro</th>
@@ -44,6 +45,6 @@ $connection->close();
         <?php endforeach; ?>
     </table>
     <br>
-    <a href="index.php">Kembali ke Halaman Utama</a>
+    <a href="dashboard.php">Kembali ke Halaman Utama</a>
 </body>
 </html>

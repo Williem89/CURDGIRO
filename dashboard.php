@@ -3,32 +3,53 @@ include 'koneksi.php';
 
 // Inisialisasi variabel
 $unused_count = 0;
-$issued_count = 0; // Set this from a query if needed
-$total_Issued_nominal = 0; // Set this from a query if needed
-$total_used_nominal = 0; // Set this from a query if needed
-$total_issued_due_soon_nominal = 0; // Set this from a query if needed
+$issued_count = 0;
+$jt_count = 0; // Changed this to match the variable being used later
 
 // Query untuk menghitung jumlah giro yang belum digunakan
 $sql = "SELECT COUNT(*) AS unused_count FROM data_giro WHERE statusgiro='Unused'";
 $result = $conn->query($sql);
-
 if ($result) {
     $row = $result->fetch_assoc();
-    $unused_count = $row['unused_count'];
-} else {
-    $unused_count = 0;
-}
+    $unused_count = (int)$row['unused_count'];
+    }
 
 // Query untuk menghitung jumlah giro yang sudah diterbitkan
 $sql = "SELECT COUNT(*) AS issued_count FROM detail_giro WHERE statgiro='Issued'";
 $result = $conn->query($sql);
-
 if ($result) {
     $row = $result->fetch_assoc();
-    $issued_count = $row['issued_count'];
-} else {
-    $issued_count = 0;
+    $issued_count = (int)$row['issued_count'];
 }
+
+// Query for counting the number of cheques due in one week
+$sql = "SELECT COUNT(*) AS jt_count 
+    FROM detail_giro 
+    WHERE StatGiro = 'Issued' 
+    AND DATEDIFF(tanggal_jatuh_tempo, NOW()) BETWEEN 0 AND 7;";
+$result = $conn->query($sql);
+if ($result) {
+    $row = $result->fetch_assoc();
+    $jt_count = (int)$row['jt_count'];
+} else {
+    echo "Error: " . $conn->error;
+    $jt_count = 0;
+}
+
+// Query for counting the number of cheques Overdue
+$sql = "SELECT COUNT(*) AS Overdue_count 
+        FROM detail_giro 
+        WHERE StatGiro = 'Issued' 
+        AND tanggal_jatuh_tempo < NOW();";
+$result = $conn->query($sql);
+if ($result) {
+    $row = $result->fetch_assoc();
+    $Overdue_count = (int)$row['Overdue_count'];
+} else {
+    echo "Error: " . $conn->error;
+    $Overdue_count = 0;
+}
+
 
 // Tutup koneksi
 $conn->close();
@@ -40,7 +61,7 @@ $conn->close();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Halaman Utama</title>
-    <link rel="stylesheet" href="styles.css"> <!-- Optional: link to an external CSS file -->
+    <link rel="stylesheet" href="styles.css">
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -88,7 +109,7 @@ $conn->close();
             min-width: 150px;
         }
         nav ul li:hover .dropdown {
-            display: block; /* Show dropdown on hover */
+            display: block;
         }
         .dropdown a {
             display: block;
@@ -97,8 +118,7 @@ $conn->close();
             text-decoration: none;
         }
         .dropdown a:hover {
-            background-color: #f1f1f1; /* Change background on hover */
-            color: #007bff;
+            background-color: #f1f1f1;
         }
         section {
             background: #bae8ff;
@@ -128,25 +148,65 @@ $conn->close();
             <li>
                 <a href="#">Master Data</a>
                 <div class="dropdown">
-                    <a href="CreateGiro.php">Input Data Giro</a>
                     <a href="register.html">Register User</a>
+                    <a href="GenerateGiro.php">Generate Giro</a>
                 </div>
             </li>
-            <li><a href="TulisGiro.php">Tulis Giro</a></li>
+            <li>
+                <a href="#">Giro</a>
+                <div class="dropdown">
+                    <a href="TulisGiro.php">Tulis Giro</a>
+                    <a href="PencairanGiro.php">Pencairan Giro</a>
+                </div>
+            </li>
+            <li>
+                <a href="#">Laporan</a>
+                <div class="dropdown">
+                    <a href="ReportStockGiro.php">Laporan Stock Giro Belum Terpakai</a>
+                    <a href="ReportIssuedGiro.php">Laporan Giro yang sudah terbit</a>
+                </div>
+            </li>
         </ul>
     </nav>
 
     <section>
-        <h2>Statistik Giro</h2>
-        <p class="statistic">
-            Jumlah Giro Unused: 
-            <a href="UnusedGiroList.php"><?php echo htmlspecialchars($unused_count); ?></a>
-        </p>
-        <p class="statistic">
-            Jumlah Giro Issued: 
-            <a href="IssuedGiroList.php"><?php echo htmlspecialchars($issued_count); ?></a>
-        </p>
-    </section>
+    <h2>Statistik Giro</h2>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Keterangan</th>
+                <th>Jumlah</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Jumlah Giro Unused</td>
+                <td>
+                    <a href="UnusedGiroList.php"><?php echo htmlspecialchars($unused_count); ?></a>
+                </td>
+            </tr>
+            <tr>
+                <td>Jumlah Giro Issued</td>
+                <td>
+                    <a href="IssuedGiroList.php"><?php echo htmlspecialchars($issued_count); ?></a>
+                </td>
+            </tr>
+            <tr>
+                <td>Jumlah Giro Akan Jatuh Tempo</td>
+                <td>
+                    <a href="JTGiroList.php"><?php echo htmlspecialchars($jt_count); ?></a>
+                </td>
+            </tr>
+            <tr>
+                <td style="color: red;">Jumlah Giro Lewat Jatuh Tempo</td>
+                <td>
+                <a href="OverDueGiroList.php" style="color: red;"><?php echo htmlspecialchars($Overdue_count); ?></a>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</section>
+
 
     <footer>
         <p>&copy; <?php echo date("Y"); ?> Aplikasi Giro. All rights reserved.</p>

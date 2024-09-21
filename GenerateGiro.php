@@ -9,9 +9,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $jumlah_giro = filter_input(INPUT_POST, 'Jumlah_giro', FILTER_SANITIZE_NUMBER_INT);
     $namabank = filter_input(INPUT_POST, 'namabank', FILTER_SANITIZE_STRING);
     $ac_number = filter_input(INPUT_POST, 'ac_number', FILTER_SANITIZE_STRING);
+    $ac_name = filter_input(INPUT_POST, 'ac_name', FILTER_SANITIZE_STRING);
 
     // Check for empty fields
-    if (empty($start_number) || empty($jumlah_giro) || empty($namabank) || empty($ac_number)) {
+    if (empty($start_number) || empty($jumlah_giro) || empty($namabank) || empty($ac_number) || empty($ac_name)) {
         echo "<script>alert('Error: All fields are required.');</script>";
     } else {
         // Calculate the last giro number
@@ -44,12 +45,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             // Prepare the insertion statement
-            $stmt = $conn->prepare("INSERT INTO data_giro (nogiro, namabank, ac_number, statusgiro, created_by, created_at) 
-                VALUES (?, ?, ?, 'Unused', 'system', NOW())");
+            $stmt = $conn->prepare("INSERT INTO data_giro (nogiro, namabank, ac_number, ac_name, statusgiro, created_by, created_at) 
+                VALUES (?, ?, ?, ?, 'Unused', 'system', NOW())");
 
             if ($stmt) {
                 // Bind parameters for the insert
-                $stmt->bind_param("sss", $giro_number, $namabank, $ac_number);
+                $stmt->bind_param("ssss", $giro_number, $namabank, $ac_number, $ac_name);
 
                 // Execute the statement
                 if (!$stmt->execute()) {
@@ -76,7 +77,6 @@ if (isset($conn) && $conn) {
 }
 ?>
 
-<!-- HTML Form for input -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -86,54 +86,81 @@ if (isset($conn) && $conn) {
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #f8f9fa;
+            background-color: #f4f4f4;
             margin: 0;
             padding: 20px;
         }
+
         h1 {
             text-align: center;
-            color: #343a40;
+            color: #333;
         }
+
         form {
-            background: white;
+            max-width: 300px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 15px;
             border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-            padding: 20px;
-            max-width: 400px;
-            margin: auto;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
         }
+
         label {
             display: block;
-            margin: 10px 0 5px;
-            color: #495057;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #555;
         }
-        input[type="text"], input[type="number"] {
-            width: calc(100% - 20px);
-            padding: 10px;
-            border: 1px solid #ced4da;
+
+        input[type="number"],
+        input[type="text"] {
+            width: 100%;
+            padding: 5px;
+            margin: 5px 0 15px;
+            border: 1px solid #ccc;
             border-radius: 4px;
+            box-sizing: border-box;
         }
-        input[type="submit"] {
-            background-color: #007bff;
-            color: white;
-            padding: 10px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-top: 10px;
-        }
-        input[type="submit"]:hover {
-            background-color: #0056b3;
-        }
-        .alert {
-            color: red;
+
+        input[type="submit"],
+        a  {
+            display: inline-block;
+            width: 25%; /* Make buttons the same width */
+            padding: 8px 5px; /* Adjust padding for larger buttons */
+            border-radius: 8px; /* Rounded corners */
             text-align: center;
-            margin-top: 20px;
+            text-decoration: none;
+            transition: background-color 0.3s, transform 0.2s; /* Smooth transition */
+            margin: 6px 0; /* Space between buttons */
+            border: none; /* Remove border */
+            font-size: 16px; /* Increase font size */
+        }
+
+        input[type="submit"] {
+            background-color: #28a745; /* Green color */
+            color: white;
+            cursor: pointer;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #218838; /* Darker green on hover */
+            transform: scale(1.05); /* Slightly enlarge on hover */
+        }
+
+        a {
+            color: white;
+            background-color: #007bff; /* Blue color */
+            margin-top: 15px; /* Add margin to create space above this button */
+        }
+
+        a:hover {
+            background-color: #0056b3; /* Darker blue on hover */
+            transform: scale(1.05); /* Slightly enlarge on hover */
         }
     </style>
 </head>
 <body>
-    <h1>Input Data Giro</h1>
+    <h1>Generate Giro</h1>
     <form method="POST" action="">
         <label for="Start_number">Mulai dari no. :</label>
         <input type="number" id="Start_number" name="Start_number" required>
@@ -147,7 +174,11 @@ if (isset($conn) && $conn) {
         <label for="ac_number">Account Number:</label>
         <input type="text" id="ac_number" name="ac_number" required>
 
+        <label for="ac_name">Account Name:</label>
+        <input type="text" id="ac_name" name="ac_name" required>
+
         <input type="submit" value="Submit">
+        <a href="dashboard.php">Kembali</a>
     </form>
 </body>
 </html>
