@@ -1,135 +1,144 @@
 <?php
-include 'koneksi.php';
+// Start the session
+session_start();
 
-// Inisialisasi variabel
-$unused_count = 0;
-$issued_count = 0; // Set this from a query if needed
-$total_Issued_nominal = 0; // Set this from a query if needed
-$total_used_nominal = 0; // Set this from a query if needed
-$total_issued_due_soon_nominal = 0; // Set this from a query if needed
-
-// Query untuk menghitung jumlah giro yang belum digunakan
-$sql = "SELECT COUNT(*) AS unused_count FROM data_giro WHERE statusgiro='Unused'";
-$result = $conn->query($sql);
-
-if ($result) {
-    $row = $result->fetch_assoc();
-    $unused_count = $row['unused_count'];
+// Check if the user is already logged in
+if (isset($_SESSION['username'])) {
+    // If logged in, redirect to dashboard or home page
+    header("Location: dashboard.php");
+    exit;
 } else {
-    $unused_count = 0;
+    // If not logged in, display a landing page
+    ?>
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Welcome</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                background-color: #f4f4f4;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 100vh;
+                margin: 0;
+                text-align: center;
+            }
+
+            .container {
+                background-color: white;
+                padding: 40px;
+                border-radius: 8px;
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            }
+
+            h1 {
+                margin-bottom: 20px;
+                color: #333;
+            }
+
+            p {
+                margin-bottom: 30px;
+                color: #666;
+            }
+
+            a {
+                display: inline-block;
+                padding: 10px 20px;
+                background-color: #5cb85c;
+                color: white;
+                border-radius: 5px;
+                text-decoration: none;
+            }
+
+            a:hover {
+                background-color: #4cae4c;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>Welcome to Our Site</h1>
+            <p>Please log in to continue.</p>
+            <a href="login.html">Go to Login</a>
+        </div>
+    </body>
+    </html>
+    <?php
 }
-
-// Query untuk menghitung jumlah giro yang sudah diterbitkan
-$sql = "SELECT COUNT(*) AS issued_count FROM detail_giro WHERE statgiro='Issued'";
-$result = $conn->query($sql);
-
-if ($result) {
-    $row = $result->fetch_assoc();
-    $issued_count = $row['issued_count'];
-} else {
-    $issued_count = 0;
-}
-
-// Tutup koneksi
-$conn->close();
 ?>
+<?php
+// Start the session
+session_start();
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Halaman Utama</title>
-    <link rel="stylesheet" href="styles.css"> <!-- Optional: link to an external CSS file -->
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f8f9fa;
-            margin: 0;
-            padding: 20px;
-        }
-        header {
-            text-align: center;
-            padding: 20px;
-            background-color: #343a40;
-            color: white;
-        }
-        nav {
-            margin: 20px 0;
-            text-align: center;
-        }
-        nav ul {
-            list-style-type: none;
-            padding: 0;
-        }
-        nav ul li {
-            display: inline;
-            margin: 0 15px;
-        }
-        nav ul li a {
-            text-decoration: none;
-            color: #007bff;
-        }
-        section {
-            background: white;
-            border-radius: 5px;
-            padding: 20px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-        }
-        section h2 {
-            color: #343a40;
-        }
-        footer {
-            text-align: center;
-            margin-top: 20px;
-            font-size: 0.9em;
-            color: #6c757d;
-        }
-        .statistic {
-            margin: 10px 0;
-        }
-    </style>
-</head>
-<body>
-    <header>
-        <h1>Selamat Datang di Aplikasi Giro</h1>
-        <p>Silakan pilih salah satu opsi di bawah ini:</p>
-    </header>
-    
-    <nav>
-        <ul>
-            <li><a href="CreateGiro.php">Input Data Giro</a></li>
-            <li><a href="TulisGiro.php">Tulis Giro</a></li>
-            <!-- Tambahkan link lain jika perlu -->
-        </ul>
-    </nav>
+// Check if the user is already logged in
+if (isset($_SESSION['username'])) {
+    // If logged in, redirect to dashboard or home page
+    header("Location: dashboard.php");
+    exit;
+} else {
+    // If not logged in, display a landing page
+    ?>
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Welcome</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                background-color: #f4f4f4;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 100vh;
+                margin: 0;
+                text-align: center;
+            }
 
-    <section>
-        <h2>Statistik Giro</h2>
-        <p class="statistic">
-            Jumlah Giro Unused: 
-            <a href="UnusedGiroList.php"><?php echo htmlspecialchars($unused_count); ?></a>
-        </p>
-        <p class="statistic">
-            Jumlah Giro Issued: 
-            <a href="IssuedGiroList.php"><?php echo htmlspecialchars($issued_count); ?></a>
-        </p>
-        <!-- Uncomment and implement these sections as needed
-        <p class="statistic">
-            Total Nominal Giro Issued: 
-            <a href="IssuedGiroList.php"><?php echo htmlspecialchars(number_format($total_Issued_nominal)); ?></a>
-        </p>
-        <p class="statistic">
-            Total Nominal Giro Used: <?php echo htmlspecialchars(number_format($total_used_nominal)); ?>
-        </p>
-        <p class="statistic">
-            Total Nominal Giro Issued yang Jatuh Tempo dalam 3 Hari: 
-        </p>
-        -->
-    </section>
+            .container {
+                background-color: white;
+                padding: 40px;
+                border-radius: 8px;
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            }
 
-    <footer>
-        <p>&copy; <?php echo date("Y"); ?> Aplikasi Giro. All rights reserved.</p>
-    </footer>
-</body>
-</html>
+            h1 {
+                margin-bottom: 20px;
+                color: #333;
+            }
+
+            p {
+                margin-bottom: 30px;
+                color: #666;
+            }
+
+            a {
+                display: inline-block;
+                padding: 10px 20px;
+                background-color: #5cb85c;
+                color: white;
+                border-radius: 5px;
+                text-decoration: none;
+            }
+
+            a:hover {
+                background-color: #4cae4c;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>Welcome to Our Site</h1>
+            <p>Please log in to continue.</p>
+            <a href="login.html">Go to Login</a>
+        </div>
+    </body>
+    </html>
+    <?php
+}
+?>
