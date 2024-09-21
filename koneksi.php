@@ -1,17 +1,15 @@
 <?php
-// File: koneksi.php
+// koneksi.php
+$servername = "localhost"; // Ganti jika perlu
+$username = "root"; // Ganti dengan username database Anda
+$password = ""; // Ganti dengan password database Anda
+$dbname = "curdgiro"; // Ganti dengan nama database Anda
 
-// Konfigurasi database
-$host = "localhost"; // Database host
-$username = "root"; // Database username
-$password = ""; // Database password (usually empty for XAMPP)
-$database = "curdgiro"; // Database name
+// Buat koneksi
+$conn = new mysqli($servername, $username, $password, $dbname);
 
-// Membuat koneksi
-$connection = mysqli_connect($host, $username, $password, $database);
-
-// Memeriksa koneksi
-if (!$connection) {
-    die("Koneksi gagal: " . mysqli_connect_error());
+// Periksa koneksi
+if ($conn->connect_error) {
+    die("Koneksi gagal: " . $conn->connect_error);
 }
 ?>
