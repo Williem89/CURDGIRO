@@ -26,7 +26,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $nama_penerima = filter_input(INPUT_POST, 'nama_penerima', FILTER_SANITIZE_STRING);
     $bank_penerima = filter_input(INPUT_POST, 'bank_penerima', FILTER_SANITIZE_STRING);
     $ac_penerima = filter_input(INPUT_POST, 'ac_penerima', FILTER_SANITIZE_STRING);
-    $StatGiro = filter_input(INPUT_POST, 'StatGiro', FILTER_SANITIZE_STRING);
     $Keterangan = filter_input(INPUT_POST, 'Keterangan', FILTER_SANITIZE_STRING);
 
     // Validate inputs
@@ -39,39 +38,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Begin transaction
         $conn->begin_transaction();
         try {
-            
-            // Define the status and creator variables
-                $statGiro = 'Issued';
-                $createdBy = 'system';
+           // Prepare statement to insert into the detail_giro table
+            $stmt = $conn->prepare("INSERT INTO detail_giro (nogiro, tanggal_giro, tanggal_jatuh_tempo, nominal, 
+            nama_penerima, bank_penerima, ac_penerima, Keterangan, StatGiro, created_by, created_at) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Issued', 'system', NOW())");
 
-                // Prepare statement to insert into the detail_giro table
-                $stmt = $conn->prepare("INSERT INTO detail_giro (nogiro, tanggal_giro, tanggal_jatuh_tempo, nominal, 
-                    nama_penerima, bank_penerima, ac_penerima, Keterangan, StatGiro, created_by, created_at) 
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
-
-                // Check if statement preparation was successful
-                if (!$stmt) {
-                    throw new Exception("Error preparing statement: " . $conn->error);
-                }
-
-                // Bind parameters - Adjusted to 10 placeholders
-$stmt->bind_param("ssssssssss", 
-$selected_giro_number, 
-$tanggal_giro, 
-$tanggal_jatuh_tempo, 
-$nominal, 
-$nama_penerima, 
-$bank_penerima, 
-$ac_penerima, 
-$Keterangan, 
-$statGiro, 
-$createdBy
-);
-
-                // Execute the statement
-                if (!$stmt->execute()) {
-                    throw new Exception("Error executing statement: " . $stmt->error);
-                }
+            if (!$stmt) {
+            throw new Exception("Error preparing statement: " . $conn->error);
+            }
+            // Bind parameters
+            $stmt->bind_param("ssssssssss", 
+            $selected_giro_number, 
+            $tanggal_giro, 
+            $tanggal_jatuh_tempo, 
+            $nominal, 
+            $nama_penerima, 
+            $bank_penerima, 
+            $ac_penerima, 
+            $Keterangan, 
+            $statGiro = 'Issued',  // Optionally, you can define this if you prefer
+            $createdBy = 'system'   // Optionally, you can define this if you prefer
+            );
+                    
+            $stmt->execute();
 
             // Update status of the selected giro number to 'Used'
             $update_stmt = $conn->prepare("UPDATE data_giro SET statusgiro = 'Used' WHERE nogiro = ?");
@@ -94,6 +83,8 @@ $createdBy
 }
 // Close the connection
 $conn->close();
+
+
 ?>
 
 <!DOCTYPE html>
@@ -154,10 +145,10 @@ $conn->close();
         .message {
             text-align: center;
             margin: 10px 0;
-            color: red; /* Error message color */
+            color: red; /* Use a suitable color for error messages */
         }
         .success-message {
-            color: green; /* Success message color */
+            color: green; /* Use a suitable color for success messages */
         }
     </style>
     <script>
@@ -208,12 +199,11 @@ $conn->close();
         }
 
         function selectBank(bankName, bankId) {
-        document.getElementById('search_bank').value = bankName;
-        document.getElementById('id_bank').value = bankId;
-        document.getElementById('bank_penerima').value = bankName; // Set the selected bank name
-        document.getElementById('bank_results').innerHTML = '';
-        document.getElementById('bank_results').style.display = 'none';
-    }
+            document.getElementById('search_bank').value = bankName;
+            document.getElementById('id_bank').value = bankId;
+            document.getElementById('bank_results').innerHTML = '';
+            document.getElementById('bank_results').style.display = 'none';
+        }
     </script>
 </head>
 <body>
@@ -254,9 +244,6 @@ $conn->close();
         <input type="text" id="search_bank" oninput="searchBank()" required autocomplete="off">
         <div id="bank_results" style="display:none; border: 1px solid #ced4da; max-height: 150px; overflow-y: auto;"></div>
         <input type="hidden" id="id_bank" name="id_bank"> <!-- Hidden input for the bank ID -->
-
-        <!-- Add a hidden input to save the selected bank name -->
-        <input type="hidden" id="bank_penerima" name="bank_penerima">
 
         <label for="ac_penerima">Account Penerima:</label>
         <input type="text" id="ac_penerima" name="ac_penerima" required><br><br>

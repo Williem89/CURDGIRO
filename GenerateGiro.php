@@ -150,7 +150,6 @@ $conn->close();
             const entitySelect = document.getElementById('nama_entitas');
             const entityId = entitySelect.value;
 
-            // Clear previous account numbers
             const acNumberSelect = document.getElementById('ac_number');
             acNumberSelect.innerHTML = '<option value="">-- Pilih Account Number --</option>';
 
@@ -171,9 +170,24 @@ $conn->close();
             }
         }
 
-        // Add event listener to fetch account numbers when entity is selected
         document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('nama_entitas').addEventListener('change', fetchAccountNumbers);
+            document.getElementById('ac_number').addEventListener('change', function() {
+                const selectedAccount = this.value;
+                if (selectedAccount) {
+                    fetch(`fetch_account_details.php?ac_number=${selectedAccount}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            document.getElementById('bank_name_display').textContent = data.bank_name;
+                            document.getElementById('namabank').value = data.bank_name; // Set the input value
+                            document.getElementById('ac_name').value = data.account_name; // Set the input value
+                            document.getElementById('account_name_display').textContent = data.account_name;
+                        })
+                        .catch(error => {
+                            console.error('Error fetching account details:', error);
+                        });
+                }
+            });
         });
     </script>
 </head>
@@ -183,7 +197,7 @@ $conn->close();
         <label>Jenis Giro:</label>
         <label><input type="radio" name="jenis_giro" value="Giro" required checked>Giro</label>
         <label><input type="radio" name="jenis_giro" value="Cek">Cek</label>
-
+        <br>
         <label for="nama_entitas">Entitas:</label>
         <select id="nama_entitas" name="nama_entitas" required>
             <option value="">-- Pilih Entitas --</option>
@@ -199,17 +213,26 @@ $conn->close();
             <option value="">Select Account Number</option>
         </select>
 
-        <label for="ac_name">Account Name:</label>
-        <input type="text" id="ac_name" name="ac_name" required>
+        <div>
+            
+            <strong>Bank Name:</strong> <span id="bank_name_display" hidden> </span>
+            <input type="text" id="namabank" name="namabank" value="" required readonly>
+        </div>
+        <br>
+        <div>
+            <strong>Account Name:</strong> <span id="account_name_display" hidden   ></span>
+            <input type="text" id="ac_name" name="ac_name" value="" required readonly>
+        </div>
 
-        <label for="namabank">Nama Bank:</label>
-        <input type="text" id="namabank" name="namabank" required>
+        <br>
 
         <label for="Start_number">Mulai dari no. :</label>
         <input type="number" id="Start_number" name="Start_number" required>
 
         <label for="Jumlah_giro">Jumlah Giro:</label>
         <input type="number" id="Jumlah_giro" name="Jumlah_giro" required>
+
+        
 
         <input type="submit" value="Submit">
         <a href="dashboard.php">Kembali</a>
