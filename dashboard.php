@@ -149,6 +149,8 @@ $conn->close();
                 <a href="#">Master Data</a>
                 <div class="dropdown">
                     <a href="register.html">Register User</a>
+                    <a href="inputentitas.php">Input Entitas</a>
+                    <a href="InputRekening.php">Input Rekening</a>
                     <a href="GenerateGiro.php">Generate Giro</a>
                 </div>
             </li>
