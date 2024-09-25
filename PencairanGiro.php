@@ -1,155 +1,203 @@
 <?php
 include 'koneksi.php';
 
-$results = [];
-
-// Fetch all issued records to display in the form
-$sql = "SELECT * FROM detail_giro WHERE StatGiro = 'Issued'";
+// Ambil data dari tabel detail_giro dengan kondisi StatGiro = 'Issued'
+$sql = "SELECT nogiro FROM detail_giro WHERE StatGiro = 'Issued'";
 $result = $conn->query($sql);
 
-if ($result) {
-    while ($row = $result->fetch_assoc()) {
-        $results[] = $row;
-    }
-}
+// Set tanggal cair giro ke hari ini
+$tanggal_cair_giro = ""; // Kosongkan nilai tanggal
 
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_nogiro'])) {
-    $update_id = $_POST['update_nogiro'];
-    $tanggal_giro_cair = $_POST['tanggal_giro_cair']; // New input field
+// Variabel untuk pesan error
+$error_message = "";
 
-    // Update query to set StatGiro to 'Settled' and include tanggal_giro_cair
-    $sql_update = "UPDATE detail_giro SET StatGiro = 'Settled', tanggal_cair_giro = ? WHERE nogiro = ?";
-    $stmt = $conn->prepare($sql_update);
-    
-    if ($stmt) {
-        $stmt->bind_param('ss', $tanggal_cair_giro, $update_id); // Assuming nogiro is a string
-        if ($stmt->execute()) {
-            echo "<p style='color: green;'>Data successfully updated!</p>";
-        } else {
-            echo "<p style='color: red;'>Error executing update: " . $stmt->error . "</p>";
-        }
-        $stmt->close();
+// Cek apakah form disubmit
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $selected_nogiro = $_POST['nogiro'];
+    $tanggal_cair_giro = $_POST['tanggal_cair_giro'];
+
+    // Validasi apakah nogiro dipilih
+    if (empty($selected_nogiro)) {
+        $error_message = "Nomor giro harus diisi.";
     } else {
-        echo "<p style='color: red;'>Error preparing statement: " . $conn->error . "</p>";
+        // Update tanggal_cair_giro dan StatGiro
+        $updateSql = "UPDATE detail_giro SET tanggal_cair_giro = ?, StatGiro = 'Seatle' WHERE nogiro = ?";
+        $stmt = $conn->prepare($updateSql);
+        $stmt->bind_param("ss", $tanggal_cair_giro, $selected_nogiro);
+        
+        if ($stmt->execute()) {
+            echo "<p style='color: green;'>Data berhasil diperbarui!</p>";
+        } else {
+            echo "<p style='color: red;'>Error: " . $stmt->error . "</p>";
+        }
     }
 }
 
-// Close the connection
-$conn->close();
+// Ambil kembali data untuk dropdown
+$result = $conn->query($sql);
 ?>
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Update Detail Giro</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>Form Giro</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #f8f9fa;
+            background-color: #f4f4f4;
             margin: 0;
             padding: 20px;
         }
-        header {
+        h1 {
             text-align: center;
-            margin-bottom: 20px;
+            color: #333;
         }
         form {
             background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
             padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
             max-width: 500px;
             margin: auto;
         }
         label {
             display: block;
-            margin-bottom: 10px;
-            color: #495057;
+            margin: 10px 0 5px;
+            color: #555;
         }
-        select, input[type="text"], input[type="date"], input[type="number"], input[type="submit"], input[type="button"] {
+        select, input[type="date"], input[type="submit"], .btn-back {
             width: 100%;
             padding: 10px;
-            margin-top: 5px;
             margin-bottom: 15px;
-            border: 1px solid #ced4da;
+            border: 1px solid #ccc;
             border-radius: 4px;
+            box-sizing: border-box;
         }
         input[type="submit"] {
-            background-color: #007bff;
+            background-color: #4CAF50;
             color: white;
+            border: none;
             cursor: pointer;
+            transition: background-color 0.3s;
         }
         input[type="submit"]:hover {
+            background-color: #45a049;
+        }
+        .btn-back {
+            background-color: #007BFF;
+            color: white;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .btn-back:hover {
             background-color: #0056b3;
         }
-        input[type="button"] {
-            background-color: #6c757d; /* Grey color for back button */
-            color: white;
-            cursor: pointer;
-        }
-        input[type="button"]:hover {
-            background-color: #5a6268; /* Darker grey on hover */
-        }
-        #giro-preview {
-            background: #f1f1f1;
-            padding: 10px;
-            border-radius: 4px;
+        #detail {
             margin-top: 20px;
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+        .error {
+            color: red;
+            margin-bottom: 15px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+        th {
+            background-color: #f2f2f2;
+            text-align: left;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        tr:hover {
+            background-color: #f1f1f1;
         }
     </style>
     <script>
-        function showPreview() {
-            const select = document.getElementById('update_nogiro');
-            const previewDiv = document.getElementById('giro-preview');
-            const selectedOption = select.options[select.selectedIndex];
-
-            if (selectedOption.value) {
-                const giroDetails = JSON.parse(selectedOption.getAttribute('data-details'));
-                const formattedNominal = new Intl.NumberFormat('id-ID', {
-                    style: 'currency',
-                    currency: 'IDR'
-                }).format(giroDetails.nominal); // Adjust the currency as needed
-
-                previewDiv.innerHTML = `
-                    <strong>No Giro:</strong> ${giroDetails.nogiro} <br>
-                    <strong>Status Giro:</strong> ${giroDetails.StatGiro} <br>
-                    <strong>Nominal Giro:</strong> ${formattedNominal} <br>
-                    <strong>Tanggal Jatuh Tempo:</strong> ${giroDetails.tanggal_jatuh_tempo}
-                `;
-            } else {
-                previewDiv.innerHTML = '';
+        function getDetail(nogiro) {
+            if (nogiro === "") {
+                document.getElementById("detail").innerHTML = "";
+                document.getElementById("tanggal_cair_giro").value = ""; // Kosongkan input tanggal
+                return;
             }
+
+            // Mengambil data menggunakan AJAX
+            var xhr = new XMLHttpRequest();
+            xhr.open("GET", "get_detail.php?nogiro=" + nogiro, true);
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState == 4 && xhr.status == 200) {
+                    var data = JSON.parse(xhr.responseText);
+                    var detailHTML = `
+                        <h2>Detail Giro</h2>
+                        <table>
+                            <tr><th>No Giro</th><td>${nogiro}</td></tr>
+                            <tr><th>Nomor Akun</th><td>${data.ac_number}</td></tr>
+                            <tr><th>Nama Akun</th><td>${data.ac_name}</td></tr>
+                            <tr><th>Nama Bank</th><td>${data.namabank}</td></tr>
+                            <tr><th>Nama Penerima</th><td>${data.nama_penerima}</td></tr>
+                            <tr><th>Akun Penerima</th><td>${data.ac_penerima}</td></tr>
+                            <tr><th>Bank Penerima</th><td>${data.bank_penerima}</td></tr>
+                            <tr><th>Nominal</th><td>Rp ${parseInt(data.nominal).toLocaleString()}</td></tr>
+                            <tr><th>No PVR</th><td>${data.PVRNO}</td></tr>
+                            <tr><th>Keterangan</th><td>${data.keterangan}</td></tr>
+                        </table>
+                    `;
+                    document.getElementById("detail").innerHTML = detailHTML;
+                }
+            };
+            xhr.send();
         }
     </script>
 </head>
 <body>
-    <header>
-        <h1>Pencairan Giro</h1>
-    </header>
-
-    <form method="POST">
-        <label for="update_nogiro">Pilih Giro untuk dicairkan:</label>
-        <select name="update_nogiro" id="update_nogiro" required onchange="showPreview()">
-            <option value="">--Pilih Giro--</option>
-            <?php foreach ($results as $row): ?>
-                <option value="<?php echo htmlspecialchars($row['nogiro']); ?>" data-details='<?php echo json_encode($row); ?>'>
-                    <?php echo htmlspecialchars($row['nogiro']) . " - " . htmlspecialchars($row['StatGiro']); ?>
-                </option>
-            <?php endforeach; ?>
+    <h1>Form Giro</h1>
+    <form action="" method="post">
+        <?php if ($error_message): ?>
+            <p class="error"><?php echo $error_message; ?></p>
+        <?php endif; ?>
+        
+        <label for="nogiro">Nomor Giro:</label>
+        <select id="nogiro" name="nogiro" onchange="getDetail(this.value)">
+            <option value="">Pilih Nomor Giro</option>
+            <?php
+            if ($result->num_rows > 0) {
+                // Output data dari setiap baris
+                while ($row = $result->fetch_assoc()) {
+                    echo '<option value="' . $row["nogiro"] . '">' . $row["nogiro"] . '</option>';
+                }
+            } else {
+                echo '<option value="">Tidak ada data</option>';
+            }
+            ?>
         </select>
 
-        <label for="tanggal_cair_giro">Tanggal Giro Cair:</label>
-        <input type="date" id="tanggal_cair_giro" name="tanggal_cair_giro" required>
-
-        <input type="submit" value="Update ke Settled">
-        <input type="button" value="Back" onclick="window.location.href='dashboard.php'"> <!-- Adjust the link as necessary -->
+        <label for="tanggal_cair_giro">Tanggal Cair Giro:</label>
+        <input type="date" id="tanggal_cair_giro" name="tanggal_cair_giro" value="">
+        
+        <input type="submit" value="Submit">
+        <a href="dashboard.php" class="btn-back">Back</a>
     </form>
 
-    <div id="giro-preview">
-        <!-- Preview will be displayed here -->
-    </div>
+    <div id="detail"></div>
+
+    <?php
+    // Tutup koneksi
+    $conn->close();
+    ?>
 </body>
 </html>

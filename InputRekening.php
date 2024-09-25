@@ -66,6 +66,8 @@ if (isset($conn) && $conn) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Input Data Rekening</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -77,63 +79,67 @@ if (isset($conn) && $conn) {
         h1 {
             text-align: center;
             color: #333;
+            margin-bottom: 30px;
         }
 
-        form {
-            max-width: 300px;
+        .form-container {
+            max-width: 400px;
             margin: 0 auto;
             background: #fff;
-            padding: 15px;
+            padding: 20px;
             border-radius: 8px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
         }
 
         label {
-            display: block;
-            margin-bottom: 8px;
             font-weight: bold;
             color: #555;
+            margin-top: 10px;
         }
 
         input[type="text"],
         select {
             width: 100%;
-            padding: 5px;
-            margin: 5px 0 15px;
+            padding: 10px;
+            margin-top: 5px;
             border: 1px solid #ccc;
             border-radius: 4px;
             box-sizing: border-box;
         }
 
-        input[type="submit"],
-        .btn-back {
-            display: inline-block;
+        .btn-primary,
+        .btn-success {
             width: 100%;
             padding: 10px;
             border-radius: 8px;
-            text-align: center;
-            text-decoration: none;
-            background-color: #28a745;
-            color: white;
-            cursor: pointer;
-            border: none;
             font-size: 16px;
-            margin-top: 10px;
+            margin-top: 15px;
         }
 
-        input[type="submit"]:hover,
-        .btn-back:hover {
+        .btn-primary:hover {
+            background-color: #218838;
+        }
+
+        .btn-success {
+            background-color: #28a745;
+        }
+
+        .btn-success:hover {
             background-color: #218838;
         }
 
         #bank_results {
-            position: absolute;
+
             background-color: white;
             border: 1px solid #ccc;
             z-index: 1000;
             max-height: 150px;
             overflow-y: auto;
+            width: 100; /* Matches the input field width */
+            border-radius: 4px;
+            display: none; /* Start hidden */
         }
+
 
         #bank_results option {
             padding: 8px;
@@ -144,6 +150,37 @@ if (isset($conn) && $conn) {
             background-color: #f1f1f1;
         }
     </style>
+</head>
+<body>
+    <h1>Input Data Rekening</h1>
+    <div class="form-container">
+        <form method="POST" action="">
+            <label for="id_entitas">Entitas:</label>
+            <select id="id_entitas" name="id_entitas" required onchange="setDefaultNamaAkun()">
+                <option value="">-- Pilih Entitas --</option>
+                <?php foreach ($entities as $entity): ?>
+                    <option value="<?php echo $entity['id_entitas']; ?>">
+                        <?php echo htmlspecialchars($entity['nama_entitas']); ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+
+            <label for="nama_akun">Nama Akun:</label>
+            <input type="text" id="nama_akun" name="nama_akun" required>
+
+            <label for="search_bank">Nama Bank:</label>
+            <input type="text" id="search_bank" oninput="searchBank()" required>
+            <select id="bank_results" size="5" onclick="selectBank(event)" style="display:none;"></select>
+
+            <label for="no_akun">No Akun:</label>
+            <input type="text" id="no_akun" name="no_akun" required>      
+
+            <input type="hidden" id="id_bank" name="id_bank">
+            <button type="submit" class="btn btn-primary">Submit</button>
+            <button type="button" class="btn btn-success" onclick="window.location.href='dashboard.php';">Kembali</button>
+        </form>
+    </div>
+
     <script>
         function searchBank() {
             const query = document.getElementById('search_bank').value;
@@ -179,38 +216,9 @@ if (isset($conn) && $conn) {
             const entitasSelect = document.getElementById('id_entitas');
             const namaAkunInput = document.getElementById('nama_akun');
 
-            // Get selected option text and set it as default nama akun
             const selectedOption = entitasSelect.options[entitasSelect.selectedIndex];
             namaAkunInput.value = selectedOption ? selectedOption.text : '';
         }
     </script>
-</head>
-<body>
-    <h1>Input Data Rekening</h1>
-    <form method="POST" action="">
-        <label for="id_entitas">Entitas:</label>
-        <select id="id_entitas" name="id_entitas" required onchange="setDefaultNamaAkun()">
-            <option value="">-- Pilih Entitas --</option>
-            <?php foreach ($entities as $entity): ?>
-                <option value="<?php echo $entity['id_entitas']; ?>">
-                    <?php echo htmlspecialchars($entity['nama_entitas']); ?>
-                </option>
-            <?php endforeach; ?>
-        </select>
-
-        <label for="nama_akun">Nama Akun:</label>
-        <input type="text" id="nama_akun" name="nama_akun" required>
-
-        <label for="search_bank">Nama Bank:</label>
-        <input type="text" id="search_bank" oninput="searchBank()" required>
-        <select id="bank_results" size="5" onclick="selectBank(event)" style="display:none;"></select>
-
-        <label for="no_akun">No Akun:</label>
-        <input type="text" id="no_akun" name="no_akun" required>      
-
-        <input type="hidden" id="id_bank" name="id_bank">
-        <input type="submit" value="Submit">
-        <a href="dashboard.php" class="btn-back">Kembali</a>
-    </form>
 </body>
 </html>

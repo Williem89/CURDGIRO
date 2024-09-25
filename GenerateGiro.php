@@ -20,6 +20,7 @@ $account_numbers = [];
 // Process form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Sanitize and retrieve input values
+    $prefix = filter_input(INPUT_POST, 'prefix', FILTER_SANITIZE_STRING);
     $start_number = filter_input(INPUT_POST, 'Start_number', FILTER_SANITIZE_NUMBER_INT);
     $jumlah_giro = filter_input(INPUT_POST, 'Jumlah_giro', FILTER_SANITIZE_NUMBER_INT);
     $namabank = filter_input(INPUT_POST, 'namabank', FILTER_SANITIZE_STRING);
@@ -32,14 +33,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $created_by = $_SESSION['username'] ?? 'system';
 
     // Check for empty fields
-    if (empty($start_number) || empty($jumlah_giro) || empty($namabank) || empty($ac_number) || empty($ac_name) || empty($jenis_giro) || empty($id_entitas)) {
+    if (empty($prefix) || empty($start_number) || empty($jumlah_giro) || empty($namabank) || empty($ac_number) || empty($ac_name) || empty($jenis_giro) || empty($id_entitas)) {
         echo "<script>alert('Error: All fields are required.');</script>";
     } else {
         $end_number = $start_number + $jumlah_giro - 1;
         $giro_numbers = [];
 
         for ($i = $start_number; $i <= $end_number; $i++) {
-            $giro_number = str_pad($i, 3, '0', STR_PAD_LEFT);
+            // Include prefix in the giro number
+            $giro_number = $prefix . "-" . str_pad($i, 3, '0', STR_PAD_LEFT);
             $giro_numbers[] = $giro_number;
 
             $check_stmt = $conn->prepare("SELECT COUNT(*) FROM data_giro WHERE nogiro = ?");
@@ -208,31 +210,36 @@ $conn->close();
             <?php endforeach; ?>
         </select>
 
+
+
         <label for="ac_number">Account Number:</label>
         <select id="ac_number" name="ac_number" required>
             <option value="">Select Account Number</option>
         </select>
 
         <div>
-            
-            <strong>Bank Name:</strong> <span id="bank_name_display" hidden> </span>
+            <strong>Bank Name:</strong> <span id="bank_name_display" hidden></span>
             <input type="text" id="namabank" name="namabank" value="" required readonly>
         </div>
         <br>
         <div>
-            <strong>Account Name:</strong> <span id="account_name_display" hidden   ></span>
+            <strong>Account Name:</strong> <span id="account_name_display" hidden></span>
             <input type="text" id="ac_name" name="ac_name" value="" required readonly>
         </div>
 
         <br>
 
+        <table>
         <label for="Start_number">Mulai dari no. :</label>
-        <input type="number" id="Start_number" name="Start_number" required>
+        <tr>
+        <td><input type="text" id="prefix" name="prefix" required style="width:70px;"></td>
+        <td><input type="number" id="Start_number" name="Start_number" required style="width:220px;"></td>
+        <tr>
+            </table>
+
 
         <label for="Jumlah_giro">Jumlah Giro:</label>
         <input type="number" id="Jumlah_giro" name="Jumlah_giro" required>
-
-        
 
         <input type="submit" value="Submit">
         <a href="dashboard.php">Kembali</a>

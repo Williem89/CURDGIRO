@@ -55,18 +55,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
 
                 // Bind parameters - Adjusted to 10 placeholders
-$stmt->bind_param("ssssssssss", 
-$selected_giro_number, 
-$tanggal_giro, 
-$tanggal_jatuh_tempo, 
-$nominal, 
-$nama_penerima, 
-$bank_penerima, 
-$ac_penerima, 
-$Keterangan, 
-$statGiro, 
-$createdBy
-);
+                    $stmt->bind_param("ssssssssss", 
+                    $selected_giro_number, 
+                    $tanggal_giro, 
+                    $tanggal_jatuh_tempo, 
+                    $nominal, 
+                    $nama_penerima, 
+                    $bank_penerima, 
+                    $ac_penerima, 
+                    $Keterangan, 
+                    $statGiro, 
+                    $createdBy
+                    );
 
                 // Execute the statement
                 if (!$stmt->execute()) {
@@ -102,6 +102,8 @@ $conn->close();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Issued Giro</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
