@@ -169,7 +169,7 @@ if (isset($conn) && $conn) {
             <input type="text" id="nama_akun" name="nama_akun" required>
 
             <label for="search_bank">Nama Bank:</label>
-            <input type="text" id="search_bank" oninput="searchBank()" required>
+            <input type="text" id="search_bank" oninput="searchBank()" onfocusout="clearInput()" required>
             <select id="bank_results" size="5" onclick="selectBank(event)" style="display:none;"></select>
 
             <label for="no_akun">No Akun:</label>
@@ -182,6 +182,9 @@ if (isset($conn) && $conn) {
     </div>
 
     <script>
+        function clearInput() {
+            document.getElementById('search_bank').value = "";
+        }
         function searchBank() {
             const query = document.getElementById('search_bank').value;
             const resultsContainer = document.getElementById('bank_results');

@@ -2,8 +2,15 @@
 // Database connection
 include 'koneksi.php';
 
-// Initialize an array to hold giro numbers and their corresponding bank and account details
+// Start session
+session_start();
+
+// Assuming the username is stored in session after user login
+$createdBy = isset($_SESSION['username']) ? $_SESSION['username'] : 'unknown';
+
+// Initialize arrays to hold giro numbers and customer data
 $giro_data = [];
+$customer_data = [];
 
 // Fetch all giro numbers along with their bank and account numbers from the database
 $fetch_stmt = $conn->prepare("SELECT nogiro, namabank, ac_number FROM data_giro WHERE statusgiro = 'Unused'");
@@ -15,23 +22,31 @@ while ($fetch_stmt->fetch()) {
 }
 $fetch_stmt->close();
 
+// Fetch all customers from the database
+$customer_stmt = $conn->prepare("SELECT no_cust, ac_cust, bank_cust, nama_cust FROM list_customer");
+$customer_stmt->execute();
+$customer_stmt->bind_result($no_cust, $ac_cust, $bank_cust, $nama_cust);
+
+while ($customer_stmt->fetch()) {
+    $customer_data[$no_cust] = ['ac_number' => $ac_cust, 'bank_cust' => $bank_cust, 'nama_cust' => $nama_cust];
+}
+$customer_stmt->close();
+
 // Check if form is submitted
 $message = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Get input values and sanitize them
     $selected_giro_number = filter_input(INPUT_POST, 'giro_number', FILTER_SANITIZE_STRING);
+    $no_cust = filter_input(INPUT_POST, 'no_cust', FILTER_SANITIZE_STRING);
     $tanggal_giro = filter_input(INPUT_POST, 'tanggal_giro', FILTER_SANITIZE_STRING);
     $tanggal_jatuh_tempo = filter_input(INPUT_POST, 'tanggal_jatuh_tempo', FILTER_SANITIZE_STRING);
     $nominal = filter_input(INPUT_POST, 'nominal', FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
-    $nama_penerima = filter_input(INPUT_POST, 'nama_penerima', FILTER_SANITIZE_STRING);
-    $bank_penerima = filter_input(INPUT_POST, 'bank_penerima', FILTER_SANITIZE_STRING);
-    $ac_penerima = filter_input(INPUT_POST, 'ac_penerima', FILTER_SANITIZE_STRING);
-    $StatGiro = filter_input(INPUT_POST, 'StatGiro', FILTER_SANITIZE_STRING);
     $Keterangan = filter_input(INPUT_POST, 'Keterangan', FILTER_SANITIZE_STRING);
+    $PVRNo = filter_input(INPUT_POST, 'PVRNo', FILTER_SANITIZE_STRING);
 
     // Validate inputs
-    if (empty($selected_giro_number) || empty($tanggal_giro) || empty($tanggal_jatuh_tempo) || 
-        empty($nominal) || empty($nama_penerima) || empty($bank_penerima) || empty($ac_penerima)) {
+    if (empty($selected_giro_number) || empty($no_cust) || empty($tanggal_giro) || empty($tanggal_jatuh_tempo) || 
+        empty($nominal) || empty($customer_data[$no_cust]['nama_cust'])) {
         $message = 'Error: All fields are required.';
     } elseif ($nominal <= 0) {
         $message = 'Error: Nominal must be greater than zero.';
@@ -39,39 +54,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Begin transaction
         $conn->begin_transaction();
         try {
-            
-            // Define the status and creator variables
-                $statGiro = 'Issued';
-                $createdBy = 'system';
+            // Prepare statement to insert into the detail_giro table
+            $stmt = $conn->prepare("INSERT INTO detail_giro (nogiro, tanggal_giro, tanggal_jatuh_tempo, nominal, 
+                nama_penerima, ac_penerima, bank_penerima, Keterangan, PVRNo, StatGiro, created_by, created_at) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
 
-                // Prepare statement to insert into the detail_giro table
-                $stmt = $conn->prepare("INSERT INTO detail_giro (nogiro, tanggal_giro, tanggal_jatuh_tempo, nominal, 
-                    nama_penerima, bank_penerima, ac_penerima, Keterangan, StatGiro, created_by, created_at) 
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
+            // Check if statement preparation was successful
+            if (!$stmt) {
+                throw new Exception("Error preparing statement: " . $conn->error);
+            }
 
-                // Check if statement preparation was successful
-                if (!$stmt) {
-                    throw new Exception("Error preparing statement: " . $conn->error);
-                }
+            // Get customer details
+            $ac_penerima = $customer_data[$no_cust]['ac_number'];
+            $bank_penerima = $customer_data[$no_cust]['bank_cust'];
+            $nama_penerima = $customer_data[$no_cust]['nama_cust'];
 
-                // Bind parameters - Adjusted to 10 placeholders
-                    $stmt->bind_param("ssssssssss", 
-                    $selected_giro_number, 
-                    $tanggal_giro, 
-                    $tanggal_jatuh_tempo, 
-                    $nominal, 
-                    $nama_penerima, 
-                    $bank_penerima, 
-                    $ac_penerima, 
-                    $Keterangan, 
-                    $statGiro, 
-                    $createdBy
-                    );
+            // Bind parameters
+            $statGiro = 'Issued';  // Set StatGiro to 'Issued'
 
-                // Execute the statement
-                if (!$stmt->execute()) {
-                    throw new Exception("Error executing statement: " . $stmt->error);
-                }
+            $stmt->bind_param("sssssssssss", 
+                $selected_giro_number, 
+                $tanggal_giro, 
+                $tanggal_jatuh_tempo, 
+                $nominal, 
+                $nama_penerima, 
+                $ac_penerima, 
+                $bank_penerima, 
+                $Keterangan,
+                $PVRNo, 
+                $statGiro, 
+                $createdBy
+            );
+
+            // Execute the statement
+            if (!$stmt->execute()) {
+                throw new Exception("Error executing statement: " . $stmt->error);
+            }
 
             // Update status of the selected giro number to 'Used'
             $update_stmt = $conn->prepare("UPDATE data_giro SET statusgiro = 'Used' WHERE nogiro = ?");
@@ -92,6 +110,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 }
+
 // Close the connection
 $conn->close();
 ?>
@@ -102,8 +121,8 @@ $conn->close();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Issued Giro</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -173,9 +192,29 @@ $conn->close();
                 const data = <?php echo json_encode($giro_data); ?>;
                 bankInput.value = data[selectedGiro].namabank;
                 acNumberInput.value = data[selectedGiro].ac_number;
+                document.getElementById('search_giro_no').value = selectedGiro;
             } else {
                 bankInput.value = '';
                 acNumberInput.value = '';
+            }
+        }
+
+        function updateCustomerDetails() {
+            const customerSelect = document.getElementById('no_cust');
+            const selectedCust = customerSelect.value;
+            const acPenerimaInput = document.getElementById('ac_penerima');
+            const bankPenerimaInput = document.getElementById('bank_cust');
+            const namaPenerimaInput = document.getElementById('nama_penerima');
+
+            if (selectedCust) {
+                const data = <?php echo json_encode($customer_data); ?>;
+                acPenerimaInput.value = data[selectedCust].ac_number;
+                bankPenerimaInput.value = data[selectedCust].bank_cust;
+                namaPenerimaInput.value = data[selectedCust].nama_cust; // Set the recipient's name
+            } else {
+                acPenerimaInput.value = '';
+                bankPenerimaInput.value = '';
+                namaPenerimaInput.value = '';
             }
         }
 
@@ -185,37 +224,32 @@ $conn->close();
             tanggalJatuhTempo.value = tanggalGiro.value;
         }
 
-        function searchBank() {
-            const query = document.getElementById('search_bank').value;
-            const resultsContainer = document.getElementById('bank_results');
-            resultsContainer.innerHTML = '';
+        function searchGiro() {
+            const input = document.getElementById('search_giro_no').value.toLowerCase();
+            const select = document.getElementById('giro_number');
+            const options = select.getElementsByTagName('option');
 
-            if (query.length > 0) {
-                fetch(`search_bank.php?q=${query}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        data.forEach(bank => {
-                            const bankDiv = document.createElement('div');
-                            bankDiv.textContent = bank.nama_bank;
-                            bankDiv.style.padding = '10px';
-                            bankDiv.style.cursor = 'pointer';
-                            bankDiv.onclick = () => selectBank(bank.nama_bank, bank.id);
-                            resultsContainer.appendChild(bankDiv);
-                        });
-                        resultsContainer.style.display = data.length ? 'block' : 'none';
-                    });
-            } else {
-                resultsContainer.style.display = 'none';
+            let hasOptions = false;
+
+            // Loop through options and filter based on input
+            for (let i = 0; i < options.length; i++) {
+                const optionText = options[i].textContent.toLowerCase();
+                const isVisible = optionText.includes(input);
+                options[i].style.display = isVisible ? 'block' : 'none';
+                
+                if (isVisible) {
+                    hasOptions = true;
+                }
             }
+
+            // Hide or show the select element based on input
+            select.style.display = input ? (hasOptions ? 'block' : 'none') : 'none';
         }
 
-        function selectBank(bankName, bankId) {
-        document.getElementById('search_bank').value = bankName;
-        document.getElementById('id_bank').value = bankId;
-        document.getElementById('bank_penerima').value = bankName; // Set the selected bank name
-        document.getElementById('bank_results').innerHTML = '';
-        document.getElementById('bank_results').style.display = 'none';
-    }
+        function clearInput() {
+            const input = document.getElementById('search_giro_no');
+            input.value = '';
+        }
     </script>
 </head>
 <body>
@@ -227,8 +261,8 @@ $conn->close();
     <?php endif; ?>
     <form method="POST" action="">
         <label for="giro_number">No Giro:</label>
-        <select id="giro_number" name="giro_number" required onchange="updateBankAndAccount()">
-            <option value="">Select No Giro</option>
+        <input type="text" id="search_giro_no" oninput="searchGiro()" onfocusout="clearInput()" required>
+        <select id="giro_number" name="giro_number" size="5" required onchange="updateBankAndAccount()" style="display:none;">
             <?php foreach (array_keys($giro_data) as $giro): ?>
                 <option value="<?php echo htmlspecialchars($giro); ?>"><?php echo htmlspecialchars($giro); ?></option>
             <?php endforeach; ?>
@@ -249,19 +283,25 @@ $conn->close();
         <label for="nominal">Nominal:</label>
         <input type="number" id="nominal" name="nominal" required><br><br>
 
+        <label for="no_cust">Customer:</label>
+        <select id="no_cust" name="no_cust" required onchange="updateCustomerDetails()">
+            <option value="">Select No Customer</option>
+            <?php foreach (array_keys($customer_data) as $cust): ?>
+                <option value="<?php echo htmlspecialchars($cust); ?>"><?php echo htmlspecialchars($cust); ?></option>
+            <?php endforeach; ?>
+        </select><br><br>
+
+        <label for="ac_penerima">Account Number Penerima:</label>
+        <input type="text" id="ac_penerima" name="ac_penerima" readonly required><br><br>
+
         <label for="nama_penerima">Nama Penerima:</label>
-        <input type="text" id="nama_penerima" name="nama_penerima" required><br><br>
+        <input type="text" id="nama_penerima" name="nama_penerima" readonly required><br><br>
 
-        <label for="search_bank">Bank Penerima:</label>
-        <input type="text" id="search_bank" oninput="searchBank()" required autocomplete="off">
-        <div id="bank_results" style="display:none; border: 1px solid #ced4da; max-height: 150px; overflow-y: auto;"></div>
-        <input type="hidden" id="id_bank" name="id_bank"> <!-- Hidden input for the bank ID -->
+        <label for="bank_cust">Bank Penerima:</label>
+        <input type="text" id="bank_cust" name="bank_cust" readonly required><br><br>
 
-        <!-- Add a hidden input to save the selected bank name -->
-        <input type="hidden" id="bank_penerima" name="bank_penerima">
-
-        <label for="ac_penerima">Account Penerima:</label>
-        <input type="text" id="ac_penerima" name="ac_penerima" required><br><br>
+        <label for="PVRNo">PVR No:</label>
+        <input type="text" id="PVRNo" name="PVRNo"><br><br>
 
         <label for="Keterangan">Keterangan:</label>
         <input type="text" id="Keterangan" name="Keterangan"><br><br>

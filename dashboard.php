@@ -249,29 +249,31 @@ $conn->close();
 <body>
     <div id="toggleNavbar">☰ Menu</div>
     <nav id="navbar">
-        <ul>
-            <li><a href="#">Master Data</a>
-                <div class="dropdown">
-                    <a href="register.html">Register User</a>
-                    <a href="inputentitas.php">Input Entitas</a>
-                    <a href="InputRekening.php">Input Rekening</a>
-                    <a href="GenerateGiro.php">Generate Giro</a>
-                </div>
-            </li>
-            <li><a href="#">Giro</a>
-                <div class="dropdown">
-                    <a href="TulisGiro.php">Tulis Giro</a>
-                    <a href="PencairanGiro.php">Pencairan Giro</a>
-                </div>
-            </li>
-            <li><a href="#">Laporan</a>
-                <div class="dropdown">
-                    <a href="ReportStockGiro.php">Laporan Stock Giro Belum Terpakai</a>
-                    <a href="ReportIssuedGiro.php">Laporan Giro yang sudah terbit</a>
-                </div>
-            </li>
-        </ul>
-    </nav>
+            <ul>
+                <li><a href="#">Master Data</a>
+                    <div class="dropdown">
+                        <a href="register.html">Register User</a>
+                        <a href="inputentitas.php">Input Entitas</a>
+                        <a href="InputRekening.php">Input Rekening</a>
+                        <a href="InputCustomer.php">Input Customer</a>
+                        <a href="GenerateGiro.php">Generate Giro</a>
+                    </div>
+                </li>
+                <li><a href="#">Giro</a>
+                    <div class="dropdown">
+                        <a href="TulisGiro.php">Tulis Giro</a>
+                        <a href="PencairanGiro.php">Pencairan Giro</a>
+                    </div>
+                </li>
+                <li><a href="#">Laporan</a>
+                    <div class="dropdown">
+                        <a href="ReportStockGiro.php">Laporan Stock Giro Belum Terpakai</a>
+                        <a href="ReportIssuedGiro.php">Laporan Giro yang sudah terbit</a>
+                    </div>
+                </li>
+                <li><a href="logout.php">Logout</a></li> <!-- Logout link -->
+            </ul>
+        </nav>
 
     <header>
         Selamat Datang di Aplikasi Giro
@@ -279,6 +281,42 @@ $conn->close();
 
     <section>
     <h2>Statistik Giro</h2>
+    <div class="stats-card">
+        <div class="card">
+            <a href="UnusedGiroList.php">
+                <h3>Jumlah Giro Unused</h3>
+                <p><?php echo htmlspecialchars($unused_count); ?></p>
+            </a>
+        </div>
+        <div class="card">
+            <a href="IssuedGiroList.php">
+                <h3>Jumlah Giro Issued</h3>
+                <p><?php echo htmlspecialchars($issued_count); ?></p>
+            </a>
+        </div>
+        <div class="card">
+            <a href="JTGiroList.php">
+                <h3>Jumlah Giro Akan Jatuh Tempo</h3>
+                <p><?php echo htmlspecialchars($jt_count); ?></p>
+            </a>
+        </div>
+        <div class="card">
+            <a href="OverDueGiroList.php">
+                <h3 style="color: red;">Jumlah Giro Lewat Jatuh Tempo</h3>
+                <p style="color: red;"><?php echo htmlspecialchars($Overdue_count); ?></p>
+            </a>
+        </div>
+        <div class="card">
+            <a href="MonthlyDueGiroList.php">
+                <h3>Jumlah Giro Jatuh Tempo Bulan Ini</h3>
+                <p><?php echo htmlspecialchars($monthly_due_count); ?></p>
+            </a>
+        </div>
+    </div>
+</section>
+
+<section>
+    <h2>Statistik Cek</h2>
     <div class="stats-card">
         <div class="card">
             <a href="UnusedGiroList.php">
