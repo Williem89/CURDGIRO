@@ -6,14 +6,15 @@ $selected_month = 9; // Contoh: September
 $selected_year = 2024; // Contoh: 2024
 
 // Prepare the statement
-$sql = "SELECT e.nama_entitas, d.namabank, d.ac_number, dg.nogiro, SUM(dg.Nominal) AS total_nominal, dg.tanggal_jatuh_tempo 
-        FROM detail_giro AS dg
-        INNER JOIN data_giro AS d ON dg.nogiro = d.nogiro
+$sql = "SELECT e.nama_entitas, d.namabank, d.ac_number, dg.nocek, SUM(dg.Nominal) AS total_nominal, 
+               dg.tanggal_jatuh_tempo, dg.tanggal_cair_cek 
+        FROM detail_cek AS dg
+        INNER JOIN data_cek AS d ON dg.nocek = d.nocek
         INNER JOIN list_entitas AS e ON d.id_entitas = e.id_entitas
-        WHERE dg.StatGiro = 'Issued' 
+        WHERE dg.Statcek = 'Seatle' 
         AND MONTH(dg.tanggal_jatuh_tempo) = ? 
         AND YEAR(dg.tanggal_jatuh_tempo) = ?
-        GROUP BY dg.tanggal_jatuh_tempo, e.nama_entitas, d.namabank, d.ac_number, dg.nogiro
+        GROUP BY dg.tanggal_jatuh_tempo, e.nama_entitas, d.namabank, d.ac_number, dg.nocek, dg.tanggal_cair_cek
         ORDER BY dg.tanggal_jatuh_tempo ASC;";
 
 $stmt = $conn->prepare($sql);
@@ -27,10 +28,10 @@ if ($stmt === false) {
 $stmt->execute();
 $result = $stmt->get_result();
 
-// Initialize an array to hold issued giro records
-$issued_giro_records = [];
+// Initialize an array to hold Seatle cek records
+$Seatle_cek_records = [];
 while ($row = $result->fetch_assoc()) {
-    $issued_giro_records[] = $row;
+    $Seatle_cek_records[] = $row;
 }
 
 // Close the statement and connection
@@ -43,7 +44,7 @@ $conn->close();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Daftar Giro Issued</title>
+    <title>Daftar cek Seatle</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
@@ -86,22 +87,23 @@ $conn->close();
 </head>
 <body>
     <div class="container">
-        <h1 class="text-center">Daftar Giro Issued</h1>
+        <h1 class="text-center">Daftar cek Seatle</h1>
         <table class="table table-bordered table-striped">
             <thead>
                 <tr>
                     <th>Entitas</th>
-                    <th>No Giro</th>
+                    <th>No cek</th>
                     <th>Tanggal Jatuh Tempo</th>
+                    <th>Tanggal cek Cair</th> <!-- Kolom baru -->
                     <th>Bank</th>
                     <th>No. Rekening</th>
                     <th>Nominal</th>
                 </tr>
             </thead>
             <tbody>
-            <?php if (empty($issued_giro_records)): ?>
+            <?php if (empty($Seatle_cek_records)): ?>
                 <tr>
-                    <td colspan="6" class="no-data">Tidak ada data giro.</td>
+                    <td colspan="7" class="no-data">Tidak ada data cek.</td>
                 </tr>
             <?php else: ?>
                 <?php 
@@ -110,44 +112,45 @@ $conn->close();
                 $subtotal = 0;
                 $grand_total = 0;
 
-                foreach ($issued_giro_records as $giro): 
+                foreach ($Seatle_cek_records as $cek): 
                     // Update subtotal
-                    $subtotal += $giro['total_nominal'];
-                    $grand_total += $giro['total_nominal'];
+                    $subtotal += $cek['total_nominal'];
+                    $grand_total += $cek['total_nominal'];
 
                     // Check if we need to output a new entity
-                    if ($current_entity !== $giro['nama_entitas']) {
+                    if ($current_entity !== $cek['nama_entitas']) {
                         // Output subtotal for the previous entity
                         if ($current_entity !== '') {
-                            echo '<tr class="subtotal"><td colspan="5">Subtotal</td><td>' . number_format($subtotal, 2, ',', '.') . '</td></tr>';
+                            echo '<tr class="subtotal"><td colspan="6">Subtotal</td><td>' . number_format($subtotal, 2, ',', '.') . '</td></tr>';
                         }
 
                         // Reset subtotal for new entity
-                        $subtotal = $giro['total_nominal'];
-                        $current_entity = $giro['nama_entitas'];
+                        $subtotal = $cek['total_nominal'];
+                        $current_entity = $cek['nama_entitas'];
 
-                        echo '<tr class="group-header"><td colspan="6">' . htmlspecialchars($current_entity) . '</td></tr>';
+                        echo '<tr class="group-header"><td colspan="7">' . htmlspecialchars($current_entity) . '</td></tr>';
                     }
 
                     // Check if we need to output a new bank
-                    if ($current_bank !== $giro['namabank']) {
-                        $current_bank = $giro['namabank'];
-                        echo '<tr class="group-header"><td colspan="6">' . htmlspecialchars($current_bank) . '</td></tr>';
+                    if ($current_bank !== $cek['namabank']) {
+                        $current_bank = $cek['namabank'];
+                        echo '<tr class="group-header"><td colspan="7">' . htmlspecialchars($current_bank) . '</td></tr>';
                     }
                 ?>
                     <tr>
-                        <td><?php echo htmlspecialchars($giro['nama_entitas']); ?></td>
-                        <td><?php echo htmlspecialchars($giro['nogiro']); ?></td>
-                        <td><?php echo htmlspecialchars($giro['tanggal_jatuh_tempo']); ?></td>
-                        <td><?php echo htmlspecialchars($giro['namabank']); ?></td>
-                        <td><?php echo htmlspecialchars($giro['ac_number']); ?></td>
-                        <td><?php echo number_format($giro['total_nominal'], 2, ',', '.'); ?></td>
+                        <td><?php echo htmlspecialchars($cek['nama_entitas']); ?></td>
+                        <td><?php echo htmlspecialchars($cek['nocek']); ?></td>
+                        <td><?php echo htmlspecialchars($cek['tanggal_jatuh_tempo']); ?></td>
+                        <td><?php echo htmlspecialchars($cek['tanggal_cair_cek']); ?></td> <!-- Kolom baru -->
+                        <td><?php echo htmlspecialchars($cek['namabank']); ?></td>
+                        <td><?php echo htmlspecialchars($cek['ac_number']); ?></td>
+                        <td><?php echo number_format($cek['total_nominal'], 2, ',', '.'); ?></td>
                     </tr>
                 <?php endforeach; ?>
 
                 <!-- Output subtotal for the last entity -->
-                <tr class="subtotal"><td colspan="5">Subtotal</td><td><?php echo number_format($subtotal, 2, ',', '.'); ?></td></tr>
-                <tr class="grand-total"><td colspan="5">Grand Total</td><td><?php echo number_format($grand_total, 2, ',', '.'); ?></td></tr>
+                <tr class="subtotal"><td colspan="6">Subtotal</td><td><?php echo number_format($subtotal, 2, ',', '.'); ?></td></tr>
+                <tr class="grand-total"><td colspan="6">Grand Total</td><td><?php echo number_format($grand_total, 2, ',', '.'); ?></td></tr>
             <?php endif; ?>
             </tbody>
         </table>

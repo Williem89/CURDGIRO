@@ -6,14 +6,15 @@ $selected_month = 9; // Contoh: September
 $selected_year = 2024; // Contoh: 2024
 
 // Prepare the statement
-$sql = "SELECT e.nama_entitas, d.namabank, d.ac_number, dg.nogiro, SUM(dg.Nominal) AS total_nominal, dg.tanggal_jatuh_tempo 
+$sql = "SELECT e.nama_entitas, d.namabank, d.ac_number, dg.nogiro, SUM(dg.Nominal) AS total_nominal, 
+               dg.tanggal_jatuh_tempo, dg.TglVoid 
         FROM detail_giro AS dg
         INNER JOIN data_giro AS d ON dg.nogiro = d.nogiro
         INNER JOIN list_entitas AS e ON d.id_entitas = e.id_entitas
-        WHERE dg.StatGiro = 'Issued' 
+        WHERE dg.StatGiro = 'Void' 
         AND MONTH(dg.tanggal_jatuh_tempo) = ? 
         AND YEAR(dg.tanggal_jatuh_tempo) = ?
-        GROUP BY dg.tanggal_jatuh_tempo, e.nama_entitas, d.namabank, d.ac_number, dg.nogiro
+        GROUP BY dg.tanggal_jatuh_tempo, e.nama_entitas, d.namabank, d.ac_number, dg.nogiro, dg.TglVoid
         ORDER BY dg.tanggal_jatuh_tempo ASC;";
 
 $stmt = $conn->prepare($sql);
@@ -27,10 +28,10 @@ if ($stmt === false) {
 $stmt->execute();
 $result = $stmt->get_result();
 
-// Initialize an array to hold issued giro records
-$issued_giro_records = [];
+// Initialize an array to hold Void giro records
+$Void_giro_records = [];
 while ($row = $result->fetch_assoc()) {
-    $issued_giro_records[] = $row;
+    $Void_giro_records[] = $row;
 }
 
 // Close the statement and connection
@@ -43,7 +44,7 @@ $conn->close();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Daftar Giro Issued</title>
+    <title>Daftar Giro Void</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
@@ -86,22 +87,23 @@ $conn->close();
 </head>
 <body>
     <div class="container">
-        <h1 class="text-center">Daftar Giro Issued</h1>
+        <h1 class="text-center">Daftar Giro Void</h1>
         <table class="table table-bordered table-striped">
             <thead>
                 <tr>
                     <th>Entitas</th>
                     <th>No Giro</th>
                     <th>Tanggal Jatuh Tempo</th>
+                    <th>Tanggal Giro Cair</th> <!-- Kolom baru -->
                     <th>Bank</th>
                     <th>No. Rekening</th>
                     <th>Nominal</th>
                 </tr>
             </thead>
             <tbody>
-            <?php if (empty($issued_giro_records)): ?>
+            <?php if (empty($Void_giro_records)): ?>
                 <tr>
-                    <td colspan="6" class="no-data">Tidak ada data giro.</td>
+                    <td colspan="7" class="no-data">Tidak ada data giro.</td>
                 </tr>
             <?php else: ?>
                 <?php 
@@ -110,7 +112,7 @@ $conn->close();
                 $subtotal = 0;
                 $grand_total = 0;
 
-                foreach ($issued_giro_records as $giro): 
+                foreach ($Void_giro_records as $giro): 
                     // Update subtotal
                     $subtotal += $giro['total_nominal'];
                     $grand_total += $giro['total_nominal'];
@@ -119,26 +121,27 @@ $conn->close();
                     if ($current_entity !== $giro['nama_entitas']) {
                         // Output subtotal for the previous entity
                         if ($current_entity !== '') {
-                            echo '<tr class="subtotal"><td colspan="5">Subtotal</td><td>' . number_format($subtotal, 2, ',', '.') . '</td></tr>';
+                            echo '<tr class="subtotal"><td colspan="6">Subtotal</td><td>' . number_format($subtotal, 2, ',', '.') . '</td></tr>';
                         }
 
                         // Reset subtotal for new entity
                         $subtotal = $giro['total_nominal'];
                         $current_entity = $giro['nama_entitas'];
 
-                        echo '<tr class="group-header"><td colspan="6">' . htmlspecialchars($current_entity) . '</td></tr>';
+                        echo '<tr class="group-header"><td colspan="7">' . htmlspecialchars($current_entity) . '</td></tr>';
                     }
 
                     // Check if we need to output a new bank
                     if ($current_bank !== $giro['namabank']) {
                         $current_bank = $giro['namabank'];
-                        echo '<tr class="group-header"><td colspan="6">' . htmlspecialchars($current_bank) . '</td></tr>';
+                        echo '<tr class="group-header"><td colspan="7">' . htmlspecialchars($current_bank) . '</td></tr>';
                     }
                 ?>
                     <tr>
                         <td><?php echo htmlspecialchars($giro['nama_entitas']); ?></td>
                         <td><?php echo htmlspecialchars($giro['nogiro']); ?></td>
                         <td><?php echo htmlspecialchars($giro['tanggal_jatuh_tempo']); ?></td>
+                        <td><?php echo htmlspecialchars($giro['TglVoid']); ?></td> <!-- Kolom baru -->
                         <td><?php echo htmlspecialchars($giro['namabank']); ?></td>
                         <td><?php echo htmlspecialchars($giro['ac_number']); ?></td>
                         <td><?php echo number_format($giro['total_nominal'], 2, ',', '.'); ?></td>
@@ -146,8 +149,8 @@ $conn->close();
                 <?php endforeach; ?>
 
                 <!-- Output subtotal for the last entity -->
-                <tr class="subtotal"><td colspan="5">Subtotal</td><td><?php echo number_format($subtotal, 2, ',', '.'); ?></td></tr>
-                <tr class="grand-total"><td colspan="5">Grand Total</td><td><?php echo number_format($grand_total, 2, ',', '.'); ?></td></tr>
+                <tr class="subtotal"><td colspan="6">Subtotal</td><td><?php echo number_format($subtotal, 2, ',', '.'); ?></td></tr>
+                <tr class="grand-total"><td colspan="6">Grand Total</td><td><?php echo number_format($grand_total, 2, ',', '.'); ?></td></tr>
             <?php endif; ?>
             </tbody>
         </table>

@@ -6,29 +6,29 @@ include 'koneksi.php';
 // Assuming the user's information is stored in session
 $user_logged_in = $_SESSION['username']; // Adjust this based on your session variable
 
-// Ambil data dari tabel detail_giro dengan kondisi StatGiro = 'Issued'
-$sql = "SELECT nogiro FROM detail_giro WHERE StatGiro = 'Issued'";
+// Ambil data dari tabel detail_cek dengan kondisi Statcek = 'Issued'
+$sql = "SELECT nocek FROM detail_cek WHERE Statcek = 'Issued'";
 $result = $conn->query($sql);
 
-// Set tanggal cair giro ke hari ini
-$tanggal_cair_giro = ""; // Kosongkan nilai tanggal
+// Set tanggal cair cek ke hari ini
+$tanggal_cair_cek = ""; // Kosongkan nilai tanggal
 
 // Variabel untuk pesan error
 $error_message = "";
 
 // Cek apakah form disubmit
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $selected_nogiro = $_POST['nogiro'];
-    $tanggal_cair_giro = $_POST['tanggal_cair_giro'];
+    $selected_nocek = $_POST['nocek'];
+    $tanggal_cair_cek = $_POST['tanggal_cair_cek'];
 
-    // Validasi apakah nogiro dipilih
-    if (empty($selected_nogiro)) {
-        $error_message = "Nomor giro harus diisi.";
+    // Validasi apakah nocek dipilih
+    if (empty($selected_nocek)) {
+        $error_message = "Nomor cek harus diisi.";
     } else {
-        // Update tanggal_cair_giro dan StatGiro
-        $updateSql = "UPDATE detail_giro SET tanggal_cair_giro = ?, StatGiro = 'Seatle', SeatleBy = ? WHERE nogiro = ?";
+        // Update tanggal_cair_cek dan Statcek
+        $updateSql = "UPDATE detail_cek SET tanggal_cair_cek = ?, Statcek = 'Seatle', SeatleBy = ? WHERE nocek = ?";
         $stmt = $conn->prepare($updateSql);
-        $stmt->bind_param("ssi", $tanggal_cair_giro, $user_logged_in, $selected_nogiro);
+        $stmt->bind_param("ssi", $tanggal_cair_cek, $user_logged_in, $selected_nocek);
         
         if ($stmt->execute()) {
             echo "<p style='color: green;'>Data berhasil diperbarui!</p>";
@@ -47,7 +47,7 @@ $result = $conn->query($sql);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pencairan Giro</title>
+    <title>Pencairan cek</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -134,23 +134,23 @@ $result = $conn->query($sql);
         }
     </style>
     <script>
-        function getDetail(nogiro) {
-            if (nogiro === "") {
+        function getDetail(nocek) {
+            if (nocek === "") {
                 document.getElementById("detail").innerHTML = "";
-                document.getElementById("tanggal_cair_giro").value = ""; // Kosongkan input tanggal
+                document.getElementById("tanggal_cair_cek").value = ""; // Kosongkan input tanggal
                 return;
             }
 
             // Mengambil data menggunakan AJAX
             var xhr = new XMLHttpRequest();
-            xhr.open("GET", "get_detail.php?nogiro=" + nogiro, true);
+            xhr.open("GET", "get_detail.php?nocek=" + nocek, true);
             xhr.onreadystatechange = function () {
                 if (xhr.readyState == 4 && xhr.status == 200) {
                     var data = JSON.parse(xhr.responseText);
                     var detailHTML = `
-                        <h2>Detail Giro</h2>
+                        <h2>Detail cek</h2>
                         <table>
-                            <tr><th>No Giro</th><td>${nogiro}</td></tr>
+                            <tr><th>No cek</th><td>${nocek}</td></tr>
                             <tr><th>Nomor Akun</th><td>${data.ac_number}</td></tr>
                             <tr><th>Nama Akun</th><td>${data.ac_name}</td></tr>
                             <tr><th>Nama Bank</th><td>${data.namabank}</td></tr>
@@ -158,10 +158,10 @@ $result = $conn->query($sql);
                             <tr><th>Akun Penerima</th><td>${data.ac_penerima}</td></tr>
                             <tr><th>Bank Penerima</th><td>${data.bank_penerima}</td></tr>
                             <tr><th>Nominal</th><td>Rp ${parseInt(data.nominal).toLocaleString()}</td></tr>
-                            <tr><th>Status GIRO</th><td>${data.StatGiro}</td></tr>
-                            <tr><th>Tanggal GIRO</th><td>${data.tanggal_giro}</td></tr>
+                            <tr><th>Status cek</th><td>${data.Statcek}</td></tr>
+                            <tr><th>Tanggal cek</th><td>${data.tanggal_cek}</td></tr>
                             <tr><th>Tanggal Jatuh Tempo</th><td>${data.tanggal_jatuh_tempo}</td></tr>
-                            <tr><th>Tanggal Cair</th><td>${data.tanggal_cair_giro}</td></tr>
+                            <tr><th>Tanggal Cair</th><td>${data.tanggal_cair_cek}</td></tr>
                             <tr><th>Tanggal Void</th><td>${data.TglVoid}</td></tr>
                             <tr><th>Tanggal Kembali ke Bank</th><td>${data.tglkembalikebank}</td></tr>
                             <tr><th>No PVR</th><td>${data.PVRNO}</td></tr>
@@ -176,20 +176,20 @@ $result = $conn->query($sql);
     </script>
 </head>
 <body>
-    <h1>Pencairan Giro</h1>
+    <h1>Pencairan cek</h1>
     <form action="" method="post">
         <?php if ($error_message): ?>
             <p class="error"><?php echo $error_message; ?></p>
         <?php endif; ?>
         
-        <label for="nogiro">Nomor Giro:</label>
-        <select id="nogiro" name="nogiro" onchange="getDetail(this.value)">
-            <option value="">Pilih Nomor Giro</option>
+        <label for="nocek">Nomor cek:</label>
+        <select id="nocek" name="nocek" onchange="getDetail(this.value)">
+            <option value="">Pilih Nomor cek</option>
             <?php
             if ($result->num_rows > 0) {
                 // Output data dari setiap baris
                 while ($row = $result->fetch_assoc()) {
-                    echo '<option value="' . $row["nogiro"] . '">' . $row["nogiro"] . '</option>';
+                    echo '<option value="' . $row["nocek"] . '">' . $row["nocek"] . '</option>';
                 }
             } else {
                 echo '<option value="">Tidak ada data</option>';
@@ -197,8 +197,8 @@ $result = $conn->query($sql);
             ?>
         </select>
 
-        <label for="tanggal_cair_giro">Tanggal Cair Giro:</label>
-        <input type="date" id="tanggal_cair_giro" name="tanggal_cair_giro" value="">
+        <label for="tanggal_cair_cek">Tanggal Cair cek:</label>
+        <input type="date" id="tanggal_cair_cek" name="tanggal_cair_cek" value="">
         
         <input type="submit" value="Submit">
         <a href="dashboard.php" class="btn-back">Back</a>

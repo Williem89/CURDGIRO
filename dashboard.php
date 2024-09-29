@@ -4,7 +4,16 @@ include 'koneksi.php';
 // Inisialisasi variabel
 $unused_count = 0;
 $issued_count = 0;
-$jt_count = 0; // Changed this to match the variable being used later
+$seatle_count = 0;
+$void_count = 0;
+$return_count = 0;
+$jt_count = 0; 
+$unused_cek_count = 0;
+$issued_cek_count = 0;
+$seatle_cek_count = 0;
+$void_cek_count = 0;
+$return_cek_count = 0;
+$jt_cek_count = 0;
 
 // Query untuk menghitung jumlah giro yang belum digunakan
 $sql = "SELECT COUNT(*) AS unused_count FROM data_giro WHERE statusgiro='Unused'";
@@ -22,6 +31,30 @@ if ($result) {
     $issued_count = (int)$row['issued_count'];
 }
 
+// Query untuk menghitung jumlah giro yang sudah dicairkan
+$sql = "SELECT COUNT(*) AS seatle_count FROM detail_giro WHERE statgiro='Seatle'";
+$result = $conn->query($sql);
+if ($result) {
+    $row = $result->fetch_assoc();
+    $seatle_count = (int)$row['seatle_count'];
+}
+
+// Query untuk menghitung jumlah giro yang sudah void
+$sql = "SELECT COUNT(*) AS void_count FROM detail_giro WHERE statgiro='void'";
+$result = $conn->query($sql);
+if ($result) {
+    $row = $result->fetch_assoc();
+    $void_count = (int)$row['void_count'];
+}
+
+// Query untuk menghitung jumlah giro yang sudah kembali ke bank
+$sql = "SELECT COUNT(*) AS return_count FROM detail_giro WHERE statgiro='return'";
+$result = $conn->query($sql);
+if ($result) {
+    $row = $result->fetch_assoc();
+    $return_count = (int)$row['return_count'];
+}
+
 // Query for counting the number of cheques due in one week
 $sql = "SELECT COUNT(*) AS jt_count 
     FROM detail_giro 
@@ -34,6 +67,21 @@ if ($result) {
 } else {
     echo "Error: " . $conn->error;
     $jt_count = 0;
+}
+
+// Query for counting the number of cheques due this month
+$sql = "SELECT COUNT(*) AS monthly_due_count 
+        FROM detail_giro 
+        WHERE StatGiro = 'Issued' 
+        AND MONTH(tanggal_jatuh_tempo) = MONTH(NOW()) 
+        AND YEAR(tanggal_jatuh_tempo) = YEAR(NOW());";
+$result = $conn->query($sql);
+if ($result) {
+    $row = $result->fetch_assoc();
+    $monthly_due_count = (int)$row['monthly_due_count'];
+} else {
+    echo "Error: " . $conn->error;
+    $monthly_due_count = 0;
 }
 
 // Query for counting the number of cheques Overdue
@@ -50,19 +98,87 @@ if ($result) {
     $Overdue_count = 0;
 }
 
+// Query untuk menghitung jumlah cek yang belum digunakan
+$sql = "SELECT COUNT(*) AS unused_cek_count FROM data_cek WHERE statuscek='Unused'";
+$result = $conn->query($sql);
+if ($result) {
+    $row = $result->fetch_assoc();
+    $unused_cek_count = (int)$row['unused_cek_count'];
+    }
+
+// Query untuk menghitung jumlah Cek yang sudah diterbitkan
+$sql = "SELECT COUNT(*) AS issued_cek_count FROM detail_cek WHERE statcek='Issued'";
+$result = $conn->query($sql);
+if ($result) {
+    $row = $result->fetch_assoc();
+    $issued_cek_count = (int)$row['issued_cek_count'];
+}
+
+// Query untuk menghitung jumlah cek yang sudah dicairkan
+$sql = "SELECT COUNT(*) AS seatle_cek_count FROM detail_cek WHERE statcek='Seatle'";
+$result = $conn->query($sql);
+if ($result) {
+    $row = $result->fetch_assoc();
+    $seatle_cek_count = (int)$row['seatle_cek_count'];
+}
+
+// Query untuk menghitung jumlah cek yang sudah void
+$sql = "SELECT COUNT(*) AS void_cek_count FROM detail_cek WHERE statcek='void'";
+$result = $conn->query($sql);
+if ($result) {
+    $row = $result->fetch_assoc();
+    $void_cek_count = (int)$row['void_cek_count'];
+}
+
+// Query untuk menghitung jumlah cek yang sudah kembali ke bank
+$sql = "SELECT COUNT(*) AS return_cek_count FROM detail_cek WHERE statcek='return'";
+$result = $conn->query($sql);
+if ($result) {
+    $row = $result->fetch_assoc();
+    $return_cek_count = (int)$row['return_cek_count'];
+}
+
+// Query for counting the number of cheques due in one week
+$sql = "SELECT COUNT(*) AS jt_cek_count 
+    FROM detail_cek 
+    WHERE Statcek = 'Issued' 
+    AND DATEDIFF(tanggal_jatuh_tempo, NOW()) BETWEEN 0 AND 7;";
+$result = $conn->query($sql);
+if ($result) {
+    $row = $result->fetch_assoc();
+    $jt_count = (int)$row['jt_cek_count'];
+} else {
+    echo "Error: " . $conn->error;
+    $jt_cek_count = 0;
+}
+
 // Query for counting the number of cheques due this month
-$sql = "SELECT COUNT(*) AS monthly_due_count 
-        FROM detail_giro 
-        WHERE StatGiro = 'Issued' 
+$sql = "SELECT COUNT(*) AS monthly_due_cek_count 
+        FROM detail_cek
+        WHERE Statcek = 'Issued' 
         AND MONTH(tanggal_jatuh_tempo) = MONTH(NOW()) 
         AND YEAR(tanggal_jatuh_tempo) = YEAR(NOW());";
 $result = $conn->query($sql);
 if ($result) {
     $row = $result->fetch_assoc();
-    $monthly_due_count = (int)$row['monthly_due_count'];
+    $monthly_due_cek_count = (int)$row['monthly_due_cek_count'];
 } else {
     echo "Error: " . $conn->error;
-    $monthly_due_count = 0;
+    $monthly_due_cek_count = 0;
+}
+
+// Query for counting the number of cheques Overdue
+$sql = "SELECT COUNT(*) AS Overdue_cek_count 
+        FROM detail_cek 
+        WHERE Statcek = 'Issued' 
+        AND tanggal_jatuh_tempo < NOW();";
+$result = $conn->query($sql);
+if ($result) {
+    $row = $result->fetch_assoc();
+    $Overdue_cek_count = (int)$row['Overdue_cek_count'];
+} else {
+    echo "Error: " . $conn->error;
+    $Overdue_cek_count = 0;
 }
 
 
@@ -256,13 +372,25 @@ $conn->close();
                         <a href="inputentitas.php">Input Entitas</a>
                         <a href="InputRekening.php">Input Rekening</a>
                         <a href="InputCustomer.php">Input Customer</a>
-                        <a href="GenerateGiro.php">Generate Giro</a>
+                        <a href="Generate.php">Generate</a>
                     </div>
                 </li>
                 <li><a href="#">Giro</a>
                     <div class="dropdown">
                         <a href="TulisGiro.php">Tulis Giro</a>
                         <a href="PencairanGiro.php">Pencairan Giro</a>
+                        <a href="GiroVoid.php">Void Giro</a>
+                        <a href="GiroReturn.php">Return Giro</a>
+                        <a href="GiroSearch.php">Search Giro</a>
+                    </div>
+                </li>
+                <li><a href="#">Cek</a>
+                    <div class="dropdown">
+                        <a href="TulisCek.php">Tulis Cek</a>
+                        <a href="PencairanCek.php">Pencairan Cek</a>
+                        <a href="CekVoid.php">Void Cek</a>
+                        <a href="CekReturn.php">Return Cek</a>
+                        <a href="CekSearch.php">Search Cek</a>
                     </div>
                 </li>
                 <li><a href="#">Laporan</a>
@@ -295,21 +423,39 @@ $conn->close();
             </a>
         </div>
         <div class="card">
+            <a href="seatleGiroList.php">
+                <h3>Jumlah Giro Cair</h3>
+                <p><?php echo htmlspecialchars($seatle_count); ?></p>
+            </a>
+        </div>
+        <div class="card">
+            <a href="VoidGiroList.php">
+                <h3>Jumlah Giro Void</h3>
+                <p><?php echo htmlspecialchars($void_count); ?></p>
+            </a>
+        </div>
+        <div class="card">
+            <a href="ReturnGiroList.php">
+                <h3>Jumlah Giro Return</h3>
+                <p><?php echo htmlspecialchars($return_count); ?></p>
+            </a>
+        </div>
+        <div class="card">
             <a href="JTGiroList.php">
                 <h3>Jumlah Giro Akan Jatuh Tempo</h3>
                 <p><?php echo htmlspecialchars($jt_count); ?></p>
             </a>
         </div>
         <div class="card">
-            <a href="OverDueGiroList.php">
-                <h3 style="color: red;">Jumlah Giro Lewat Jatuh Tempo</h3>
-                <p style="color: red;"><?php echo htmlspecialchars($Overdue_count); ?></p>
-            </a>
-        </div>
-        <div class="card">
             <a href="MonthlyDueGiroList.php">
                 <h3>Jumlah Giro Jatuh Tempo Bulan Ini</h3>
                 <p><?php echo htmlspecialchars($monthly_due_count); ?></p>
+            </a>
+        </div>
+        <div class="card">
+            <a href="OverDueGiroList.php">
+                <h3 style="color: red;">Jumlah Giro Lewat Jatuh Tempo</h3>
+                <p style="color: red;"><?php echo htmlspecialchars($Overdue_count); ?></p>
             </a>
         </div>
     </div>
@@ -319,33 +465,51 @@ $conn->close();
     <h2>Statistik Cek</h2>
     <div class="stats-card">
         <div class="card">
-            <a href="UnusedGiroList.php">
-                <h3>Jumlah Giro Unused</h3>
-                <p><?php echo htmlspecialchars($unused_count); ?></p>
+            <a href="UnusedCekList.php">
+                <h3>Jumlah Cek Unused</h3>
+                <p><?php echo htmlspecialchars($unused_cek_count); ?></p>
             </a>
         </div>
         <div class="card">
-            <a href="IssuedGiroList.php">
-                <h3>Jumlah Giro Issued</h3>
-                <p><?php echo htmlspecialchars($issued_count); ?></p>
+            <a href="IssuedCekList.php">
+                <h3>Jumlah Cek Issued</h3>
+                <p><?php echo htmlspecialchars($issued_cek_count); ?></p>
             </a>
         </div>
         <div class="card">
-            <a href="JTGiroList.php">
-                <h3>Jumlah Giro Akan Jatuh Tempo</h3>
-                <p><?php echo htmlspecialchars($jt_count); ?></p>
+            <a href="seatleCekList.php">
+                <h3>Jumlah Cek Cair</h3>
+                <p><?php echo htmlspecialchars($seatle_cek_count); ?></p>
             </a>
         </div>
         <div class="card">
-            <a href="OverDueGiroList.php">
+            <a href="VoidCekList.php">
+                <h3>Jumlah Cek Void</h3>
+                <p><?php echo htmlspecialchars($void_cek_count); ?></p>
+            </a>
+        </div>
+        <div class="card">
+            <a href="ReturnCekList.php">
+                <h3>Jumlah Cek Return</h3>
+                <p><?php echo htmlspecialchars($return_cek_count); ?></p>
+            </a>
+        </div>
+        <div class="card">
+            <a href="JTCekList.php">
+                <h3>Jumlah Cek Akan Jatuh Tempo</h3>
+                <p><?php echo htmlspecialchars($jt_cek_count); ?></p>
+            </a>
+        </div>
+        <div class="card">
+            <a href="MonthlyDueCekList.php">
+                <h3>Jumlah Cek Jatuh Tempo Bulan Ini</h3>
+                <p><?php echo htmlspecialchars($monthly_due_cek_count); ?></p>
+            </a>
+        </div>
+        <div class="card">
+            <a href="OverDueCekList.php">
                 <h3 style="color: red;">Jumlah Giro Lewat Jatuh Tempo</h3>
-                <p style="color: red;"><?php echo htmlspecialchars($Overdue_count); ?></p>
-            </a>
-        </div>
-        <div class="card">
-            <a href="MonthlyDueGiroList.php">
-                <h3>Jumlah Giro Jatuh Tempo Bulan Ini</h3>
-                <p><?php echo htmlspecialchars($monthly_due_count); ?></p>
+                <p style="color: red;"><?php echo htmlspecialchars($Overdue_cek_count); ?></p>
             </a>
         </div>
     </div>
@@ -365,4 +529,3 @@ $conn->close();
     </script>
 </body>
 </html>
-

@@ -14,9 +14,6 @@ if ($result) {
     }
 }
 
-// Initialize account numbers array
-$account_numbers = [];
-
 // Process form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Sanitize and retrieve input values
@@ -56,11 +53,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 continue;
             }
 
-            $stmt = $conn->prepare("INSERT INTO data_giro (nogiro, namabank, ac_number, ac_name, statusgiro, created_by, created_at, jenis_giro, id_entitas) 
-                VALUES (?, ?, ?, ?, 'Unused', ?, NOW(), ?, ?)");
+           // Choose the correct table and prepare the insert statement
+if ($jenis_giro === 'Giro') {
+    $stmt = $conn->prepare("INSERT INTO data_giro (nogiro, namabank, ac_number, ac_name, statusgiro, created_by, created_at, jenis_giro, id_entitas) 
+        VALUES (?, ?, ?, ?, 'Unused', ?, NOW(), ?, ?)");
+    
+    if ($stmt) {
+        $stmt->bind_param("sssssii", $giro_number, $namabank, $ac_number, $ac_name, $created_by, $jenis_giro, $id_entitas);
+    } else {
+        echo "<script>alert('Error preparing statement for data_giro: " . $conn->error . "');</script>";
+    }
+} else if ($jenis_giro === 'Cek') {
+    $stmt = $conn->prepare("INSERT INTO data_cek (NOCEK, namabank, ac_number, ac_name, statuscek, created_by, created_at, jenis_cek, id_entitas) 
+        VALUES (?, ?, ?, ?, 'Unused', ?, NOW(), ?, ?)");
+    
+    if ($stmt) {
+        $stmt->bind_param("sssssii", $giro_number, $namabank, $ac_number, $ac_name, $created_by, $jenis_giro, $id_entitas);
+    } else {
+        echo "<script>alert('Error preparing statement for data_cek: " . $conn->error . "');</script>";
+    }
+}
 
+
+            // Execute the statement
             if ($stmt) {
-                $stmt->bind_param("sssssii", $giro_number, $namabank, $ac_number, $ac_name, $created_by, $jenis_giro, $id_entitas);
                 if (!$stmt->execute()) {
                     echo "<script>alert('Error executing statement: " . $stmt->error . "');</script>";
                 }
@@ -194,7 +210,7 @@ $conn->close();
     </script>
 </head>
 <body>
-    <h1>Generate Giro</h1>
+    <h1>Generate Giro/Cek</h1>
     <form method="POST" action="">
         <label>Jenis Giro:</label>
         <label><input type="radio" name="jenis_giro" value="Giro" required checked>Giro</label>
@@ -209,8 +225,6 @@ $conn->close();
                 </option>
             <?php endforeach; ?>
         </select>
-
-
 
         <label for="ac_number">Account Number:</label>
         <select id="ac_number" name="ac_number" required>
@@ -229,14 +243,13 @@ $conn->close();
 
         <br>
 
-        <table>
         <label for="Start_number">Mulai dari no. :</label>
-        <tr>
-        <td><input type="text" id="prefix" name="prefix" required style="width:70px;"></td>
-        <td><input type="number" id="Start_number" name="Start_number" required style="width:220px;"></td>
-        <tr>
-            </table>
-
+        <table>
+            <tr>
+                <td><input type="text" id="prefix" name="prefix" required style="width:70px;"></td>
+                <td><input type="number" id="Start_number" name="Start_number" required style="width:220px;"></td>
+            </tr>
+        </table>
 
         <label for="Jumlah_giro">Jumlah Giro:</label>
         <input type="number" id="Jumlah_giro" name="Jumlah_giro" required>

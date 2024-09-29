@@ -6,12 +6,9 @@ include 'koneksi.php';
 // Assuming the user's information is stored in session
 $user_logged_in = $_SESSION['username']; // Adjust this based on your session variable
 
-// Ambil data dari tabel detail_giro dengan kondisi StatGiro = 'Issued'
-$sql = "SELECT nogiro FROM detail_giro WHERE StatGiro = 'Issued'";
+// Ambil data dari tabel detail_giro dengan kondisi StatGiro = 'Seatle'
+$sql = "SELECT nogiro FROM detail_giro WHERE StatGiro = 'Seatle'"; // Correct condition
 $result = $conn->query($sql);
-
-// Set tanggal cair giro ke hari ini
-$tanggal_cair_giro = ""; // Kosongkan nilai tanggal
 
 // Variabel untuk pesan error
 $error_message = "";
@@ -19,24 +16,31 @@ $error_message = "";
 // Cek apakah form disubmit
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $selected_nogiro = $_POST['nogiro'];
-    $tanggal_cair_giro = $_POST['tanggal_cair_giro'];
+
+   // Cek apakah form disubmit
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $selected_nogiro = $_POST['nogiro'];
+    $TglVoid = $_POST['TglVoid']; // Retrieve TglVoid from the POST data
 
     // Validasi apakah nogiro dipilih
     if (empty($selected_nogiro)) {
         $error_message = "Nomor giro harus diisi.";
+    } elseif (empty($TglVoid)) {
+        $error_message = "Tanggal void harus diisi."; // Optional: Add a check for TglVoid
     } else {
-        // Update tanggal_cair_giro dan StatGiro
-        $updateSql = "UPDATE detail_giro SET tanggal_cair_giro = ?, StatGiro = 'Seatle', SeatleBy = ? WHERE nogiro = ?";
+        // Update TglVoid dan VoidBy
+        $updateSql = "UPDATE detail_giro SET TglVoid = ?, StatGiro = 'Void', VoidBy = ? WHERE nogiro = ?";
         $stmt = $conn->prepare($updateSql);
-        $stmt->bind_param("ssi", $tanggal_cair_giro, $user_logged_in, $selected_nogiro);
-        
+        $stmt->bind_param("ssi", $TglVoid, $user_logged_in, $selected_nogiro);
+
         if ($stmt->execute()) {
             echo "<p style='color: green;'>Data berhasil diperbarui!</p>";
         } else {
             echo "<p style='color: red;'>Error: " . $stmt->error . "</p>";
         }
     }
-}
+}}
+
 
 // Ambil kembali data untuk dropdown
 $result = $conn->query($sql);
@@ -47,7 +51,7 @@ $result = $conn->query($sql);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pencairan Giro</title>
+    <title>Void Giro</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -137,7 +141,7 @@ $result = $conn->query($sql);
         function getDetail(nogiro) {
             if (nogiro === "") {
                 document.getElementById("detail").innerHTML = "";
-                document.getElementById("tanggal_cair_giro").value = ""; // Kosongkan input tanggal
+                document.getElementById("TglVoid").value = ""; // Kosongkan input tanggal
                 return;
             }
 
@@ -176,7 +180,7 @@ $result = $conn->query($sql);
     </script>
 </head>
 <body>
-    <h1>Pencairan Giro</h1>
+    <h1>Void Giro</h1>
     <form action="" method="post">
         <?php if ($error_message): ?>
             <p class="error"><?php echo $error_message; ?></p>
@@ -187,7 +191,6 @@ $result = $conn->query($sql);
             <option value="">Pilih Nomor Giro</option>
             <?php
             if ($result->num_rows > 0) {
-                // Output data dari setiap baris
                 while ($row = $result->fetch_assoc()) {
                     echo '<option value="' . $row["nogiro"] . '">' . $row["nogiro"] . '</option>';
                 }
@@ -197,8 +200,8 @@ $result = $conn->query($sql);
             ?>
         </select>
 
-        <label for="tanggal_cair_giro">Tanggal Cair Giro:</label>
-        <input type="date" id="tanggal_cair_giro" name="tanggal_cair_giro" value="">
+        <label for="TglVoid">Tanggal Void Giro:</label>
+        <input type="date" id="TglVoid" name="TglVoid" value="">
         
         <input type="submit" value="Submit">
         <a href="dashboard.php" class="btn-back">Back</a>

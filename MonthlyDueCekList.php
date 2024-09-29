@@ -9,13 +9,13 @@ $selected_month = isset($_POST['month']) ? intval($_POST['month']) : date('n');
 $selected_year = isset($_POST['year']) ? intval($_POST['year']) : date('Y');
 
 // Query for fetching the cheques due in the selected month and year
-$sql = "SELECT d.namabank, d.ac_name, dg.nogiro, SUM(dg.Nominal) AS total_nominal, dg.tanggal_jatuh_tempo 
-        FROM detail_giro AS dg
-        INNER JOIN data_giro AS d ON dg.nogiro = d.nogiro
-        WHERE dg.StatGiro = 'Issued' 
+$sql = "SELECT d.namabank, d.ac_name, dg.nocek, SUM(dg.Nominal) AS total_nominal, dg.tanggal_jatuh_tempo 
+        FROM detail_cek AS dg
+        INNER JOIN data_cek AS d ON dg.nocek = d.nocek
+        WHERE dg.Statcek = 'Issued' 
         AND MONTH(dg.tanggal_jatuh_tempo) = $selected_month 
         AND YEAR(dg.tanggal_jatuh_tempo) = $selected_year
-        GROUP BY dg.tanggal_jatuh_tempo, d.namabank, d.ac_name, dg.nogiro
+        GROUP BY dg.tanggal_jatuh_tempo, d.namabank, d.ac_name, dg.nocek
         ORDER BY dg.tanggal_jatuh_tempo ASC;";
 
 $result = $conn->query($sql);
@@ -42,7 +42,7 @@ $bank_data = [];
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Giro Jatuh Tempo Bulan Ini</title>
+    <title>cek Jatuh Tempo Bulan Ini</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
@@ -86,7 +86,7 @@ $bank_data = [];
 </head>
 <body>
     <header>
-        <h1>Giro Jatuh Tempo <?php echo htmlspecialchars(date('F Y', mktime(0, 0, 0, $selected_month, 1, $selected_year))); ?></h1>
+        <h1>cek Jatuh Tempo <?php echo htmlspecialchars(date('F Y', mktime(0, 0, 0, $selected_month, 1, $selected_year))); ?></h1>
     </header>
 
     <form method="POST" class="mb-4">
@@ -118,12 +118,12 @@ $bank_data = [];
     </form>
 
     <div class="container table-container mt-4">
-        <h2 class="mb-4">Daftar Giro yang Jatuh Tempo</h2>
+        <h2 class="mb-4">Daftar cek yang Jatuh Tempo</h2>
         <div class="table-responsive">
             <table class="table table-bordered">
                 <thead class="table-primary">
                     <tr>
-                        <th>No. Giro</th>
+                        <th>No. cek</th>
                         <th>Pemegang</th>
                         <th>Bank</th>
                         <th>Jumlah</th>
@@ -161,7 +161,7 @@ $bank_data = [];
                             </tr>
                             <?php foreach ($bank_info['entries'] as $cheque): ?>
                                 <tr>
-                                    <td><?php echo htmlspecialchars($cheque['nogiro']); ?></td>
+                                    <td><?php echo htmlspecialchars($cheque['nocek']); ?></td>
                                     <td><?php echo htmlspecialchars($cheque['ac_name']); ?></td>
                                     <td class="text-left"><?php echo htmlspecialchars($cheque['namabank']); ?></td>
                                     <td><?php echo htmlspecialchars(number_format($cheque['total_nominal'], 2)); ?></td>
@@ -180,7 +180,7 @@ $bank_data = [];
                     <?php endforeach; ?>
                 <?php else: ?>
                     <tr>
-                        <td colspan="4" class="text-center">Tidak ada giro yang jatuh tempo bulan ini.</td>
+                        <td colspan="4" class="text-center">Tidak ada cek yang jatuh tempo bulan ini.</td>
                     </tr>
                 <?php endif; ?>
                 <tr>
@@ -209,7 +209,7 @@ $bank_data = [];
     </div>
 
     <footer>
-        <p>&copy; <?php echo date("Y"); ?> Aplikasi Giro. All rights reserved.</p>
+        <p>&copy; <?php echo date("Y"); ?> Aplikasi cek. All rights reserved.</p>
     </footer>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
