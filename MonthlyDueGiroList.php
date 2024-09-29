@@ -1,5 +1,10 @@
 <?php
-include 'koneksi.php';
+include 'koneksi.php'; // Pastikan koneksi database sudah benar
+
+require 'vendor/autoload.php'; // Mengimpor PhpSpreadsheet
+
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 // Initialize an empty array to store the due cheques
 $due_cheques = [];
@@ -30,11 +35,46 @@ if ($result) {
 // Close the connection
 $conn->close();
 
-// Initialize variables for subtotals and grand total
-$grand_total = 0;
-$current_date = null;
-$bank_data = [];
+// Function to export data to Excel
+function exportToExcel($due_cheques, $selected_month, $selected_year) {
+    $spreadsheet = new Spreadsheet();
+    $sheet = $spreadsheet->getActiveSheet();
 
+    // Set header
+    $sheet->setCellValue('A1', 'Tanggal Jatuh Tempo');
+    $sheet->setCellValue('B1', 'No. Giro');
+    $sheet->setCellValue('C1', 'Pemegang');
+    $sheet->setCellValue('D1', 'Bank');
+    $sheet->setCellValue('E1', 'Jumlah');
+
+    $row = 2; // Start from the second row
+
+    // Loop through due cheques and populate Excel
+    foreach ($due_cheques as $cheque) {
+        $sheet->setCellValue("A$row", $cheque['tanggal_jatuh_tempo']);
+        $sheet->setCellValue("B$row", $cheque['nogiro']);
+        $sheet->setCellValue("C$row", $cheque['ac_name']);
+        $sheet->setCellValue("D$row", $cheque['namabank']);
+        $sheet->setCellValue("E$row", $cheque['total_nominal']);
+        $row++;
+    }
+
+    // Save Excel file
+    $filename = "Giro_Jatuh_Tempo_{$selected_month}_{$selected_year}.xlsx";
+    $writer = new Xlsx($spreadsheet);
+    $writer->save($filename);
+
+    // Download the file
+    header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    header('Content-Disposition: attachment; filename="' . $filename . '"');
+    $writer->save('php://output');
+    exit;
+}
+
+// Check if export button was clicked
+if (isset($_POST['export'])) {
+    exportToExcel($due_cheques, $selected_month, $selected_year);
+}
 ?>
 
 <!DOCTYPE html>
@@ -58,12 +98,6 @@ $bank_data = [];
             border-radius: 5px;
             margin-bottom: 20px;
         }
-        footer {
-            text-align: center;
-            margin-top: 30px;
-            font-size: 0.9em;
-            color: #6c757d;
-        }
         .table-container {
             background-color: white;
             border-radius: 8px;
@@ -82,6 +116,11 @@ $bank_data = [];
         .btn-back:hover {
             background-color: #004494;
         }
+        .section-title {
+            font-weight: bold;
+            font-size: 1.1em;
+            background-color: #e9ecef;
+        }
     </style>
 </head>
 <body>
@@ -94,7 +133,6 @@ $bank_data = [];
             <div class="col-md-6">
                 <select name="month" class="form-select">
                     <?php
-                    // Get current month
                     $current_month = date('n');
                     for ($m = 1; $m <= 12; $m++) {
                         echo '<option value="' . $m . '"' . ($current_month == $m ? ' selected' : '') . '>' . date('F', mktime(0, 0, 0, $m, 1)) . '</option>';
@@ -105,7 +143,6 @@ $bank_data = [];
             <div class="col-md-6">
                 <select name="year" class="form-select">
                     <?php
-                    // Get current year
                     $current_year = date('Y');
                     for ($y = $current_year - 5; $y <= $current_year + 5; $y++) {
                         echo '<option value="' . $y . '"' . ($current_year == $y ? ' selected' : '') . '>' . $y . '</option>';
@@ -115,6 +152,7 @@ $bank_data = [];
             </div>
         </div>
         <button type="submit" class="btn btn-primary mt-2">Tampilkan</button>
+        <button type="submit" name="export" class="btn btn-success mt-2">Ekspor ke Excel</button>
     </form>
 
     <div class="container table-container mt-4">
@@ -123,6 +161,7 @@ $bank_data = [];
             <table class="table table-bordered">
                 <thead class="table-primary">
                     <tr>
+                        <th>Tanggal Jatuh Tempo</th>
                         <th>No. Giro</th>
                         <th>Pemegang</th>
                         <th>Bank</th>
@@ -133,6 +172,7 @@ $bank_data = [];
                 <?php if (count($due_cheques) > 0): ?>
                     <?php
                     // Organize data by date and bank
+                    $bank_data = [];
                     foreach ($due_cheques as $cheque) {
                         $date_key = $cheque['tanggal_jatuh_tempo'];
                         $bank_key = $cheque['namabank'];
@@ -151,57 +191,32 @@ $bank_data = [];
                     // Render the organized data
                     foreach ($bank_data as $date => $banks): ?>
                         <tr>
-                            <td colspan="4" class="text-left section-title"><h4><?php echo htmlspecialchars(date('d-m-Y', strtotime($date))); ?></h4></td>
+                            <td colspan="5" class="section-title"><h4><?php echo htmlspecialchars(date('d-m-Y', strtotime($date))); ?></h4></td>
                         </tr>
-                        <?php 
-                        $date_total = 0; // Initialize date total
-                        foreach ($banks as $bank_name => $bank_info): ?>
+                        <?php foreach ($banks as $bank_name => $bank_info): ?>
                             <tr>
-                                <td colspan="4" class="text-left section-title"><strong><?php echo htmlspecialchars($bank_name); ?></strong></td>
+                                <td colspan="5" class="section-title"><strong><?php echo htmlspecialchars($bank_name); ?></strong></td>
                             </tr>
                             <?php foreach ($bank_info['entries'] as $cheque): ?>
                                 <tr>
+                                    <td><?php echo htmlspecialchars(date('d-m-Y', strtotime($cheque['tanggal_jatuh_tempo']))); ?></td>
                                     <td><?php echo htmlspecialchars($cheque['nogiro']); ?></td>
                                     <td><?php echo htmlspecialchars($cheque['ac_name']); ?></td>
-                                    <td class="text-left"><?php echo htmlspecialchars($cheque['namabank']); ?></td>
+                                    <td><?php echo htmlspecialchars($cheque['namabank']); ?></td>
                                     <td><?php echo htmlspecialchars(number_format($cheque['total_nominal'], 2)); ?></td>
                                 </tr>
-                                <?php $date_total += $cheque['total_nominal']; // Add to date total ?>
                             <?php endforeach; ?>
                             <tr>
-                                <td colspan="3" class="text-end subtotal"><strong>Subtotal untuk <?php echo htmlspecialchars($bank_name); ?>:</strong></td>
-                                <td class="subtotal"><strong><?php echo htmlspecialchars(number_format($bank_info['subtotal'], 2)); ?></strong></td>
+                                <td colspan="4" class="text-end"><strong>Total untuk <?php echo htmlspecialchars($bank_name); ?>:</strong></td>
+                                <td><?php echo htmlspecialchars(number_format($bank_info['subtotal'], 2)); ?></td>
                             </tr>
                         <?php endforeach; ?>
-                        <tr>
-                            <td colspan="3" class="text-end subtotal"><strong>Subtotal untuk <?php echo htmlspecialchars(date('d-m-Y', strtotime($date))); ?>:</strong></td>
-                            <td class="subtotal"><strong><?php echo htmlspecialchars(number_format($date_total, 2)); ?></strong></td>
-                        </tr>
                     <?php endforeach; ?>
                 <?php else: ?>
                     <tr>
-                        <td colspan="4" class="text-center">Tidak ada giro yang jatuh tempo bulan ini.</td>
+                        <td colspan="5" class="text-center">Tidak ada giro yang jatuh tempo bulan ini.</td>
                     </tr>
                 <?php endif; ?>
-                <tr>
-                    <td colspan="3" class="text-end subtotal"><strong>Grand Total:</strong></td>
-                    <td class="subtotal">
-                        <strong>
-                            <?php 
-                            // Initialize grand total
-                            $grand_total = 0; 
-                            // Loop through bank data to sum subtotals
-                            foreach ($bank_data as $banks) {
-                                foreach ($banks as $bank_info) {
-                                    $grand_total += $bank_info['subtotal'];
-                                }
-                            }
-                            // Output formatted grand total
-                            echo htmlspecialchars(number_format($grand_total, 2)); 
-                            ?>
-                        </strong>
-                    </td>
-                </tr>
                 </tbody>
             </table>
         </div>
