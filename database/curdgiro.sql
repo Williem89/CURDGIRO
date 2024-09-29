@@ -11,11 +11,42 @@
  Target Server Version : 100432 (10.4.32-MariaDB)
  File Encoding         : 65001
 
- Date: 25/09/2024 18:37:28
+ Date: 29/09/2024 10:37:41
 */
 
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
+
+-- ----------------------------
+-- Table structure for data_cek
+-- ----------------------------
+DROP TABLE IF EXISTS `data_cek`;
+CREATE TABLE `data_cek`  (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `nocek` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `namabank` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `ac_number` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `ac_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `statuscek` varchar(15) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT 'Unused',
+  `created_by` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `jenis_cek` varchar(15) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `id_entitas` int(11) NULL DEFAULT NULL,
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE INDEX `nogiro`(`nocek`) USING BTREE,
+  INDEX `id_entitas`(`id_entitas`) USING BTREE,
+  CONSTRAINT `data_cek_ibfk_1` FOREIGN KEY (`id_entitas`) REFERENCES `list_entitas` (`id_entitas`) ON DELETE RESTRICT ON UPDATE RESTRICT
+) ENGINE = InnoDB AUTO_INCREMENT = 173 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of data_cek
+-- ----------------------------
+INSERT INTO `data_cek` VALUES (167, 'CEK-100', 'Bank Central Asia', '4546645465456465465', 'PT. Global Energi Lestari', 'Used', 'itgel', '2024-09-28 18:18:21', '0', 1);
+INSERT INTO `data_cek` VALUES (168, 'CEK-101', 'Bank Central Asia', '4546645465456465465', 'PT. Global Energi Lestari', 'Used', 'itgel', '2024-09-28 18:18:21', '0', 1);
+INSERT INTO `data_cek` VALUES (169, 'CEK-102', 'Bank Central Asia', '4546645465456465465', 'PT. Global Energi Lestari', 'Unused', 'itgel', '2024-09-28 18:18:21', '0', 1);
+INSERT INTO `data_cek` VALUES (170, 'CEK-103', 'Bank Central Asia', '4546645465456465465', 'PT. Global Energi Lestari', 'Used', 'itgel', '2024-09-28 18:18:21', '0', 1);
+INSERT INTO `data_cek` VALUES (171, 'CEK-104', 'Bank Central Asia', '4546645465456465465', 'PT. Global Energi Lestari', 'Unused', 'itgel', '2024-09-28 18:18:21', '0', 1);
+INSERT INTO `data_cek` VALUES (172, 'CEK-105', 'Bank Central Asia', '4546645465456465465', 'PT. Global Energi Lestari', 'Unused', 'itgel', '2024-09-28 18:18:21', '0', 1);
 
 -- ----------------------------
 -- Table structure for data_giro
@@ -36,7 +67,7 @@ CREATE TABLE `data_giro`  (
   UNIQUE INDEX `nogiro`(`nogiro`) USING BTREE,
   INDEX `id_entitas`(`id_entitas`) USING BTREE,
   CONSTRAINT `data_giro_ibfk_1` FOREIGN KEY (`id_entitas`) REFERENCES `list_entitas` (`id_entitas`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 117 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 172 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of data_giro
@@ -57,9 +88,9 @@ INSERT INTO `data_giro` VALUES (13, '898890', 'Bank Negara Indonesia', '58974444
 INSERT INTO `data_giro` VALUES (14, '898891', 'Bank Negara Indonesia', '58974444', 'PT. Global Energy Lestari', 'Used', 'itgel', '2024-09-25 14:46:01', '0', 1);
 INSERT INTO `data_giro` VALUES (15, '898892', 'Bank Negara Indonesia', '58974444', 'PT. Global Energy Lestari', 'Unused', 'itgel', '2024-09-25 14:46:01', '0', 1);
 INSERT INTO `data_giro` VALUES (16, '898893', 'Bank Negara Indonesia', '58974444', 'PT. Global Energy Lestari', 'Unused', 'itgel', '2024-09-25 14:46:01', '0', 1);
-INSERT INTO `data_giro` VALUES (17, '898894', 'Bank Negara Indonesia', '58974444', 'PT. Global Energy Lestari', 'Unused', 'itgel', '2024-09-25 14:46:01', '0', 1);
+INSERT INTO `data_giro` VALUES (17, '898894', 'Bank Negara Indonesia', '58974444', 'PT. Global Energy Lestari', 'Used', 'itgel', '2024-09-25 14:46:01', '0', 1);
 INSERT INTO `data_giro` VALUES (18, '898895', 'Bank Negara Indonesia', '58974444', 'PT. Global Energy Lestari', 'Used', 'itgel', '2024-09-25 14:46:01', '0', 1);
-INSERT INTO `data_giro` VALUES (19, '898896', 'Bank Negara Indonesia', '58974444', 'PT. Global Energy Lestari', 'Unused', 'itgel', '2024-09-25 14:46:01', '0', 1);
+INSERT INTO `data_giro` VALUES (19, '898896', 'Bank Negara Indonesia', '58974444', 'PT. Global Energy Lestari', 'Used', 'itgel', '2024-09-25 14:46:01', '0', 1);
 INSERT INTO `data_giro` VALUES (20, '898897', 'Bank Negara Indonesia', '58974444', 'PT. Global Energy Lestari', 'Unused', 'itgel', '2024-09-25 14:46:01', '0', 1);
 INSERT INTO `data_giro` VALUES (21, '898898', 'Bank Negara Indonesia', '58974444', 'PT. Global Energy Lestari', 'Unused', 'itgel', '2024-09-25 14:46:01', '0', 1);
 INSERT INTO `data_giro` VALUES (22, '898899', 'Bank Negara Indonesia', '58974444', 'PT. Global Energy Lestari', 'Unused', 'itgel', '2024-09-25 14:46:01', '0', 1);
@@ -157,6 +188,96 @@ INSERT INTO `data_giro` VALUES (113, 'wqe-001', 'Bank Central Asia', '12345678',
 INSERT INTO `data_giro` VALUES (114, 'wqe-002', 'Bank Central Asia', '12345678', 'PT. Global Energy Lestari', 'Unused', 'itgel', '2024-09-25 18:32:12', '0', 1);
 INSERT INTO `data_giro` VALUES (115, 'wqe-003', 'Bank Central Asia', '12345678', 'PT. Global Energy Lestari', 'Unused', 'itgel', '2024-09-25 18:32:12', '0', 1);
 INSERT INTO `data_giro` VALUES (116, 'wqe-004', 'Bank Central Asia', '12345678', 'PT. Global Energy Lestari', 'Unused', 'itgel', '2024-09-25 18:32:12', '0', 1);
+INSERT INTO `data_giro` VALUES (117, 'CD-1000', 'Bank Central Asia', '4546645465456465465', 'PT. Global Energy Lestari', 'Used', 'itgel', '2024-09-26 13:59:49', '0', 1);
+INSERT INTO `data_giro` VALUES (118, 'CD-1001', 'Bank Central Asia', '4546645465456465465', 'PT. Global Energy Lestari', 'Used', 'itgel', '2024-09-26 13:59:49', '0', 1);
+INSERT INTO `data_giro` VALUES (119, 'CD-1002', 'Bank Central Asia', '4546645465456465465', 'PT. Global Energy Lestari', 'Used', 'itgel', '2024-09-26 13:59:49', '0', 1);
+INSERT INTO `data_giro` VALUES (120, 'CD-1003', 'Bank Central Asia', '4546645465456465465', 'PT. Global Energy Lestari', 'Used', 'itgel', '2024-09-26 13:59:49', '0', 1);
+INSERT INTO `data_giro` VALUES (121, 'CD-1004', 'Bank Central Asia', '4546645465456465465', 'PT. Global Energy Lestari', 'Used', 'itgel', '2024-09-26 13:59:49', '0', 1);
+INSERT INTO `data_giro` VALUES (122, 'CD-1005', 'Bank Central Asia', '4546645465456465465', 'PT. Global Energy Lestari', 'Used', 'itgel', '2024-09-26 13:59:49', '0', 1);
+INSERT INTO `data_giro` VALUES (123, 'CD-1006', 'Bank Central Asia', '4546645465456465465', 'PT. Global Energy Lestari', 'Used', 'itgel', '2024-09-26 13:59:49', '0', 1);
+INSERT INTO `data_giro` VALUES (124, 'CD-1007', 'Bank Central Asia', '4546645465456465465', 'PT. Global Energy Lestari', 'Unused', 'itgel', '2024-09-26 13:59:49', '0', 1);
+INSERT INTO `data_giro` VALUES (125, 'CD-1008', 'Bank Central Asia', '4546645465456465465', 'PT. Global Energy Lestari', 'Used', 'itgel', '2024-09-26 13:59:49', '0', 1);
+INSERT INTO `data_giro` VALUES (126, 'CD-1009', 'Bank Central Asia', '4546645465456465465', 'PT. Global Energy Lestari', 'Unused', 'itgel', '2024-09-26 13:59:49', '0', 1);
+INSERT INTO `data_giro` VALUES (127, 'CD-1010', 'Bank Central Asia', '4546645465456465465', 'PT. Global Energy Lestari', 'Unused', 'itgel', '2024-09-26 13:59:49', '0', 1);
+INSERT INTO `data_giro` VALUES (128, 'CD-1011', 'Bank Central Asia', '4546645465456465465', 'PT. Global Energy Lestari', 'Unused', 'itgel', '2024-09-26 13:59:49', '0', 1);
+INSERT INTO `data_giro` VALUES (129, 'CD-1012', 'Bank Central Asia', '4546645465456465465', 'PT. Global Energy Lestari', 'Unused', 'itgel', '2024-09-26 13:59:49', '0', 1);
+INSERT INTO `data_giro` VALUES (130, 'CD-1013', 'Bank Central Asia', '4546645465456465465', 'PT. Global Energy Lestari', 'Unused', 'itgel', '2024-09-26 13:59:49', '0', 1);
+INSERT INTO `data_giro` VALUES (131, 'CD-1014', 'Bank Central Asia', '4546645465456465465', 'PT. Global Energy Lestari', 'Unused', 'itgel', '2024-09-26 13:59:49', '0', 1);
+INSERT INTO `data_giro` VALUES (132, 'CD-1015', 'Bank Central Asia', '4546645465456465465', 'PT. Global Energy Lestari', 'Unused', 'itgel', '2024-09-26 13:59:49', '0', 1);
+INSERT INTO `data_giro` VALUES (133, 'CD-1016', 'Bank Central Asia', '4546645465456465465', 'PT. Global Energy Lestari', 'Unused', 'itgel', '2024-09-26 13:59:49', '0', 1);
+INSERT INTO `data_giro` VALUES (134, 'CD-1017', 'Bank Central Asia', '4546645465456465465', 'PT. Global Energy Lestari', 'Unused', 'itgel', '2024-09-26 13:59:49', '0', 1);
+INSERT INTO `data_giro` VALUES (135, 'CD-1018', 'Bank Central Asia', '4546645465456465465', 'PT. Global Energy Lestari', 'Unused', 'itgel', '2024-09-26 13:59:49', '0', 1);
+INSERT INTO `data_giro` VALUES (136, 'CD-1019', 'Bank Central Asia', '4546645465456465465', 'PT. Global Energy Lestari', 'Unused', 'itgel', '2024-09-26 13:59:49', '0', 1);
+INSERT INTO `data_giro` VALUES (137, 'CD-1020', 'Bank Central Asia', '4546645465456465465', 'PT. Global Energy Lestari', 'Unused', 'itgel', '2024-09-26 13:59:49', '0', 1);
+INSERT INTO `data_giro` VALUES (138, 'CD-1021', 'Bank Central Asia', '4546645465456465465', 'PT. Global Energy Lestari', 'Unused', 'itgel', '2024-09-26 13:59:49', '0', 1);
+INSERT INTO `data_giro` VALUES (139, 'CD-1022', 'Bank Central Asia', '4546645465456465465', 'PT. Global Energy Lestari', 'Unused', 'itgel', '2024-09-26 13:59:49', '0', 1);
+INSERT INTO `data_giro` VALUES (140, 'CD-1023', 'Bank Central Asia', '4546645465456465465', 'PT. Global Energy Lestari', 'Unused', 'itgel', '2024-09-26 13:59:49', '0', 1);
+INSERT INTO `data_giro` VALUES (141, 'CD-1024', 'Bank Central Asia', '4546645465456465465', 'PT. Global Energy Lestari', 'Unused', 'itgel', '2024-09-26 13:59:49', '0', 1);
+INSERT INTO `data_giro` VALUES (142, 'CD-1025', 'Bank Central Asia', '4546645465456465465', 'PT. Global Energy Lestari', 'Unused', 'itgel', '2024-09-26 13:59:49', '0', 1);
+INSERT INTO `data_giro` VALUES (143, 'CD-1026', 'Bank Central Asia', '4546645465456465465', 'PT. Global Energy Lestari', 'Unused', 'itgel', '2024-09-26 13:59:49', '0', 1);
+INSERT INTO `data_giro` VALUES (144, 'CD-1027', 'Bank Central Asia', '4546645465456465465', 'PT. Global Energy Lestari', 'Unused', 'itgel', '2024-09-26 13:59:49', '0', 1);
+INSERT INTO `data_giro` VALUES (145, 'CD-1028', 'Bank Central Asia', '4546645465456465465', 'PT. Global Energy Lestari', 'Unused', 'itgel', '2024-09-26 13:59:49', '0', 1);
+INSERT INTO `data_giro` VALUES (146, 'CD-1029', 'Bank Central Asia', '4546645465456465465', 'PT. Global Energy Lestari', 'Unused', 'itgel', '2024-09-26 13:59:49', '0', 1);
+INSERT INTO `data_giro` VALUES (147, 'CD-1030', 'Bank Central Asia', '4546645465456465465', 'PT. Global Energy Lestari', 'Unused', 'itgel', '2024-09-26 13:59:49', '0', 1);
+INSERT INTO `data_giro` VALUES (148, 'CD-1031', 'Bank Central Asia', '4546645465456465465', 'PT. Global Energy Lestari', 'Unused', 'itgel', '2024-09-26 13:59:49', '0', 1);
+INSERT INTO `data_giro` VALUES (149, 'CD-1032', 'Bank Central Asia', '4546645465456465465', 'PT. Global Energy Lestari', 'Unused', 'itgel', '2024-09-26 13:59:49', '0', 1);
+INSERT INTO `data_giro` VALUES (150, 'CD-1033', 'Bank Central Asia', '4546645465456465465', 'PT. Global Energy Lestari', 'Unused', 'itgel', '2024-09-26 13:59:49', '0', 1);
+INSERT INTO `data_giro` VALUES (151, 'CD-1034', 'Bank Central Asia', '4546645465456465465', 'PT. Global Energy Lestari', 'Unused', 'itgel', '2024-09-26 13:59:49', '0', 1);
+INSERT INTO `data_giro` VALUES (152, 'CD-1035', 'Bank Central Asia', '4546645465456465465', 'PT. Global Energy Lestari', 'Unused', 'itgel', '2024-09-26 13:59:49', '0', 1);
+INSERT INTO `data_giro` VALUES (153, 'CD-1036', 'Bank Central Asia', '4546645465456465465', 'PT. Global Energy Lestari', 'Used', 'itgel', '2024-09-26 13:59:49', '0', 1);
+INSERT INTO `data_giro` VALUES (154, 'CD-1037', 'Bank Central Asia', '4546645465456465465', 'PT. Global Energy Lestari', 'Unused', 'itgel', '2024-09-26 13:59:49', '0', 1);
+INSERT INTO `data_giro` VALUES (155, 'CD-1038', 'Bank Central Asia', '4546645465456465465', 'PT. Global Energy Lestari', 'Unused', 'itgel', '2024-09-26 13:59:49', '0', 1);
+INSERT INTO `data_giro` VALUES (156, 'CD-1039', 'Bank Central Asia', '4546645465456465465', 'PT. Global Energy Lestari', 'Unused', 'itgel', '2024-09-26 13:59:49', '0', 1);
+INSERT INTO `data_giro` VALUES (157, 'CD-1040', 'Bank Central Asia', '4546645465456465465', 'PT. Global Energy Lestari', 'Unused', 'itgel', '2024-09-26 13:59:49', '0', 1);
+INSERT INTO `data_giro` VALUES (158, 'CD-1041', 'Bank Central Asia', '4546645465456465465', 'PT. Global Energy Lestari', 'Unused', 'itgel', '2024-09-26 13:59:49', '0', 1);
+INSERT INTO `data_giro` VALUES (159, 'CD-1042', 'Bank Central Asia', '4546645465456465465', 'PT. Global Energy Lestari', 'Unused', 'itgel', '2024-09-26 13:59:49', '0', 1);
+INSERT INTO `data_giro` VALUES (160, 'CD-1043', 'Bank Central Asia', '4546645465456465465', 'PT. Global Energy Lestari', 'Unused', 'itgel', '2024-09-26 13:59:49', '0', 1);
+INSERT INTO `data_giro` VALUES (161, 'CD-1044', 'Bank Central Asia', '4546645465456465465', 'PT. Global Energy Lestari', 'Unused', 'itgel', '2024-09-26 13:59:49', '0', 1);
+INSERT INTO `data_giro` VALUES (162, 'CD-1045', 'Bank Central Asia', '4546645465456465465', 'PT. Global Energy Lestari', 'Unused', 'itgel', '2024-09-26 13:59:49', '0', 1);
+INSERT INTO `data_giro` VALUES (163, 'CD-1046', 'Bank Central Asia', '4546645465456465465', 'PT. Global Energy Lestari', 'Unused', 'itgel', '2024-09-26 13:59:49', '0', 1);
+INSERT INTO `data_giro` VALUES (164, 'CD-1047', 'Bank Central Asia', '4546645465456465465', 'PT. Global Energy Lestari', 'Unused', 'itgel', '2024-09-26 13:59:49', '0', 1);
+INSERT INTO `data_giro` VALUES (165, 'CD-1048', 'Bank Central Asia', '4546645465456465465', 'PT. Global Energy Lestari', 'Unused', 'itgel', '2024-09-26 13:59:49', '0', 1);
+INSERT INTO `data_giro` VALUES (166, 'CD-1049', 'Bank Central Asia', '4546645465456465465', 'PT. Global Energy Lestari', 'Unused', 'itgel', '2024-09-26 13:59:49', '0', 1);
+INSERT INTO `data_giro` VALUES (167, 'TEST-123', 'Bank Central Asia', '8077556688', 'PT. Global Energi Lestari', 'Unused', 'itgel', '2024-09-28 18:17:05', '0', 1);
+INSERT INTO `data_giro` VALUES (168, 'TEST-124', 'Bank Central Asia', '8077556688', 'PT. Global Energi Lestari', 'Unused', 'itgel', '2024-09-28 18:17:05', '0', 1);
+INSERT INTO `data_giro` VALUES (169, 'TEST-125', 'Bank Central Asia', '8077556688', 'PT. Global Energi Lestari', 'Unused', 'itgel', '2024-09-28 18:17:05', '0', 1);
+INSERT INTO `data_giro` VALUES (170, 'TEST-126', 'Bank Central Asia', '8077556688', 'PT. Global Energi Lestari', 'Unused', 'itgel', '2024-09-28 18:17:05', '0', 1);
+INSERT INTO `data_giro` VALUES (171, 'TEST-127', 'Bank Central Asia', '8077556688', 'PT. Global Energi Lestari', 'Unused', 'itgel', '2024-09-28 18:17:05', '0', 1);
+
+-- ----------------------------
+-- Table structure for detail_cek
+-- ----------------------------
+DROP TABLE IF EXISTS `detail_cek`;
+CREATE TABLE `detail_cek`  (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `nocek` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `tanggal_cek` date NULL DEFAULT NULL,
+  `tanggal_jatuh_tempo` date NULL DEFAULT NULL,
+  `Nominal` int(11) NULL DEFAULT NULL,
+  `nama_penerima` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `bank_penerima` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `ac_penerima` int(20) NULL DEFAULT NULL,
+  `StatCek` varchar(15) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `Keterangan` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `PVRNo` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `tanggal_cair_Cek` date NULL DEFAULT NULL,
+  `SeatleBy` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `TglVoid` date NULL DEFAULT NULL,
+  `VoidBy` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `tglkembalikebank` date NULL DEFAULT NULL,
+  `dikembalikanoleh` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `created_by` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE INDEX `nogiro`(`nocek`) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 31 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of detail_cek
+-- ----------------------------
+INSERT INTO `detail_cek` VALUES (28, 'CEK-101', '2024-09-28', '2024-09-28', 2147483647, 'Williem Chandra', 'Bank Central Asia', 2147483647, 'Return', 'test', 'test', '2024-10-04', 'itgel', '2024-10-12', 'itgel', NULL, 'itgel', 'itgel', '2024-09-28 18:51:20');
+INSERT INTO `detail_cek` VALUES (29, 'CEK-100', '2024-09-30', '2024-09-30', 2000000000, 'Williem Chandra', 'Bank Central Asia', 2147483647, 'Return', '', '', '2024-10-04', 'itgel', '2024-10-12', 'itgel', NULL, 'itgel', 'itgel', '2024-09-28 19:52:03');
+INSERT INTO `detail_cek` VALUES (30, 'CEK-103', '2024-10-01', '2024-10-01', 90789, 'Williem Chandra', 'Bank Central Asia', 2147483647, 'Return', 'testing 1', 'testing pvr 1', '2024-10-04', 'itgel', '2024-10-12', 'itgel', NULL, 'itgel', 'itgel', '2024-09-28 20:41:29');
 
 -- ----------------------------
 -- Table structure for detail_giro
@@ -175,27 +296,43 @@ CREATE TABLE `detail_giro`  (
   `Keterangan` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
   `PVRNo` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
   `tanggal_cair_giro` date NULL DEFAULT NULL,
+  `SeatleBy` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `TglVoid` date NULL DEFAULT NULL,
+  `VoidBy` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `tglkembalikebank` date NULL DEFAULT NULL,
+  `dikembalikanoleh` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
   `created_by` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `nogiro`(`nogiro`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 18 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 32 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of detail_giro
 -- ----------------------------
-INSERT INTO `detail_giro` VALUES (6, '45680', '2024-09-24', '2024-09-24', 1000, 'test 1 ', 'Bank Aladin Syariah', 123456, 'Seatle', 'Test1', NULL, '2024-09-25', 'system', '2024-09-24 22:18:13');
-INSERT INTO `detail_giro` VALUES (7, '898931', '2024-08-14', '2024-08-14', 5000000, 'Tester 1', 'Bank Amar Indonesia', 987654, 'Issued', 'Testing Overdue', NULL, NULL, 'system', '2024-09-25 14:46:56');
-INSERT INTO `detail_giro` VALUES (8, '898929', '2024-09-18', '2024-09-18', 6000000, 'test 2', 'Bank Aceh Syariah', 654321, 'Issued', 'Testing on this month', NULL, NULL, 'system', '2024-09-25 14:48:13');
-INSERT INTO `detail_giro` VALUES (9, '898934', '2024-09-21', '2024-09-21', 8000000, 'Tester 3', 'Bank UOB Indonesia', 2147483647, 'Issued', 'Tester 3', NULL, NULL, 'system', '2024-09-25 14:49:00');
-INSERT INTO `detail_giro` VALUES (10, '898891', '2024-09-27', '2024-09-27', 1000000, 'Testing 4', 'Bank HSBC Indonesia', 2147483647, 'Issued', 'Tester 4', NULL, NULL, 'system', '2024-09-25 14:49:45');
-INSERT INTO `detail_giro` VALUES (11, '898924', '2024-09-25', '2024-09-25', 2147483647, 'test', 'Bank Amar Indonesia', 0, 'Issued', 'testing kesekian', NULL, NULL, 'system', '2024-09-25 14:50:16');
-INSERT INTO `detail_giro` VALUES (12, '45683', '2024-09-25', '2024-09-25', 1000, 'asdsa', 'Bank Aladin Syariah', 12312321, 'Issued', '-', NULL, NULL, 'system', '2024-09-25 17:35:56');
-INSERT INTO `detail_giro` VALUES (13, '898895', '2024-09-25', '2024-09-25', 2147483647, 'test', 'Bank Allo Indonesia', 2147483647, 'Issued', '-', NULL, NULL, 'system', '2024-09-25 17:47:09');
-INSERT INTO `detail_giro` VALUES (14, '898890', '2024-09-25', '2024-09-25', 5000000, 'testing testing', 'Bank Aladin Syariah', 2147483647, 'Issued', '-', NULL, NULL, 'system', '2024-09-25 17:48:36');
-INSERT INTO `detail_giro` VALUES (15, '5732', '2024-09-24', '2024-09-24', 2000, 'maya', 'Bank Negara Indonesia', 2147483647, 'Seatle', '-', NULL, '2024-09-25', 'system', '2024-09-25 17:57:39');
-INSERT INTO `detail_giro` VALUES (16, '898906', '2024-09-17', '2024-09-17', 1000000000, 'Satria', 'Bank Central Asia', 1234567890, 'Issued', 'capcipcup', NULL, NULL, 'system', '2024-09-25 18:02:03');
-INSERT INTO `detail_giro` VALUES (17, '898921', '2024-10-04', '2024-10-31', 8500, 'maya', 'Bank UOB Indonesia', 2147483647, 'Issued', 'hahahaha', NULL, NULL, 'system', '2024-09-25 18:03:56');
+INSERT INTO `detail_giro` VALUES (6, '45680', '2024-09-24', '2024-09-24', 1000, 'test 1 ', 'Bank Aladin Syariah', 123456, 'Return', 'Test1', NULL, '2024-09-25', NULL, '2024-09-28', 'itgel', '2024-09-28', 'itgel', 'system', '2024-09-24 22:18:13');
+INSERT INTO `detail_giro` VALUES (7, '898931', '2024-08-14', '2024-08-14', 5000000, 'Tester 1', 'Bank Amar Indonesia', 987654, 'Issued', 'Testing Overdue', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'system', '2024-09-25 14:46:56');
+INSERT INTO `detail_giro` VALUES (8, '898929', '2024-09-18', '2024-09-18', 6000000, 'test 2', 'Bank Aceh Syariah', 654321, 'Return', 'Testing on this month', NULL, '2024-10-01', 'itgel', '2024-10-02', 'itgel', NULL, 'itgel', 'system', '2024-09-25 14:48:13');
+INSERT INTO `detail_giro` VALUES (9, '898934', '2024-09-21', '2024-09-21', 8000000, 'Tester 3', 'Bank UOB Indonesia', 2147483647, 'Return', 'Tester 3', NULL, '2024-09-28', NULL, '2024-09-29', 'itgel', NULL, 'itgel', 'system', '2024-09-25 14:49:00');
+INSERT INTO `detail_giro` VALUES (10, '898891', '2024-09-27', '2024-09-27', 1000000, 'Testing 4', 'Bank HSBC Indonesia', 2147483647, 'Issued', 'Tester 4', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'system', '2024-09-25 14:49:45');
+INSERT INTO `detail_giro` VALUES (11, '898924', '2024-09-25', '2024-09-25', 2147483647, 'test', 'Bank Amar Indonesia', 0, 'Issued', 'testing kesekian', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'system', '2024-09-25 14:50:16');
+INSERT INTO `detail_giro` VALUES (12, '45683', '2024-09-25', '2024-09-25', 1000, 'asdsa', 'Bank Aladin Syariah', 12312321, 'Void', '-', NULL, NULL, NULL, '2024-09-19', 'itgel', NULL, NULL, 'system', '2024-09-25 17:35:56');
+INSERT INTO `detail_giro` VALUES (13, '898895', '2024-09-25', '2024-09-25', 2147483647, 'test', 'Bank Allo Indonesia', 2147483647, 'Return', '-', NULL, NULL, NULL, '2024-09-28', 'itgel', '2024-09-28', 'itgel', 'system', '2024-09-25 17:47:09');
+INSERT INTO `detail_giro` VALUES (14, '898890', '2024-09-25', '2024-09-25', 5000000, 'testing testing', 'Bank Aladin Syariah', 2147483647, 'Issued', '-', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'system', '2024-09-25 17:48:36');
+INSERT INTO `detail_giro` VALUES (15, '5732', '2024-09-24', '2024-09-24', 2000, 'maya', 'Bank Negara Indonesia', 2147483647, 'Seatle', '-', NULL, '2024-09-25', NULL, NULL, NULL, NULL, NULL, 'system', '2024-09-25 17:57:39');
+INSERT INTO `detail_giro` VALUES (16, '898906', '2024-09-17', '2024-09-17', 1000000000, 'Satria', 'Bank Central Asia', 1234567890, 'Seatle', 'capcipcup', NULL, '2024-09-26', NULL, NULL, NULL, NULL, NULL, 'system', '2024-09-25 18:02:03');
+INSERT INTO `detail_giro` VALUES (17, '898921', '2024-10-04', '2024-10-31', 8500, 'maya', 'Bank UOB Indonesia', 2147483647, 'Issued', 'hahahaha', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'system', '2024-09-25 18:03:56');
+INSERT INTO `detail_giro` VALUES (18, 'CD-1036', '2024-09-26', '2024-10-02', 12000000, 'test', 'Bank Aceh Syariah', 2147483647, 'Void', '-', NULL, '2024-09-27', NULL, NULL, 'itgel', NULL, NULL, 'system', '2024-09-26 14:01:30');
+INSERT INTO `detail_giro` VALUES (19, 'CD-1000', '2024-09-27', '2024-09-27', 10000000, 'Williem Chandra', 'Bank Central Asia', 2147483647, 'Void', 'test search nogiro trial 1', NULL, NULL, NULL, NULL, 'itgel', NULL, NULL, 'system', '2024-09-27 14:19:14');
+INSERT INTO `detail_giro` VALUES (21, '898894', '2024-09-27', '2024-09-27', 1000, 'Williem Chandra', 'Bank Central Asia', 2147483647, '0', 'test StatGiro', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'system', '2024-09-27 14:24:50');
+INSERT INTO `detail_giro` VALUES (22, '898896', '2024-09-16', '2024-09-16', 2000000, 'testing', 'Bank Central Asia', 1234567890, 'Issued', 'testing stat giro', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'system', '2024-09-27 14:27:59');
+INSERT INTO `detail_giro` VALUES (23, 'CD-1001', '2024-09-27', '2024-09-27', 200000000, 'Williem Chandra', 'Bank Central Asia', 2147483647, 'Void', 'testing stat giro', NULL, NULL, NULL, NULL, 'itgel', NULL, NULL, 'system', '2024-09-27 14:33:29');
+INSERT INTO `detail_giro` VALUES (24, 'CD-1002', '2024-09-25', '2024-09-25', 10000000, 'Williem Chandra', 'Bank Central Asia', 2147483647, 'Void', 'testing kesekian kali', NULL, NULL, NULL, NULL, 'itgel', NULL, NULL, 'system', '2024-09-27 15:06:42');
+INSERT INTO `detail_giro` VALUES (25, 'CD-1003', '2024-09-27', '2024-09-27', 200000, 'Williem Chandra', 'Bank Central Asia', 2147483647, 'Void', 'Testing untuk Field PVR No', NULL, NULL, NULL, NULL, 'itgel', NULL, NULL, 'system', '2024-09-27 15:41:07');
+INSERT INTO `detail_giro` VALUES (26, 'CD-1004', '2024-09-26', '2024-09-26', 2000000000, 'Williem Chandra', 'Bank Central Asia', 2147483647, 'Void', 'Testing 1 ', '1123123123', NULL, NULL, NULL, 'itgel', NULL, NULL, 'system', '2024-09-27 16:06:10');
+INSERT INTO `detail_giro` VALUES (27, 'CD-1005', '2024-09-27', '2024-09-27', 1000000000, 'Williem Chandra', 'Bank Central Asia', 2147483647, 'Void', 'tete', 'teete', NULL, NULL, NULL, 'itgel', NULL, NULL, 'itgel', '2024-09-27 16:12:43');
+INSERT INTO `detail_giro` VALUES (30, 'CD-1008', '2024-09-28', '2024-09-28', 2147483647, 'Williem Chandra', 'Bank Central Asia', 2147483647, 'Issued', 'testing kesekian', 'pvr testing', NULL, NULL, NULL, NULL, NULL, NULL, 'itgel', '2024-09-28 20:39:22');
+INSERT INTO `detail_giro` VALUES (31, 'CD-1006', '2024-10-02', '2024-10-02', 8900000, 'Williem Chandra', 'Bank Central Asia', 2147483647, 'Issued', '123', 'pvr testing', NULL, NULL, NULL, NULL, NULL, NULL, 'itgel', '2024-09-28 20:40:07');
 
 -- ----------------------------
 -- Table structure for list_bank
@@ -310,6 +447,27 @@ INSERT INTO `list_bank` VALUES (97, 'Bank Victoria Syariah');
 INSERT INTO `list_bank` VALUES (98, 'Bank Woori Saudara');
 
 -- ----------------------------
+-- Table structure for list_customer
+-- ----------------------------
+DROP TABLE IF EXISTS `list_customer`;
+CREATE TABLE `list_customer`  (
+  `id_cust` int(11) NOT NULL AUTO_INCREMENT,
+  `no_cust` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `ac_cust` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `nama_cust` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `bank_cust` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  PRIMARY KEY (`id_cust`) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 6 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of list_customer
+-- ----------------------------
+INSERT INTO `list_customer` VALUES (1, 'WIlliem BCA', '8075055664', 'Williem Chandra', 'Bank Central Asia');
+INSERT INTO `list_customer` VALUES (3, 'WIlliem BCA 2 ', '8075055665', 'Williem Chandra', 'Bank Central Asia');
+INSERT INTO `list_customer` VALUES (4, 'WIlliem BCA 3', '8075055666', 'Williem Chandra', 'Bank Central Asia');
+INSERT INTO `list_customer` VALUES (5, 'WIlliem BCA 4', '8075055668', 'Williem Chandra', 'Bank Central Asia');
+
+-- ----------------------------
 -- Table structure for list_entitas
 -- ----------------------------
 DROP TABLE IF EXISTS `list_entitas`;
@@ -324,7 +482,7 @@ CREATE TABLE `list_entitas`  (
 -- ----------------------------
 -- Records of list_entitas
 -- ----------------------------
-INSERT INTO `list_entitas` VALUES (1, 'PT. Global Energy Lestari', '');
+INSERT INTO `list_entitas` VALUES (1, 'PT. Global Energi Lestari', '');
 INSERT INTO `list_entitas` VALUES (2, 'PT. Indo Agro Permata Permai', '');
 INSERT INTO `list_entitas` VALUES (3, 'PT. Kelinci Karya Sampoerna', '');
 
@@ -341,17 +499,19 @@ CREATE TABLE `list_rekening`  (
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `id_entitas`(`id_entitas`) USING BTREE,
   CONSTRAINT `list_rekening_ibfk_1` FOREIGN KEY (`id_entitas`) REFERENCES `list_entitas` (`id_entitas`) ON DELETE CASCADE ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 10 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 12 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of list_rekening
 -- ----------------------------
-INSERT INTO `list_rekening` VALUES (4, '12345678', 'Bank Central Asia', 'PT. Global Energy Lestari', 1);
-INSERT INTO `list_rekening` VALUES (5, '4567890123', 'Bank Rakyat Indonesia', 'PT. Global Energy Lestari', 1);
-INSERT INTO `list_rekening` VALUES (6, '58974444', 'Bank Negara Indonesia', 'PT. Global Energy Lestari', 1);
-INSERT INTO `list_rekening` VALUES (7, '8077556688', 'Bank Central Asia', 'PT. Global Energy Lestari', 1);
-INSERT INTO `list_rekening` VALUES (8, '8077556688', 'Bank Central Asia', 'PT. Global Energy Lestari', 1);
-INSERT INTO `list_rekening` VALUES (9, '80555555555', 'Bank Central Asia', 'PT. Global Energy Lestari', 1);
+INSERT INTO `list_rekening` VALUES (4, '12345678', 'Bank Central Asia', 'PT. Global Energi Lestari', 1);
+INSERT INTO `list_rekening` VALUES (5, '4567890123', 'Bank Rakyat Indonesia', 'PT. Global Energi Lestari', 1);
+INSERT INTO `list_rekening` VALUES (6, '58974444', 'Bank Negara Indonesia', 'PT. Global Energi Lestari', 1);
+INSERT INTO `list_rekening` VALUES (7, '8077556688', 'Bank Central Asia', 'PT. Global Energi Lestari', 1);
+INSERT INTO `list_rekening` VALUES (8, '8077556688', 'Bank Central Asia', 'PT. Global Energi Lestari', 1);
+INSERT INTO `list_rekening` VALUES (9, '80555555555', 'Bank Central Asia', 'PT. Global Energi Lestari', 1);
+INSERT INTO `list_rekening` VALUES (10, '234567890', 'Bank Negara Indonesia', 'PT. Global Energi Lestari', 1);
+INSERT INTO `list_rekening` VALUES (11, '4546645465456465465', 'Bank Central Asia', 'PT. Global Energi Lestari', 1);
 
 -- ----------------------------
 -- Table structure for users
