@@ -193,6 +193,7 @@ $conn->close();
                 bankInput.value = data[selectedGiro].namabank;
                 acNumberInput.value = data[selectedGiro].ac_number;
                 document.getElementById('search_giro_no').value = selectedGiro;
+                document.getElementById('giro_number').style.display = "none"
             } else {
                 bankInput.value = '';
                 acNumberInput.value = '';

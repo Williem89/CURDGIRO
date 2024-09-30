@@ -158,6 +158,7 @@ $conn->close();
                 const data = <?php echo json_encode($cek_data); ?>;
                 bankInput.value = data[selectedcek].namabank;
                 acNumberInput.value = data[selectedcek].ac_number;
+                document.getElementById('cek_number').style.display = "none"
             } else {
                 bankInput.value = '';
                 acNumberInput.value = '';
@@ -232,7 +233,7 @@ $conn->close();
         <input type="text" id="PVRNo" name="PVRNo"><br><br>
 
         <input type="submit" value="Submit">
-        <a href="your-back-url-here" class="back-button">Back</a>
+        <a href="dashboard.php" class="back-button">Back</a>
     </form>
 </body>
 </html>
