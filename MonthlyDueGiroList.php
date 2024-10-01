@@ -1,7 +1,7 @@
 <?php
-include 'koneksi.php'; // Pastikan koneksi database sudah benar
+include 'koneksi.php'; // Ensure the database connection is correct
 
-require 'vendor/autoload.php'; // Mengimpor PhpSpreadsheet
+require 'vendor/autoload.php'; // Import PhpSpreadsheet
 
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
@@ -14,13 +14,14 @@ $selected_month = isset($_POST['month']) ? intval($_POST['month']) : date('n');
 $selected_year = isset($_POST['year']) ? intval($_POST['year']) : date('Y');
 
 // Query for fetching the cheques due in the selected month and year
-$sql = "SELECT d.namabank, d.ac_name, dg.nogiro, SUM(dg.Nominal) AS total_nominal, dg.tanggal_jatuh_tempo 
+$sql = "SELECT d.namabank, d.ac_name, dg.ac_penerima, dg.nama_penerima, dg.nogiro, 
+               SUM(dg.Nominal) AS total_nominal, dg.tanggal_jatuh_tempo, dg.PVRNo, dg.keterangan 
         FROM detail_giro AS dg
         INNER JOIN data_giro AS d ON dg.nogiro = d.nogiro
         WHERE dg.StatGiro = 'Issued' 
         AND MONTH(dg.tanggal_jatuh_tempo) = $selected_month 
         AND YEAR(dg.tanggal_jatuh_tempo) = $selected_year
-        GROUP BY dg.tanggal_jatuh_tempo, d.namabank, d.ac_name, dg.nogiro
+        GROUP BY dg.tanggal_jatuh_tempo, d.namabank, d.ac_name, dg.ac_penerima, dg.nama_penerima, dg.nogiro, dg.PVRNo, dg.keterangan
         ORDER BY dg.tanggal_jatuh_tempo ASC;";
 
 $result = $conn->query($sql);
@@ -37,38 +38,50 @@ $conn->close();
 
 // Function to export data to Excel
 function exportToExcel($due_cheques, $selected_month, $selected_year) {
-    $spreadsheet = new Spreadsheet();
-    $sheet = $spreadsheet->getActiveSheet();
+    try {
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
 
-    // Set header
-    $sheet->setCellValue('A1', 'Tanggal Jatuh Tempo');
-    $sheet->setCellValue('B1', 'No. Giro');
-    $sheet->setCellValue('C1', 'Pemegang');
-    $sheet->setCellValue('D1', 'Bank');
-    $sheet->setCellValue('E1', 'Jumlah');
+        // Set header
+        $sheet->setCellValue('A1', 'Tanggal Jatuh Tempo');
+        $sheet->setCellValue('B1', 'No. Giro');
+        $sheet->setCellValue('C1', 'Pemegang');
+        $sheet->setCellValue('D1', 'Nama Penerima');
+        $sheet->setCellValue('E1', 'Ak. Penerima');
+        $sheet->setCellValue('F1', 'Bank Penerima');
+        $sheet->setCellValue('G1', 'No PVR');
+        $sheet->setCellValue('H1', 'Keterangan');
+        $sheet->setCellValue('I1', 'Jumlah');
 
-    $row = 2; // Start from the second row
+        $row = 2; // Start from the second row
 
-    // Loop through due cheques and populate Excel
-    foreach ($due_cheques as $cheque) {
-        $sheet->setCellValue("A$row", $cheque['tanggal_jatuh_tempo']);
-        $sheet->setCellValue("B$row", $cheque['nogiro']);
-        $sheet->setCellValue("C$row", $cheque['ac_name']);
-        $sheet->setCellValue("D$row", $cheque['namabank']);
-        $sheet->setCellValue("E$row", $cheque['total_nominal']);
-        $row++;
+        // Loop through due cheques and populate Excel
+        foreach ($due_cheques as $cheque) {
+            $sheet->setCellValue("A$row", $cheque['tanggal_jatuh_tempo']);
+            $sheet->setCellValue("B$row", $cheque['nogiro']);
+            $sheet->setCellValue("C$row", $cheque['ac_name']);
+            $sheet->setCellValue("D$row", $cheque['nama_penerima']);
+            $sheet->setCellValue("E$row", $cheque['ac_penerima']);
+            $sheet->setCellValue("F$row", $cheque['namabank']);
+            $sheet->setCellValue("G$row", $cheque['PVRNo']); // Ensure this matches your database column
+            $sheet->setCellValue("H$row", $cheque['keterangan']);
+            $sheet->setCellValue("I$row", $cheque['total_nominal']);
+            $row++;
+        }
+
+        // Save Excel file
+        $filename = "Giro_Jatuh_Tempo_{$selected_month}_{$selected_year}.xlsx";
+        $writer = new Xlsx($spreadsheet);
+        
+        // Output to browser
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        $writer->save('php://output');
+        exit;
+        
+    } catch (Exception $e) {
+        echo 'Error exporting to Excel: ' . $e->getMessage();
     }
-
-    // Save Excel file
-    $filename = "Giro_Jatuh_Tempo_{$selected_month}_{$selected_year}.xlsx";
-    $writer = new Xlsx($spreadsheet);
-    $writer->save($filename);
-
-    // Download the file
-    header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    header('Content-Disposition: attachment; filename="' . $filename . '"');
-    $writer->save('php://output');
-    exit;
 }
 
 // Check if export button was clicked
@@ -153,9 +166,11 @@ if (isset($_POST['export'])) {
         </div>
         <button type="submit" class="btn btn-primary mt-2">Tampilkan</button>
         <button type="submit" name="export" class="btn btn-success mt-2">Ekspor ke Excel</button>
+        
     </form>
+    <button id="pdfexport" class="btn btn-success mt-2">Ekspor ke PDF</button>
 
-    <div class="container table-container mt-4">
+    <div class="container table-container mt-4" id="contentExport">
         <h2 class="mb-4">Daftar Giro yang Jatuh Tempo</h2>
         <div class="table-responsive">
             <table class="table table-bordered">
@@ -164,7 +179,11 @@ if (isset($_POST['export'])) {
                         <th>Tanggal Jatuh Tempo</th>
                         <th>No. Giro</th>
                         <th>Pemegang</th>
-                        <th>Bank</th>
+                        <th>Nama Penerima</th>
+                        <th>Ak. Penerima</th>
+                        <th>Bank Penerima</th>
+                        <th>No PVR</th>
+                        <th>Keterangan</th>
                         <th>Jumlah</th>
                     </tr>
                 </thead>
@@ -191,41 +210,69 @@ if (isset($_POST['export'])) {
                     // Render the organized data
                     foreach ($bank_data as $date => $banks): ?>
                         <tr>
-                            <td colspan="5" class="section-title"><h4><?php echo htmlspecialchars(date('d-m-Y', strtotime($date))); ?></h4></td>
+                            <td colspan="9" class="section-title"><h4><?php echo htmlspecialchars(date('d-m-Y', strtotime($date))); ?></h4></td>
                         </tr>
                         <?php foreach ($banks as $bank_name => $bank_info): ?>
                             <tr>
-                                <td colspan="5" class="section-title"><strong><?php echo htmlspecialchars($bank_name); ?></strong></td>
+                                <td colspan="9" class="section-title"><strong><?php echo htmlspecialchars($bank_name); ?></strong></td>
                             </tr>
                             <?php foreach ($bank_info['entries'] as $cheque): ?>
                                 <tr>
                                     <td><?php echo htmlspecialchars(date('d-m-Y', strtotime($cheque['tanggal_jatuh_tempo']))); ?></td>
                                     <td><?php echo htmlspecialchars($cheque['nogiro']); ?></td>
                                     <td><?php echo htmlspecialchars($cheque['ac_name']); ?></td>
+                                    <td><?php echo htmlspecialchars($cheque['nama_penerima']); ?></td>
+                                    <td><?php echo htmlspecialchars($cheque['ac_penerima']); ?></td>
                                     <td><?php echo htmlspecialchars($cheque['namabank']); ?></td>
+                                    <td><?php echo htmlspecialchars($cheque['PVRNo']); ?></td>
+                                    <td><?php echo htmlspecialchars($cheque['keterangan']); ?></td>
                                     <td><?php echo htmlspecialchars(number_format($cheque['total_nominal'], 2)); ?></td>
                                 </tr>
                             <?php endforeach; ?>
                             <tr>
-                                <td colspan="4" class="text-end"><strong>Total untuk <?php echo htmlspecialchars($bank_name); ?>:</strong></td>
+                                <td colspan="8" class="text-end"><strong>Total untuk <?php echo htmlspecialchars($bank_name); ?>:</strong></td>
                                 <td><?php echo htmlspecialchars(number_format($bank_info['subtotal'], 2)); ?></td>
                             </tr>
                         <?php endforeach; ?>
                     <?php endforeach; ?>
                 <?php else: ?>
                     <tr>
-                        <td colspan="5" class="text-center">Tidak ada giro yang jatuh tempo bulan ini.</td>
+                        <td colspan="9" class="text-center">Tidak ada giro yang jatuh tempo bulan ini.</td>
                     </tr>
                 <?php endif; ?>
                 </tbody>
             </table>
         </div>
-        <a href="dashboard.php" class="btn-back">Kembali</a>              
+        
     </div>
-
-    <footer>
-        <p>&copy; <?php echo date("Y"); ?> Aplikasi Giro. All rights reserved.</p>
-    </footer>
+    <a href="dashboard.php" class="btn-back">Kembali</a>
+    
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"
+    integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg=="
+    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script>
+        document.getElementById('pdfexport').addEventListener('click', function() {
+            console.log("clikced")
+
+        const element = document.getElementById('contentExport');
+        const opt = {
+            margin: 0.5,
+            filename: 'document.pdf',
+            html2canvas: {
+                scale: 2,
+                backgroundColor: '#ffffff'
+            },
+            jsPDF: {
+                unit: 'cm',
+                format: 'a4',
+                orientation: 'landscape'
+            }
+        };
+
+        // Generate the PDF
+        html2pdf().from(element).set(opt).save();
+        });
+        </script>
 </body>
 </html>
