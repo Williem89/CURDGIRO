@@ -121,17 +121,17 @@ $conn->close();
     </script>
 </head>
 <body>
-    <h1>Laporan Jumlah cek Unused</h1>
+    <h1>Laporan Jumlah Cek Available</h1>
     
     <?php if (empty($report_data)): ?>
-        <p style="text-align: center;">Tidak ada data cek.</p>
+        <p style="text-align: center;">Tidak ada data Cek.</p>
     <?php else: ?>
         <table>
             <thead>
                 <tr>
                     <th>Nama Entitas</th>
                     <th>Bank</th>
-                    <th>Jumlah cek</th>
+                    <th>Jumlah Cek</th>
                 </tr>
             </thead>
             <tbody>

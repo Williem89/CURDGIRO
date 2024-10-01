@@ -412,49 +412,49 @@ $conn->close();
     <div class="stats-card">
         <div class="card">
             <a href="UnusedGiroList.php">
-                <h3>Jumlah Giro Unused</h3>
+                <h3>Giro Available</h3>
                 <p><?php echo htmlspecialchars($unused_count); ?></p>
             </a>
         </div>
         <div class="card">
             <a href="IssuedGiroList.php">
-                <h3>Jumlah Giro Issued</h3>
+                <h3>Giro Issued</h3>
                 <p><?php echo htmlspecialchars($issued_count); ?></p>
             </a>
         </div>
         <div class="card">
             <a href="seatleGiroList.php">
-                <h3>Jumlah Giro Cair</h3>
+                <h3>Giro Cair</h3>
                 <p><?php echo htmlspecialchars($seatle_count); ?></p>
             </a>
         </div>
         <div class="card">
             <a href="VoidGiroList.php">
-                <h3>Jumlah Giro Void</h3>
+                <h3>Giro Void</h3>
                 <p><?php echo htmlspecialchars($void_count); ?></p>
             </a>
         </div>
         <div class="card">
             <a href="ReturnGiroList.php">
-                <h3>Jumlah Giro Return</h3>
+                <h3>Giro Return</h3>
                 <p><?php echo htmlspecialchars($return_count); ?></p>
             </a>
         </div>
         <div class="card">
             <a href="JTGiroList.php">
-                <h3>Jumlah Giro Akan Jatuh Tempo</h3>
+                <h3>Giro Akan Jatuh Tempo</h3>
                 <p><?php echo htmlspecialchars($jt_count); ?></p>
             </a>
         </div>
         <div class="card">
             <a href="MonthlyDueGiroList.php">
-                <h3>Jumlah Giro Jatuh Tempo Bulan Ini</h3>
+                <h3>Giro Jatuh Tempo Bulan Ini</h3>
                 <p><?php echo htmlspecialchars($monthly_due_count); ?></p>
             </a>
         </div>
         <div class="card">
             <a href="OverDueGiroList.php">
-                <h3 style="color: red;">Jumlah Giro Lewat Jatuh Tempo</h3>
+                <h3 style="color: red;">Giro Lewat Jatuh Tempo</h3>
                 <p style="color: red;"><?php echo htmlspecialchars($Overdue_count); ?></p>
             </a>
         </div>
@@ -466,49 +466,49 @@ $conn->close();
     <div class="stats-card">
         <div class="card">
             <a href="UnusedCekList.php">
-                <h3>Jumlah Cek Unused</h3>
+                <h3>Cek Available</h3>
                 <p><?php echo htmlspecialchars($unused_cek_count); ?></p>
             </a>
         </div>
         <div class="card">
             <a href="IssuedCekList.php">
-                <h3>Jumlah Cek Issued</h3>
+                <h3>Cek Issued</h3>
                 <p><?php echo htmlspecialchars($issued_cek_count); ?></p>
             </a>
         </div>
         <div class="card">
             <a href="seatleCekList.php">
-                <h3>Jumlah Cek Cair</h3>
+                <h3>Cek Cair</h3>
                 <p><?php echo htmlspecialchars($seatle_cek_count); ?></p>
             </a>
         </div>
         <div class="card">
             <a href="VoidCekList.php">
-                <h3>Jumlah Cek Void</h3>
+                <h3>Cek Void</h3>
                 <p><?php echo htmlspecialchars($void_cek_count); ?></p>
             </a>
         </div>
         <div class="card">
             <a href="ReturnCekList.php">
-                <h3>Jumlah Cek Return</h3>
+                <h3>Cek Return</h3>
                 <p><?php echo htmlspecialchars($return_cek_count); ?></p>
             </a>
         </div>
         <div class="card">
             <a href="JTCekList.php">
-                <h3>Jumlah Cek Akan Jatuh Tempo</h3>
+                <h3>Cek Akan Jatuh Tempo</h3>
                 <p><?php echo htmlspecialchars($jt_cek_count); ?></p>
             </a>
         </div>
         <div class="card">
             <a href="MonthlyDueCekList.php">
-                <h3>Jumlah Cek Jatuh Tempo Bulan Ini</h3>
+                <h3>Cek Jatuh Tempo Bulan Ini</h3>
                 <p><?php echo htmlspecialchars($monthly_due_cek_count); ?></p>
             </a>
         </div>
         <div class="card">
             <a href="OverDueCekList.php">
-                <h3 style="color: red;">Jumlah Giro Lewat Jatuh Tempo</h3>
+                <h3 style="color: red;">Giro Lewat Jatuh Tempo</h3>
                 <p style="color: red;"><?php echo htmlspecialchars($Overdue_cek_count); ?></p>
             </a>
         </div>
