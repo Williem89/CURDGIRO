@@ -6,45 +6,37 @@ include 'koneksi.php';
 // Assuming the user's information is stored in session
 $user_logged_in = $_SESSION['username']; // Adjust this based on your session variable
 
-// Ambil data dari tabel detail_giro
-$sql = "SELECT nogiro FROM detail_giro"; 
+// Ambil data dari tabel detail_Giro dengan kondisi StatGiro = 'Void'
+$sql = "SELECT noGiro FROM detail_Giro WHERE StatGiro = 'Void'"; // Correct condition
 $result = $conn->query($sql);
-
-// Ambil semua data nogiro untuk pencarian
-$nogiro_list = [];
-if ($result->num_rows > 0) {
-    while ($row = $result->fetch_assoc()) {
-        $nogiro_list[] = htmlspecialchars($row["nogiro"]);
-    }
-}
 
 // Variabel untuk pesan error
 $error_message = "";
 
-// Cek apakah form disubmit
+// Giro apakah form disubmit
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $selected_nogiro = $_POST['nogiro'] ?? '';
-    $TglVoid = $_POST['TglVoid'] ?? ''; // Retrieve TglVoid from the POST data
+    $selected_noGiro = $_POST['noGiro'];
+    $tglkembalikebank = $_POST['tglkembalikebank']; // Ensure you get this from the form
 
-    // Validasi apakah nogiro dipilih
-    if (empty($selected_nogiro)) {
-        $error_message = "Nomor giro harus diisi.";
+    // Validasi apakah noGiro dipilih
+    if (empty($selected_noGiro)) {
+        $error_message = "Nomor Giro harus diisi.";
     } else {
         // Update TglVoid dan VoidBy
-        $updateSql = "UPDATE detail_giro SET TglVoid = ?, StatGiro = 'Void', VoidBy = ? WHERE nogiro = ?";
+        $updateSql = "UPDATE detail_Giro SET tglkembalikebank = ?, StatGiro = 'Return', dikembalikanoleh = ? WHERE noGiro = ?";
         $stmt = $conn->prepare($updateSql);
-        $stmt->bind_param("ssi", $TglVoid, $user_logged_in, $selected_nogiro);
-
+        $stmt->bind_param("ssi", $tglkembalikebank, $user_logged_in, $selected_noGiro);
+        
         if ($stmt->execute()) {
             echo "<p style='color: green;'>Data berhasil diperbarui!</p>";
         } else {
-            echo "<p style='color: red;'>Error: " . htmlspecialchars($stmt->error) . "</p>";
+            echo "<p style='color: red;'>Error: " . $stmt->error . "</p>";
         }
     }
 }
 
-// Tutup koneksi
-$conn->close();
+// Ambil kembali data untuk dropdown
+$result = $conn->query($sql);
 ?>
 
 <!DOCTYPE html>
@@ -118,66 +110,35 @@ $conn->close();
             color: red;
             margin-bottom: 15px;
         }
-        #search-results {
-            position: absolute;
-            background-color: white;
-            z-index: 1000;
-            border: 1px solid #ccc;
-            max-height: 150px;
-            overflow-y: auto;
-            display: none;
-            width: calc(100% - 22px); /* Adjust width to match input */
-        }
-        .result-item {
+        .giro-option {
             padding: 10px;
             cursor: pointer;
+            border: 1px solid #ccc;
+            margin-top: 2px;
+            background: white;
         }
-        .result-item:hover {
-            background-color: #f1f1f1;
+        .giro-option:hover {
+            background: #f1f1f1;
         }
     </style>
     <script>
-        let nogiroList = <?php echo json_encode($nogiro_list); ?>; // Get nogiro list from PHP
-
-        function searchNogiro() {
-            const input = document.getElementById("nogiro").value.toLowerCase();
-            const filteredList = nogiroList.filter(nogiro => nogiro.toLowerCase().includes(input));
-            
-            const resultsDiv = document.getElementById("search-results");
-            resultsDiv.innerHTML = ""; // Clear previous results
-            resultsDiv.style.display = filteredList.length > 0 ? 'block' : 'none'; // Show or hide results
-
-            filteredList.forEach(nogiro => {
-                const div = document.createElement("div");
-                div.textContent = nogiro;
-                div.classList.add("result-item");
-                div.onclick = function() {
-                    document.getElementById("nogiro").value = nogiro; // Set selected nogiro
-                    resultsDiv.innerHTML = ""; // Clear results
-                    resultsDiv.style.display = 'none'; // Hide results
-                    getDetail(nogiro); // Fetch details
-                };
-                resultsDiv.appendChild(div);
-            });
-        }
-
-        function getDetail(nogiro) {
-            if (nogiro === "") {
+        function getDetail(noGiro) {
+            if (noGiro === "") {
                 document.getElementById("detail").innerHTML = "";
-                document.getElementById("TglVoid").value = ""; // Kosongkan input tanggal
+                document.getElementById("tglkembalikebank").value = ""; // Kosongkan input tanggal
                 return;
             }
 
             // Mengambil data menggunakan AJAX
             var xhr = new XMLHttpRequest();
-            xhr.open("GET", "get_detail.php?nogiro=" + nogiro, true);
+            xhr.open("GET", "get_detail.php?noGiro=" + noGiro, true);
             xhr.onreadystatechange = function () {
                 if (xhr.readyState == 4 && xhr.status == 200) {
                     var data = JSON.parse(xhr.responseText);
                     var detailHTML = `
                         <h2>Detail Giro</h2>
                         <table>
-                            <tr><th>No Giro</th><td>${nogiro}</td></tr>
+                            <tr><th>No Giro</th><td>${noGiro}</td></tr>
                             <tr><th>Nomor Akun</th><td>${data.ac_number}</td></tr>
                             <tr><th>Nama Akun</th><td>${data.ac_name}</td></tr>
                             <tr><th>Nama Bank</th><td>${data.namabank}</td></tr>
@@ -185,10 +146,10 @@ $conn->close();
                             <tr><th>Akun Penerima</th><td>${data.ac_penerima}</td></tr>
                             <tr><th>Bank Penerima</th><td>${data.bank_penerima}</td></tr>
                             <tr><th>Nominal</th><td>Rp ${parseInt(data.nominal).toLocaleString()}</td></tr>
-                            <tr><th>Status GIRO</th><td>${data.StatGiro}</td></tr>
-                            <tr><th>Tanggal GIRO</th><td>${data.tanggal_giro}</td></tr>
+                            <tr><th>Status Giro</th><td>${data.StatGiro}</td></tr>
+                            <tr><th>Tanggal Giro</th><td>${data.tanggal_Giro}</td></tr>
                             <tr><th>Tanggal Jatuh Tempo</th><td>${data.tanggal_jatuh_tempo}</td></tr>
-                            <tr><th>Tanggal Cair</th><td>${data.tanggal_cair_giro}</td></tr>
+                            <tr><th>Tanggal Cair</th><td>${data.tanggal_cair_Giro}</td></tr>
                             <tr><th>Tanggal Void</th><td>${data.TglVoid}</td></tr>
                             <tr><th>Tanggal Kembali ke Bank</th><td>${data.tglkembalikebank}</td></tr>
                             <tr><th>No PVR</th><td>${data.PVRNO}</td></tr>
@@ -200,6 +161,17 @@ $conn->close();
             };
             xhr.send();
         }
+
+        function searchGiro() {
+            var input = document.getElementById("noGiro");
+            var filter = input.value.toUpperCase();
+            var options = document.getElementsByClassName("giro-option");
+
+            for (var i = 0; i < options.length; i++) {
+                var txtValue = options[i].textContent || options[i].innerText;
+                options[i].style.display = txtValue.toUpperCase().indexOf(filter) > -1 ? "" : "none";
+            }
+        }
     </script>
 </head>
 <body>
@@ -209,13 +181,32 @@ $conn->close();
             <p class="error"><?php echo $error_message; ?></p>
         <?php endif; ?>
         
-        <label for="nogiro">Nomor Giro:</label>
-        <input type="text" id="nogiro" name="nogiro" oninput="searchNogiro()" autocomplete="off">
-        <div id="search-results"></div>
+        <label for="noGiro">Nomor Giro:</label>
+        <input type="text" id="noGiro" name="noGiro" onkeyup="searchGiro()" placeholder="Cari Nomor Giro..." autocomplete="off">
+        <div id="giroOptions">
+            <?php
+            if ($result->num_rows > 0) {
+                while ($row = $result->fetch_assoc()) {
+                    echo '<div class="giro-option" onclick="getDetail(\'' . $row["noGiro"] . '\')">' . $row["noGiro"] . '</div>';
+                }
+            } else {
+                echo '<div class="giro-option">Tidak ada data</div>';
+            }
+            ?>
+        </div>
 
+        <label for="tglkembalikebank">Tanggal Giro di Kembalikan Ke Bank:</label>
+        <input type="date" id="tglkembalikebank" name="tglkembalikebank" value="">
+        
+        <input type="submit" value="Submit">
         <a href="dashboard.php" class="btn-back">Back</a>
     </form>
 
     <div id="detail"></div>
+
+    <?php
+    // Tutup koneksi
+    $conn->close();
+    ?>
 </body>
 </html>

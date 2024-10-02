@@ -4,7 +4,7 @@ session_start(); // Start the session to access user information
 include 'koneksi.php';
 
 // Assuming the user's information is stored in session
-$user_logged_in = $_SESSION['username']; // Adjust this based on your session variable
+$user_logged_in = $_SESSION['username'] ?? 'Guest'; // Fallback to Guest if not set
 
 // Ambil data dari tabel detail_giro dengan kondisi StatGiro = 'Issued'
 $sql = "SELECT nogiro FROM detail_giro WHERE StatGiro = 'Issued'";
@@ -18,28 +18,43 @@ $error_message = "";
 
 // Cek apakah form disubmit
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $selected_nogiro = $_POST['nogiro'];
-    $tanggal_cair_giro = $_POST['tanggal_cair_giro'];
+    $selected_nogiro = $_POST['nogiro'] ?? '';
+    $tanggal_cair_giro = $_POST['tanggal_cair_giro'] ?? '';
 
     // Validasi apakah nogiro dipilih
     if (empty($selected_nogiro)) {
         $error_message = "Nomor giro harus diisi.";
+    } elseif (empty($tanggal_cair_giro)) {
+        $error_message = "Tanggal cair giro harus diisi.";
     } else {
         // Update tanggal_cair_giro dan StatGiro
         $updateSql = "UPDATE detail_giro SET tanggal_cair_giro = ?, StatGiro = 'Seatle', SeatleBy = ? WHERE nogiro = ?";
         $stmt = $conn->prepare($updateSql);
-        $stmt->bind_param("ssi", $tanggal_cair_giro, $user_logged_in, $selected_nogiro);
-        
-        if ($stmt->execute()) {
-            echo "<p style='color: green;'>Data berhasil diperbarui!</p>";
+        if ($stmt) {
+            $stmt->bind_param("sss", $tanggal_cair_giro, $user_logged_in, $selected_nogiro);
+            
+            if ($stmt->execute()) {
+                echo "<p style='color: green;'>Data berhasil diperbarui!</p>";
+            } else {
+                echo "<p style='color: red;'>Error: " . htmlspecialchars($stmt->error) . "</p>";
+            }
+            $stmt->close();
         } else {
-            echo "<p style='color: red;'>Error: " . $stmt->error . "</p>";
+            echo "<p style='color: red;'>Error preparing statement: " . htmlspecialchars($conn->error) . "</p>";
         }
     }
 }
 
-// Ambil kembali data untuk dropdown
-$result = $conn->query($sql);
+// Ambil semua data nogiro untuk pencarian
+$nogiro_list = [];
+if ($result->num_rows > 0) {
+    while ($row = $result->fetch_assoc()) {
+        $nogiro_list[] = htmlspecialchars($row["nogiro"]);
+    }
+}
+
+// Tutup koneksi
+$conn->close();
 ?>
 
 <!DOCTYPE html>
@@ -72,7 +87,7 @@ $result = $conn->query($sql);
             margin: 10px 0 5px;
             color: #555;
         }
-        select, input[type="date"], input[type="submit"], .btn-back {
+        input[type="text"], input[type="date"], input[type="submit"], .btn-back {
             width: 100%;
             padding: 10px;
             margin-bottom: 15px;
@@ -113,27 +128,48 @@ $result = $conn->query($sql);
             color: red;
             margin-bottom: 15px;
         }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
+        #search-results {
+            position: absolute;
+            background-color: white;
+            z-index: 1000;
+            border: 1px solid #ccc;
+            max-height: 150px;
+            overflow-y: auto;
+            display: none;
         }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 8px;
+        .result-item {
+            padding: 10px;
+            cursor: pointer;
         }
-        th {
-            background-color: #f2f2f2;
-            text-align: left;
-        }
-        tr:nth-child(even) {
-            background-color: #f9f9f9;
-        }
-        tr:hover {
+        .result-item:hover {
             background-color: #f1f1f1;
         }
     </style>
     <script>
+        let nogiroList = <?php echo json_encode($nogiro_list); ?>; // Get nogiro list from PHP
+        
+        function searchNogiro() {
+            const input = document.getElementById("nogiro").value.toLowerCase();
+            const filteredList = nogiroList.filter(nogiro => nogiro.toLowerCase().includes(input));
+            
+            const resultsDiv = document.getElementById("search-results");
+            resultsDiv.innerHTML = ""; // Clear previous results
+            resultsDiv.style.display = filteredList.length > 0 ? 'block' : 'none'; // Show or hide results
+
+            filteredList.forEach(nogiro => {
+                const div = document.createElement("div");
+                div.textContent = nogiro;
+                div.classList.add("result-item");
+                div.onclick = function() {
+                    document.getElementById("nogiro").value = nogiro; // Set selected nogiro
+                    resultsDiv.innerHTML = ""; // Clear results
+                    resultsDiv.style.display = 'none'; // Hide results
+                    getDetail(nogiro); // Fetch details
+                };
+                resultsDiv.appendChild(div);
+            });
+        }
+
         function getDetail(nogiro) {
             if (nogiro === "") {
                 document.getElementById("detail").innerHTML = "";
@@ -143,7 +179,7 @@ $result = $conn->query($sql);
 
             // Mengambil data menggunakan AJAX
             var xhr = new XMLHttpRequest();
-            xhr.open("GET", "get_detail.php?nogiro=" + nogiro, true);
+            xhr.open("GET", "get_detail.php?nogiro=" + encodeURIComponent(nogiro), true);
             xhr.onreadystatechange = function () {
                 if (xhr.readyState == 4 && xhr.status == 200) {
                     var data = JSON.parse(xhr.responseText);
@@ -179,23 +215,12 @@ $result = $conn->query($sql);
     <h1>Pencairan Giro</h1>
     <form action="" method="post">
         <?php if ($error_message): ?>
-            <p class="error"><?php echo $error_message; ?></p>
+            <p class="error"><?php echo htmlspecialchars($error_message); ?></p>
         <?php endif; ?>
         
         <label for="nogiro">Nomor Giro:</label>
-        <select id="nogiro" name="nogiro" onchange="getDetail(this.value)">
-            <option value="">Pilih Nomor Giro</option>
-            <?php
-            if ($result->num_rows > 0) {
-                // Output data dari setiap baris
-                while ($row = $result->fetch_assoc()) {
-                    echo '<option value="' . $row["nogiro"] . '">' . $row["nogiro"] . '</option>';
-                }
-            } else {
-                echo '<option value="">Tidak ada data</option>';
-            }
-            ?>
-        </select>
+        <input type="text" id="nogiro" name="nogiro" oninput="searchNogiro()" autocomplete="off">
+        <div id="search-results"></div>
 
         <label for="tanggal_cair_giro">Tanggal Cair Giro:</label>
         <input type="date" id="tanggal_cair_giro" name="tanggal_cair_giro" value="">
@@ -205,10 +230,5 @@ $result = $conn->query($sql);
     </form>
 
     <div id="detail"></div>
-
-    <?php
-    // Tutup koneksi
-    $conn->close();
-    ?>
 </body>
 </html>
