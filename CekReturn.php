@@ -6,8 +6,8 @@ include 'koneksi.php';
 // Assuming the user's information is stored in session
 $user_logged_in = $_SESSION['username']; // Adjust this based on your session variable
 
-// Ambil data dari tabel detail_giro dengan kondisi StatGiro = 'Seatle'
-$sql = "SELECT nogiro FROM detail_giro WHERE StatGiro = 'Seatle'"; // Correct condition
+// Ambil data dari tabel detail_giro dengan kondisi StatGiro = 'Posted'
+$sql = "SELECT nogiro FROM detail_giro WHERE StatGiro = 'Posted'"; // Correct condition
 $result = $conn->query($sql);
 
 // Ambil semua data nogiro untuk pencarian

@@ -6,8 +6,8 @@ include 'koneksi.php';
 // Assuming the user's information is stored in session
 $user_logged_in = $_SESSION['username']; // Adjust this based on your session variable
 
-// Ambil data dari tabel detail_cek dengan kondisi Statcek = 'Seatle'
-$sql = "SELECT nocek FROM detail_cek WHERE Statcek = 'Seatle'"; // Correct condition
+// Ambil data dari tabel detail_cek dengan kondisi Statcek = 'Posted'
+$sql = "SELECT nocek FROM detail_cek WHERE Statcek = 'Posted'"; // Correct condition
 $result = $conn->query($sql);
 
 // Variabel untuk pesan error

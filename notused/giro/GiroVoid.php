@@ -4,14 +4,19 @@ session_start(); // Start the session to access user information
 include 'koneksi.php';
 
 // Assuming the user's information is stored in session
-$user_logged_in = $_SESSION['username'] ?? 'Guest'; // Fallback to Guest if not set
+$user_logged_in = $_SESSION['username']; // Adjust this based on your session variable
 
-// Ambil data dari tabel detail_giro dengan kondisi StatGiro = 'Issued'
-$sql = "SELECT nogiro FROM detail_giro WHERE StatGiro = 'Issued'";
+// Ambil data dari tabel detail_giro dengan kondisi StatGiro = 'Posted'
+$sql = "SELECT nogiro FROM detail_giro WHERE StatGiro = 'Posted'"; // Correct condition
 $result = $conn->query($sql);
 
-// Set tanggal cair giro ke hari ini
-$tanggal_cair_giro = ""; // Kosongkan nilai tanggal
+// Ambil semua data nogiro untuk pencarian
+$nogiro_list = [];
+if ($result->num_rows > 0) {
+    while ($row = $result->fetch_assoc()) {
+        $nogiro_list[] = htmlspecialchars($row["nogiro"]);
+    }
+}
 
 // Variabel untuk pesan error
 $error_message = "";
@@ -19,37 +24,24 @@ $error_message = "";
 // Cek apakah form disubmit
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $selected_nogiro = $_POST['nogiro'] ?? '';
-    $tanggal_cair_giro = $_POST['tanggal_cair_giro'] ?? '';
+    $TglVoid = $_POST['TglVoid'] ?? ''; // Retrieve TglVoid from the POST data
 
     // Validasi apakah nogiro dipilih
     if (empty($selected_nogiro)) {
         $error_message = "Nomor giro harus diisi.";
-    } elseif (empty($tanggal_cair_giro)) {
-        $error_message = "Tanggal cair giro harus diisi.";
+    } elseif (empty($TglVoid)) {
+        $error_message = "Tanggal void harus diisi."; // Optional: Add a check for TglVoid
     } else {
-        // Update tanggal_cair_giro dan StatGiro
-        $updateSql = "UPDATE detail_giro SET tanggal_cair_giro = ?, StatGiro = 'Seatle', SeatleBy = ? WHERE nogiro = ?";
+        // Update TglVoid dan VoidBy
+        $updateSql = "UPDATE detail_giro SET TglVoid = ?, StatGiro = 'Void', VoidBy = ? WHERE nogiro = ?";
         $stmt = $conn->prepare($updateSql);
-        if ($stmt) {
-            $stmt->bind_param("sss", $tanggal_cair_giro, $user_logged_in, $selected_nogiro);
-            
-            if ($stmt->execute()) {
-                echo "<p style='color: green;'>Data berhasil diperbarui!</p>";
-            } else {
-                echo "<p style='color: red;'>Error: " . htmlspecialchars($stmt->error) . "</p>";
-            }
-            $stmt->close();
-        } else {
-            echo "<p style='color: red;'>Error preparing statement: " . htmlspecialchars($conn->error) . "</p>";
-        }
-    }
-}
+        $stmt->bind_param("ssi", $TglVoid, $user_logged_in, $selected_nogiro);
 
-// Ambil semua data nogiro untuk pencarian
-$nogiro_list = [];
-if ($result->num_rows > 0) {
-    while ($row = $result->fetch_assoc()) {
-        $nogiro_list[] = htmlspecialchars($row["nogiro"]);
+        if ($stmt->execute()) {
+            echo "<p style='color: green;'>Data berhasil diperbarui!</p>";
+        } else {
+            echo "<p style='color: red;'>Error: " . htmlspecialchars($stmt->error) . "</p>";
+        }
     }
 }
 
@@ -62,7 +54,7 @@ $conn->close();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pencairan Giro</title>
+    <title>Void Giro</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -147,7 +139,7 @@ $conn->close();
     </style>
     <script>
         let nogiroList = <?php echo json_encode($nogiro_list); ?>; // Get nogiro list from PHP
-        
+
         function searchNogiro() {
             const input = document.getElementById("nogiro").value.toLowerCase();
             const filteredList = nogiroList.filter(nogiro => nogiro.toLowerCase().includes(input));
@@ -173,13 +165,13 @@ $conn->close();
         function getDetail(nogiro) {
             if (nogiro === "") {
                 document.getElementById("detail").innerHTML = "";
-                document.getElementById("tanggal_cair_giro").value = ""; // Kosongkan input tanggal
+                document.getElementById("TglVoid").value = ""; // Kosongkan input tanggal
                 return;
             }
 
             // Mengambil data menggunakan AJAX
             var xhr = new XMLHttpRequest();
-            xhr.open("GET", "get_detail.php?nogiro=" + encodeURIComponent(nogiro), true);
+            xhr.open("GET", "get_detail.php?nogiro=" + nogiro, true);
             xhr.onreadystatechange = function () {
                 if (xhr.readyState == 4 && xhr.status == 200) {
                     var data = JSON.parse(xhr.responseText);
@@ -212,18 +204,18 @@ $conn->close();
     </script>
 </head>
 <body>
-    <h1>Pencairan Giro</h1>
+    <h1>Void Giro</h1>
     <form action="" method="post">
         <?php if ($error_message): ?>
-            <p class="error"><?php echo htmlspecialchars($error_message); ?></p>
+            <p class="error"><?php echo $error_message; ?></p>
         <?php endif; ?>
         
         <label for="nogiro">Nomor Giro:</label>
         <input type="text" id="nogiro" name="nogiro" oninput="searchNogiro()" autocomplete="off">
         <div id="search-results"></div>
 
-        <label for="tanggal_cair_giro">Tanggal Cair Giro:</label>
-        <input type="date" id="tanggal_cair_giro" name="tanggal_cair_giro" value="">
+        <label for="TglVoid">Tanggal Void Giro:</label>
+        <input type="date" id="TglVoid" name="TglVoid" value="">
         
         <input type="submit" value="Submit">
         <a href="dashboard.php" class="btn-back">Back</a>

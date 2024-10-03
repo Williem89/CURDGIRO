@@ -3,124 +3,124 @@ Array
     [nogiro] => YL-792374
     [entitas] => PT GLOBAL ENERGI LESTARI
     [tanggal] => 2024-10-04
-    [statgiro] => seatle
+    [statgiro] => Posted
 )
 Array
 (
     [nogiro] => YL-792374
     [entitas] => PT GLOBAL ENERGI LESTARI
     [tanggal] => 2024-10-03
-    [statgiro] => seatle
+    [statgiro] => Posted
 )
 Array
 (
     [nogiro] => YL-792374
     [entitas] => PT GLOBAL ENERGI LESTARI
     [tanggal] => 2024-10-03
-    [statgiro] => seatle
-)
-Array
-(
-    [nogiro] => YL-792374
-    [entitas] => PT GLOBAL ENERGI LESTARI
-    [tanggal] => 2024-10-11
-    [statgiro] => seatle
-)
-Array
-(
-    [nogiro] => YL-792374
-    [entitas] => PT GLOBAL ENERGI LESTARI
-    [tanggal] => 2024-10-03
-    [statgiro] => seatle
-)
-Array
-(
-    [nogiro] => YL-792374
-    [entitas] => PT GLOBAL ENERGI LESTARI
-    [tanggal] => 2024-10-03
-    [statgiro] => seatle
-)
-Array
-(
-    [nogiro] => YL-792374
-    [entitas] => PT GLOBAL ENERGI LESTARI
-    [tanggal] => 2024-10-03
-    [statgiro] => seatle
-)
-Array
-(
-    [nogiro] => YL-792374
-    [entitas] => PT GLOBAL ENERGI LESTARI
-    [tanggal] => 2024-10-03
-    [statgiro] => seatle
-)
-Array
-(
-    [nogiro] => YL-792374
-    [entitas] => PT GLOBAL ENERGI LESTARI
-    [tanggal] => 2024-10-03
-    [statgiro] => seatle
+    [statgiro] => Posted
 )
 Array
 (
     [nogiro] => YL-792374
     [entitas] => PT GLOBAL ENERGI LESTARI
     [tanggal] => 2024-10-11
-    [statgiro] => seatle
+    [statgiro] => Posted
+)
+Array
+(
+    [nogiro] => YL-792374
+    [entitas] => PT GLOBAL ENERGI LESTARI
+    [tanggal] => 2024-10-03
+    [statgiro] => Posted
+)
+Array
+(
+    [nogiro] => YL-792374
+    [entitas] => PT GLOBAL ENERGI LESTARI
+    [tanggal] => 2024-10-03
+    [statgiro] => Posted
+)
+Array
+(
+    [nogiro] => YL-792374
+    [entitas] => PT GLOBAL ENERGI LESTARI
+    [tanggal] => 2024-10-03
+    [statgiro] => Posted
+)
+Array
+(
+    [nogiro] => YL-792374
+    [entitas] => PT GLOBAL ENERGI LESTARI
+    [tanggal] => 2024-10-03
+    [statgiro] => Posted
+)
+Array
+(
+    [nogiro] => YL-792374
+    [entitas] => PT GLOBAL ENERGI LESTARI
+    [tanggal] => 2024-10-03
+    [statgiro] => Posted
+)
+Array
+(
+    [nogiro] => YL-792374
+    [entitas] => PT GLOBAL ENERGI LESTARI
+    [tanggal] => 2024-10-11
+    [statgiro] => Posted
 )
 Array
 (
     [nogiro] => YL-792374
     [tanggal] => 2024-10-03
-    [statgiro] => Seatle
+    [statgiro] => Posted
 )
 Array
 (
     [nogiro] => YL-792374
     [tanggal] => 2024-10-03
-    [statgiro] => Seatle
+    [statgiro] => Posted
 )
 Array
 (
     [nogiro] => YL-792374
     [tanggal] => 2024-10-03
-    [statgiro] => Seatle
+    [statgiro] => Posted
 )
 Array
 (
     [nogiro] => YL-792374
     [tanggal] => 2024-10-03
-    [statgiro] => Seatle
+    [statgiro] => Posted
 )
 Array
 (
     [nogiro] => YL-792374
     [tanggal] => 2024-10-03
-    [statgiro] => Seatle
+    [statgiro] => Posted
 )
 Array
 (
     [nogiro] => YL-792374
     [tanggal] => 2024-10-03
-    [statgiro] => Seatle
+    [statgiro] => Posted
 )
 Array
 (
     [nogiro] => YL-792374
     [tanggal] => 2024-10-03
-    [statgiro] => Seatle
+    [statgiro] => Posted
 )
 Array
 (
     [nogiro] => YL-792374
     [tanggal] => 2024-10-03
-    [statgiro] => Seatle
+    [statgiro] => Posted
 )
 Array
 (
     [nogiro] => YL-792374
     [tanggal] => 2024-10-03
-    [statgiro] => Seatle
+    [statgiro] => Posted
 )
 Array
 (
@@ -175,13 +175,13 @@ Array
 (
     [nogiro] => YL-792374
     [tanggal] => 2024-10-03
-    [statgiro] => Seatle
+    [statgiro] => Posted
     [action] => cairgiro
 )
 Array
 (
     [nogiro] => BJ-847178
     [tanggal] => 2024-10-03
-    [statgiro] => Seatle
+    [statgiro] => Posted
     [action] => cairgiro
 )

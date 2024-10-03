@@ -11,13 +11,10 @@ $sql = "SELECT e.nama_entitas, d.namabank, d.ac_number, dg.nogiro, SUM(dg.Nomina
         INNER JOIN data_giro AS d ON dg.nogiro = d.nogiro
         INNER JOIN list_entitas AS e ON d.id_entitas = e.id_entitas
         WHERE dg.StatGiro = 'Issued' 
-        AND MONTH(dg.tanggal_jatuh_tempo) = ? 
-        AND YEAR(dg.tanggal_jatuh_tempo) = ?
         GROUP BY dg.tanggal_jatuh_tempo, e.nama_entitas, d.namabank, d.ac_number, dg.nogiro
         ORDER BY dg.tanggal_jatuh_tempo ASC;";
 
 $stmt = $conn->prepare($sql);
-$stmt->bind_param("ii", $selected_month, $selected_year);
 
 if ($stmt === false) {
     die("Preparation failed: " . $conn->error);

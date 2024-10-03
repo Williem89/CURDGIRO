@@ -11,7 +11,7 @@ $sql = "SELECT e.nama_entitas, d.namabank, d.ac_number, dg.nocek, SUM(dg.Nominal
         FROM detail_cek AS dg
         INNER JOIN data_cek AS d ON dg.nocek = d.nocek
         INNER JOIN list_entitas AS e ON d.id_entitas = e.id_entitas
-        WHERE dg.Statcek = 'Seatle' 
+        WHERE dg.Statcek = 'Posted' 
         AND MONTH(dg.tanggal_jatuh_tempo) = ? 
         AND YEAR(dg.tanggal_jatuh_tempo) = ?
         GROUP BY dg.tanggal_jatuh_tempo, e.nama_entitas, d.namabank, d.ac_number, dg.nocek, dg.tanggal_cair_cek
@@ -28,10 +28,10 @@ if ($stmt === false) {
 $stmt->execute();
 $result = $stmt->get_result();
 
-// Initialize an array to hold Seatle cek records
-$Seatle_cek_records = [];
+// Initialize an array to hold Posted cek records
+$Posted_cek_records = [];
 while ($row = $result->fetch_assoc()) {
-    $Seatle_cek_records[] = $row;
+    $Posted_cek_records[] = $row;
 }
 
 // Close the statement and connection
@@ -44,7 +44,7 @@ $conn->close();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Daftar cek Seatle</title>
+    <title>Daftar cek Posted</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
@@ -87,7 +87,7 @@ $conn->close();
 </head>
 <body>
     <div class="container">
-        <h1 class="text-center">Daftar cek Seatle</h1>
+        <h1 class="text-center">Daftar cek Posted</h1>
         <table class="table table-bordered table-striped">
             <thead>
                 <tr>
@@ -101,7 +101,7 @@ $conn->close();
                 </tr>
             </thead>
             <tbody>
-            <?php if (empty($Seatle_cek_records)): ?>
+            <?php if (empty($Posted_cek_records)): ?>
                 <tr>
                     <td colspan="7" class="no-data">Tidak ada data cek.</td>
                 </tr>
@@ -112,7 +112,7 @@ $conn->close();
                 $subtotal = 0;
                 $grand_total = 0;
 
-                foreach ($Seatle_cek_records as $cek): 
+                foreach ($Posted_cek_records as $cek): 
                     // Update subtotal
                     $subtotal += $cek['total_nominal'];
                     $grand_total += $cek['total_nominal'];

@@ -17,13 +17,22 @@ if ($stmt === false) {
 $stmt->execute();
 $result = $stmt->get_result();
 
-// Initialize an array to hold the counts and records
+// Initialize an array to hold the counts and records, and a variable for grand total
 $report_data = [];
+$grand_total = 0;
+
 while ($row = $result->fetch_assoc()) {
     $report_data[$row['nama_entitas']][$row['namabank']][] = [
         'nogiro' => $row['nogiro'],
         'ac_number' => $row['ac_number'],
     ];
+}
+
+// Calculate grand total
+foreach ($report_data as $banks) {
+    foreach ($banks as $giroList) {
+        $grand_total += count($giroList);
+    }
 }
 
 // Close the statement and connection
@@ -98,6 +107,11 @@ $conn->close();
         a:hover {
             background-color: #357ab8;
         }
+        .grand-total {
+            font-weight: bold;
+            text-align: center;
+            margin-top: 20px;
+        }
     </style>
     <script>
         function toggleGiroList(bank) {
@@ -156,8 +170,6 @@ $conn->close();
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        
-
                                         <?php 
                                         usort($giroList, function($a, $b) {
                                             return strcmp($a['ac_number'], $b['ac_number']);
@@ -178,6 +190,9 @@ $conn->close();
                 <?php endforeach; ?>
             </tbody>
         </table>
+        <div class="grand-total">
+            Grand Total: <?php echo $grand_total; ?> Giro
+        </div>
     <?php endif; ?>
     
     <a href="index.php">Kembali ke Halaman Utama</a>

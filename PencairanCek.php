@@ -26,7 +26,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $error_message = "Nomor cek harus diisi.";
     } else {
         // Update tanggal_cair_cek dan Statcek
-        $updateSql = "UPDATE detail_cek SET tanggal_cair_cek = ?, Statcek = 'Seatle', SeatleBy = ? WHERE nocek = ?";
+        $updateSql = "UPDATE detail_cek SET tanggal_cair_cek = ?, Statcek = 'Posted', PostedBy = ? WHERE nocek = ?";
         $stmt = $conn->prepare($updateSql);
         $stmt->bind_param("ssi", $tanggal_cair_cek, $user_logged_in, $selected_nocek);
         

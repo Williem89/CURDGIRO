@@ -24,7 +24,7 @@
             FROM detail_giro AS dg
             INNER JOIN data_giro AS d ON dg.nogiro = d.nogiro
             INNER JOIN list_entitas AS e ON d.id_entitas = e.id_entitas
-            WHERE dg.StatGiro != 'Seatle' 
+            WHERE dg.StatGiro != 'Posted' 
             AND MONTH(dg.tanggal_jatuh_tempo) = ? 
             AND YEAR(dg.tanggal_jatuh_tempo) = ? 
             AND (dg.nogiro LIKE ? OR e.nama_entitas LIKE ? OR d.namabank LIKE ?) 
@@ -199,7 +199,7 @@
                             <td><?php echo htmlspecialchars($giro['namabank']); ?></td>
                             <td><?php echo htmlspecialchars($giro['ac_number']); ?></td>
                             <td><?php echo number_format($giro['total_nominal'], 2, ',', '.'); ?></td>
-                            <td <?php echo $giro['StatGiro'] == "Seatle" ? "hidden" : ""; ?>>    
+                            <td <?php echo $giro['StatGiro'] == "Posted" ? "hidden" : ""; ?>>    
                                 <input type="date" id="tanggal_cair_giro" style="display:none;">
                                 <button class="btn btn-sm btn-primary cair-btn" <?php echo $giro['StatGiro'] == "Void" ? "disabled" : ""; ?> 
                                         data-nogiro="<?php echo htmlspecialchars($giro['nogiro']); ?>" 
@@ -240,16 +240,13 @@
                     const { value: date } = await Swal.fire({
                         title: "Tanggal Cair",
                         input: "date",
-                        inputAttributes: {
-                            min: new Date().toISOString().split("T")[0] // Set the min date to today
-                        },
                         showCancelButton: true,
                         confirmButtonText: 'Submit',
                         cancelButtonText: 'Cancel'
                     });
 
                     if (date) {
-                        // Perform AJAX request to update StatGiro to "seatle"
+                        // Perform AJAX request to update StatGiro to "Posted"
                         fetch('update_statgiro.php', {
                             method: 'POST',
                             headers: {
@@ -257,9 +254,9 @@
                             },
                             body: JSON.stringify({
                                 nogiro: nogiro,
-                                //SeatleBy: user,
+                                //PostedBy: user,
                                 tanggal: date,
-                                statgiro: 'Seatle',
+                                statgiro: 'Posted',
                                 action: "cairgiro"
                             })
                         }
@@ -267,7 +264,7 @@
                         .then(response => response.json())
                         .then(data => {
                             if (data.success) {
-                                Swal.fire("Tanggal Cair", `StatGiro updated to: seatle on ${date}`);
+                                Swal.fire("Giro Berhasil di Posting");
                             } else {
                                 Swal.fire("Error", data.message, "error");
                             }
@@ -289,16 +286,13 @@
                     const { value: date } = await Swal.fire({
                         title: "Tanggal Return",
                         input: "date",
-                        inputAttributes: {
-                            min: new Date().toISOString().split("T")[0] // Set the min date to today
-                        },
                         showCancelButton: true,
                         confirmButtonText: 'Submit',
                         cancelButtonText: 'Cancel'
                     });
 
                     if (date) {
-                        // Perform AJAX request to update StatGiro to "seatle"
+                        // Perform AJAX request to update StatGiro to "Posted"
                         fetch('update_statgiro.php', {
                             method: 'POST',
                             headers: {
@@ -336,16 +330,13 @@
                     const { value: date } = await Swal.fire({
                         title: "Tanggal Void",
                         input: "date",
-                        inputAttributes: {
-                            min: new Date().toISOString().split("T")[0] // Set the min date to today
-                        },
                         showCancelButton: true,
                         confirmButtonText: 'Submit',
                         cancelButtonText: 'Cancel'
                     });
 
                     if (date) {
-                        // Perform AJAX request to update StatGiro to "seatle"
+                        // Perform AJAX request to update StatGiro to "Posted"
                         fetch('update_statgiro.php', {
                             method: 'POST',
                             headers: {
@@ -353,7 +344,6 @@
                             },
                             body: JSON.stringify({
                                 nogiro: nogiro,
-                                //SeatleBy: user,
                                 tanggal: date,
                                 statgiro: 'Void',
                                 action: "voidgiro"
@@ -363,7 +353,7 @@
                         .then(response => response.json())
                         .then(data => {
                             if (data.success) {
-                                Swal.fire("Giro Sudah tercatat kembali ke Bank");
+                                Swal.fire("Giro Void");
                             } else {
                                 Swal.fire("Error", data.message, "error");
                             }

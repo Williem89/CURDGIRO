@@ -25,7 +25,7 @@ if (isset($data['nogiro'], $data['tanggal'], $data['statgiro'], $data["action"])
     $action = $data['action'];
 
     if ($action == "cairgiro") {
-        $sql = "UPDATE detail_giro SET StatGiro = ?, tanggal_Cair_giro = ?, SeatleBy = '$user_logged_in' WHERE nogiro = ?";
+        $sql = "UPDATE detail_giro SET StatGiro = ?, tanggal_Cair_giro = ?, PostedBy = '$user_logged_in' WHERE nogiro = ?";
         $stmt = $conn->prepare($sql);
 
         // Check if preparation was successful
@@ -91,7 +91,7 @@ if (isset($data['nogiro'], $data['tanggal'], $data['statgiro'], $data["action"])
         // Close the statement and connection
         $stmt->close();
     }
-    //$seatleBy = $data['SeatleBy'];
+    //$PostedBy = $data['PostedBy'];
 
     // Prepare the SQL statement    
 
