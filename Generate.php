@@ -14,6 +14,27 @@ if ($result) {
     }
 }
 
+// Initialize Batch ID
+$batchId = '';
+
+// Fetch the last Batch ID from the database
+$sql = "SELECT BatchId FROM data_giro ORDER BY BatchId DESC LIMIT 1";
+$result = $conn->query($sql);
+
+if ($result && $row = $result->fetch_assoc()) {
+    // Extract the number from the last Batch ID
+    $lastBatchId = $row['BatchId'];
+    $lastNumber = intval(substr($lastBatchId, 0, 4)); // Ambil 4 digit pertama
+    $newBatchNumber = $lastNumber + 1; // Tambah 1 pada Batch ID terakhir
+} else {
+    $newBatchNumber = 1; // Jika tidak ada Batch ID, mulai dari 1
+}
+
+// Generate a new Batch ID with random number and current date
+$randomNumber = rand(1000, 9999);
+$todayDate = date('Ymd');
+$batchId = str_pad($newBatchNumber, 4, '0', STR_PAD_LEFT) . $randomNumber . $todayDate; // Format Batch ID baru
+
 // Process form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Sanitize and retrieve input values
@@ -53,27 +74,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 continue;
             }
 
-           // Choose the correct table and prepare the insert statement
-if ($jenis_giro === 'Giro') {
-    $stmt = $conn->prepare("INSERT INTO data_giro (nogiro, namabank, ac_number, ac_name, statusgiro, created_by, created_at, jenis_giro, id_entitas) 
-        VALUES (?, ?, ?, ?, 'Unused', ?, NOW(), ?, ?)");
-    
-    if ($stmt) {
-        $stmt->bind_param("sssssii", $giro_number, $namabank, $ac_number, $ac_name, $created_by, $jenis_giro, $id_entitas);
-    } else {
-        echo "<script>alert('Error preparing statement for data_giro: " . $conn->error . "');</script>";
-    }
-} else if ($jenis_giro === 'Cek') {
-    $stmt = $conn->prepare("INSERT INTO data_cek (NOCEK, namabank, ac_number, ac_name, statuscek, created_by, created_at, jenis_cek, id_entitas) 
-        VALUES (?, ?, ?, ?, 'Unused', ?, NOW(), ?, ?)");
-    
-    if ($stmt) {
-        $stmt->bind_param("sssssii", $giro_number, $namabank, $ac_number, $ac_name, $created_by, $jenis_giro, $id_entitas);
-    } else {
-        echo "<script>alert('Error preparing statement for data_cek: " . $conn->error . "');</script>";
-    }
-}
-
+            // Choose the correct table and prepare the insert statement
+            if ($jenis_giro === 'Giro') {
+                $stmt = $conn->prepare("INSERT INTO data_giro (BatchId, nogiro, namabank, ac_number, ac_name, statusgiro, created_by, created_at, jenis_giro, id_entitas) 
+                VALUES (?, ?, ?, ?, ?, 'Belum Aktif', ?, NOW(), ?, ?)");
+                
+                if ($stmt) {
+                    $stmt->bind_param("ssssssii", $batchId, $giro_number, $namabank, $ac_number, $ac_name, $created_by, $jenis_giro, $id_entitas);
+                } else {
+                    echo "<script>alert('Error preparing statement for data_giro: " . $conn->error . "');</script>";
+                }
+            } else if ($jenis_giro === 'Cek') {
+                $stmt = $conn->prepare("INSERT INTO data_cek (BatchId, NOCEK, namabank, ac_number, ac_name, statuscek, created_by, created_at, jenis_cek, id_entitas) 
+                VALUES (?, ?, ?, ?, ?, 'Unused', ?, NOW(), ?, ?)");
+                
+                if ($stmt) {
+                    $stmt->bind_param("ssssssii", $batchId, $giro_number, $namabank, $ac_number, $ac_name, $created_by, $jenis_giro, $id_entitas);
+                } else {
+                    echo "<script>alert('Error preparing statement for data_cek: " . $conn->error . "');</script>";
+                }
+            }
 
             // Execute the statement
             if ($stmt) {
@@ -93,6 +113,7 @@ if ($jenis_giro === 'Giro') {
 // Close the database connection
 $conn->close();
 ?>
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -216,6 +237,9 @@ $conn->close();
         <label><input type="radio" name="jenis_giro" value="Giro" required checked>Giro</label>
         <label><input type="radio" name="jenis_giro" value="Cek">Cek</label>
         <br>
+        <label for="batchId">Batch ID:</label>
+        <input type="text" id="batchId" name="batchId" value="<?php echo htmlspecialchars($batchId); ?>" readonly disabled>
+        
         <label for="nama_entitas">Entitas:</label>
         <select id="nama_entitas" name="nama_entitas" required>
             <option value="">-- Pilih Entitas --</option>

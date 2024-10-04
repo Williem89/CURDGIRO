@@ -185,3 +185,17 @@ Array
     [statgiro] => Posted
     [action] => cairgiro
 )
+Array
+(
+    [nogiro] => BD-576460
+    [tanggal] => 2024-10-04
+    [statgiro] => Posted
+    [action] => cairgiro
+)
+Array
+(
+    [nogiro] => BD-576460
+    [tanggal] => 2024-06-04
+    [statgiro] => Void
+    [action] => voidgiro
+)
