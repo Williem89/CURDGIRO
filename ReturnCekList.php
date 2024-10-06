@@ -1,10 +1,6 @@
 <?php
 include 'koneksi.php';
 
-// Pastikan $selected_month dan $selected_year sudah di-set sebelumnya
-$selected_month = 9; // Contoh: September
-$selected_year = 2024; // Contoh: 2024
-
 // Prepare the statement
 $sql = "SELECT e.nama_entitas, d.namabank, d.ac_number, dg.nocek, SUM(dg.Nominal) AS total_nominal, 
                dg.tanggal_jatuh_tempo, dg.tglkembalikebank 
@@ -12,13 +8,10 @@ $sql = "SELECT e.nama_entitas, d.namabank, d.ac_number, dg.nocek, SUM(dg.Nominal
         INNER JOIN data_cek AS d ON dg.nocek = d.nocek
         INNER JOIN list_entitas AS e ON d.id_entitas = e.id_entitas
         WHERE dg.Statcek = 'Return' 
-        AND MONTH(dg.tanggal_jatuh_tempo) = ? 
-        AND YEAR(dg.tanggal_jatuh_tempo) = ?
         GROUP BY dg.tanggal_jatuh_tempo, e.nama_entitas, d.namabank, d.ac_number, dg.nocek, dg.tglkembalikebank
         ORDER BY dg.tanggal_jatuh_tempo ASC;";
 
 $stmt = $conn->prepare($sql);
-$stmt->bind_param("ii", $selected_month, $selected_year);
 
 if ($stmt === false) {
     die("Preparation failed: " . $conn->error);

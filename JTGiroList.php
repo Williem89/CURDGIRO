@@ -42,11 +42,70 @@ $conn->close();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Daftar Giro Issued</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background: linear-gradient(to right, #ffeb3b, #ffc107);
+            color: #333;
+        }
+
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+
+        p {
+            text-align: center;
+            font-size: 1.2em;
+            color: #666;
+        }
+
+        a {
+            display: inline-block;
+            margin: 20px auto;
+            padding: 10px 20px;
+            background: linear-gradient(to right, #ffeb3b, #ffc107);
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            text-align: center;
+            transition: background-color 0.3s;
+        }
+
+        a:hover {
+            background: linear-gradient(to right, #ffc107, #ffca28);
+        }
+    </style>
 </head>
 <body>
     <h1>Daftar Giro Issued yang Jatuh Tempo dalam 7 Hari</h1>
     <p>Total Giro yang Jatuh Tempo: <?php echo $jt_count; ?></p>
-    <table border="1">
+    <table>
         <tr>
             <th>No Giro</th>
             <th>Tanggal Jatuh Tempo</th>

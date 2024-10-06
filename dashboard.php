@@ -1,189 +1,95 @@
 <?php
 include 'koneksi.php';
 
-// Inisialisasi variabel
-$unused_count = 0;
-$issued_count = 0;
-$Posted_count = 0;
-$void_count = 0;
-$return_count = 0;
-$jt_count = 0; 
-$unused_cek_count = 0;
-$issued_cek_count = 0;
-$Posted_cek_count = 0;
-$void_cek_count = 0;
-$return_cek_count = 0;
-$jt_cek_count = 0;
-
-// Query untuk menghitung jumlah giro yang belum digunakan
-$sql = "SELECT COUNT(*) AS unused_count FROM data_giro WHERE statusgiro='Unused'";
-$result = $conn->query($sql);
-if ($result) {
+// Function to count the number of items based on status
+function countItems($conn, $table, $statusColumn, $statusValue) {
+    $stmt = $conn->prepare("SELECT COUNT(*) AS count FROM $table WHERE $statusColumn = ?");
+    $stmt->bind_param("s", $statusValue);
+    $stmt->execute();
+    $result = $stmt->get_result();
     $row = $result->fetch_assoc();
-    $unused_count = (int)$row['unused_count'];
+    return (int)$row['count'];
+}
+
+// Function to count cheques based on a specific condition
+function countChequesDue($conn, $table, $statusColumn, $statusValue, $dateCondition) {
+    $stmt = $conn->prepare("SELECT COUNT(*) AS count FROM $table WHERE $statusColumn = ? AND $dateCondition");
+    $stmt->bind_param("s", $statusValue);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $row = $result->fetch_assoc();
+    return (int)$row['count'];
+}
+
+// Initialize counts for Giro
+$unused_count = countItems($conn, 'data_giro', 'statusgiro', 'Unused');
+$issued_count = countItems($conn, 'detail_giro', 'statgiro', 'Issued');
+$Posted_count = countItems($conn, 'detail_giro', 'statgiro', 'Posted');
+$void_count = countItems($conn, 'detail_giro', 'statgiro', 'void');
+$return_count = countItems($conn, 'detail_giro', 'statgiro', 'return');
+$jt_count = countChequesDue($conn, 'detail_giro', 'StatGiro', 'Issued', "DATEDIFF(tanggal_jatuh_tempo, NOW()) BETWEEN 0 AND 7");
+$monthly_due_count = countChequesDue($conn, 'detail_giro', 'StatGiro', 'Issued', "MONTH(tanggal_jatuh_tempo) = MONTH(NOW()) AND YEAR(tanggal_jatuh_tempo) = YEAR(NOW())");
+$Overdue_count = countChequesDue($conn, 'detail_giro', 'StatGiro', 'Issued', "tanggal_jatuh_tempo < CURDATE()");
+
+// Initialize counts for Cek
+$unused_cek_count = countItems($conn, 'data_cek', 'statuscek', 'Unused');
+$issued_cek_count = countItems($conn, 'detail_cek', 'statcek', 'Issued');
+$Posted_cek_count = countItems($conn, 'detail_cek', 'statcek', 'Posted');
+$void_cek_count = countItems($conn, 'detail_cek', 'statcek', 'void');
+$return_cek_count = countItems($conn, 'detail_cek', 'statcek', 'return');
+$jt_cek_count = countChequesDue($conn, 'detail_cek', 'Statcek', 'Issued', "DATEDIFF(tanggal_jatuh_tempo, NOW()) BETWEEN 0 AND 7");
+$monthly_due_cek_count = countChequesDue($conn, 'detail_cek', 'Statcek', 'Issued', "MONTH(tanggal_jatuh_tempo) = MONTH(NOW()) AND YEAR(tanggal_jatuh_tempo) = YEAR(NOW())");
+$Overdue_cek_count = countChequesDue($conn, 'detail_cek', 'Statcek', 'Issued', "tanggal_jatuh_tempo < NOW()");
+
+//Kebutuhan Tab List Giro
+// Initialize an empty array to store the due cheques
+$due_cheques = [];
+// Initialize variables
+$due_giros = []; // Initialize as an empty array
+$due_checks = []; // Initialize as an empty array
+
+// Get the selected start and end dates or default to today
+$start_date = isset($_POST['start_date']) ? $_POST['start_date'] : date('d-m-y');
+$end_date = isset($_POST['end_date']) ? $_POST['end_date'] : date('d-m-y');
+
+// Function to fetch due items
+function fetchDueItems($conn, $type, $start_date, $end_date) {
+    $tableDetail = $type === 'giro' ? 'detail_giro' : 'detail_cek';
+    $tableData = $type === 'giro' ? 'data_giro' : 'data_cek';
+    $statusColumn = $type === 'giro' ? 'StatGiro' : 'StatCek';
+    $numberColumn = $type === 'giro' ? 'nogiro' : 'nocek';
+
+    $sql = "SELECT d.namabank, d.ac_name, dg.ac_penerima, dg.nama_penerima, dg.$numberColumn, 
+                   SUM(dg.Nominal) AS total_nominal, dg.tanggal_jatuh_tempo, dg.PVRNo, dg.keterangan 
+            FROM $tableDetail AS dg
+            INNER JOIN $tableData AS d ON dg.$numberColumn = d.$numberColumn
+            WHERE dg.$statusColumn = 'Issued' 
+            AND dg.tanggal_jatuh_tempo BETWEEN ? AND ?
+            GROUP BY dg.tanggal_jatuh_tempo, d.namabank, d.ac_name, dg.ac_penerima, dg.nama_penerima, dg.$numberColumn, dg.PVRNo, dg.keterangan
+            ORDER BY dg.tanggal_jatuh_tempo ASC;";
+
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("ss", $start_date, $end_date);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    $items = [];
+    while ($row = $result->fetch_assoc()) {
+        $items[] = $row;
     }
 
-// Query untuk menghitung jumlah giro yang sudah diterbitkan
-$sql = "SELECT COUNT(*) AS issued_count FROM detail_giro WHERE statgiro='Issued'";
-$result = $conn->query($sql);
-if ($result) {
-    $row = $result->fetch_assoc();
-    $issued_count = (int)$row['issued_count'];
+    $stmt->close();
+    return $items;
 }
 
-// Query untuk menghitung jumlah giro yang sudah dicairkan
-$sql = "SELECT COUNT(*) AS Posted_count FROM detail_giro WHERE statgiro='Posted'";
-$result = $conn->query($sql);
-if ($result) {
-    $row = $result->fetch_assoc();
-    $Posted_count = (int)$row['Posted_count'];
-}
+// Fetch due cheques and giro
+$due_cheques = fetchDueItems($conn, 'cek', $start_date, $end_date);
+$due_giro = fetchDueItems($conn, 'giro', $start_date, $end_date);
 
-// Query untuk menghitung jumlah giro yang sudah void
-$sql = "SELECT COUNT(*) AS void_count FROM detail_giro WHERE statgiro='void'";
-$result = $conn->query($sql);
-if ($result) {
-    $row = $result->fetch_assoc();
-    $void_count = (int)$row['void_count'];
-}
+// Combine both arrays if needed
+$due_items = array_merge($due_cheques, $due_giro);
 
-// Query untuk menghitung jumlah giro yang sudah kembali ke bank
-$sql = "SELECT COUNT(*) AS return_count FROM detail_giro WHERE statgiro='return'";
-$result = $conn->query($sql);
-if ($result) {
-    $row = $result->fetch_assoc();
-    $return_count = (int)$row['return_count'];
-}
-
-// Query for counting the number of cheques due in one week
-$sql = "SELECT COUNT(*) AS jt_count 
-    FROM detail_giro 
-    WHERE StatGiro = 'Issued' 
-    AND DATEDIFF(tanggal_jatuh_tempo, NOW()) BETWEEN 0 AND 7;";
-$result = $conn->query($sql);
-if ($result) {
-    $row = $result->fetch_assoc();
-    $jt_count = (int)$row['jt_count'];
-} else {
-    echo "Error: " . $conn->error;
-    $jt_count = 0;
-}
-
-// Query for counting the number of cheques due this month
-$sql = "SELECT COUNT(*) AS monthly_due_count 
-        FROM detail_giro 
-        WHERE StatGiro = 'Issued' 
-        AND MONTH(tanggal_jatuh_tempo) = MONTH(NOW()) 
-        AND YEAR(tanggal_jatuh_tempo) = YEAR(NOW());";
-$result = $conn->query($sql);
-if ($result) {
-    $row = $result->fetch_assoc();
-    $monthly_due_count = (int)$row['monthly_due_count'];
-} else {
-    echo "Error: " . $conn->error;
-    $monthly_due_count = 0;
-}
-
-// Query for counting the number of cheques Overdue
-$sql = "SELECT COUNT(*) AS Overdue_count 
-        FROM detail_giro 
-        WHERE StatGiro = 'Issued' 
-        AND tanggal_jatuh_tempo < CURDATE();"; // Keep using < to exclude today
-$result = $conn->query($sql);
-if ($result) {
-    $row = $result->fetch_assoc();
-    $Overdue_count = (int)$row['Overdue_count'];
-} else {
-    echo "Error: " . $conn->error;
-    $Overdue_count = 0;
-}
-
-
-// Query untuk menghitung jumlah cek yang belum digunakan
-$sql = "SELECT COUNT(*) AS unused_cek_count FROM data_cek WHERE statuscek='Unused'";
-$result = $conn->query($sql);
-if ($result) {
-    $row = $result->fetch_assoc();
-    $unused_cek_count = (int)$row['unused_cek_count'];
-    }
-
-// Query untuk menghitung jumlah Cek yang sudah diterbitkan
-$sql = "SELECT COUNT(*) AS issued_cek_count FROM detail_cek WHERE statcek='Issued'";
-$result = $conn->query($sql);
-if ($result) {
-    $row = $result->fetch_assoc();
-    $issued_cek_count = (int)$row['issued_cek_count'];
-}
-
-// Query untuk menghitung jumlah cek yang sudah dicairkan
-$sql = "SELECT COUNT(*) AS Posted_cek_count FROM detail_cek WHERE statcek='Posted'";
-$result = $conn->query($sql);
-if ($result) {
-    $row = $result->fetch_assoc();
-    $Posted_cek_count = (int)$row['Posted_cek_count'];
-}
-
-// Query untuk menghitung jumlah cek yang sudah void
-$sql = "SELECT COUNT(*) AS void_cek_count FROM detail_cek WHERE statcek='void'";
-$result = $conn->query($sql);
-if ($result) {
-    $row = $result->fetch_assoc();
-    $void_cek_count = (int)$row['void_cek_count'];
-}
-
-// Query untuk menghitung jumlah cek yang sudah kembali ke bank
-$sql = "SELECT COUNT(*) AS return_cek_count FROM detail_cek WHERE statcek='return'";
-$result = $conn->query($sql);
-if ($result) {
-    $row = $result->fetch_assoc();
-    $return_cek_count = (int)$row['return_cek_count'];
-}
-
-// Query for counting the number of cheques due in one week
-$sql = "SELECT COUNT(*) AS jt_cek_count 
-    FROM detail_cek 
-    WHERE Statcek = 'Issued' 
-    AND DATEDIFF(tanggal_jatuh_tempo, NOW()) BETWEEN 0 AND 7;";
-$result = $conn->query($sql);
-if ($result) {
-    $row = $result->fetch_assoc();
-    $jt_count = (int)$row['jt_cek_count'];
-} else {
-    echo "Error: " . $conn->error;
-    $jt_cek_count = 0;
-}
-
-// Query for counting the number of cheques due this month
-$sql = "SELECT COUNT(*) AS monthly_due_cek_count 
-        FROM detail_cek
-        WHERE Statcek = 'Issued' 
-        AND MONTH(tanggal_jatuh_tempo) = MONTH(NOW()) 
-        AND YEAR(tanggal_jatuh_tempo) = YEAR(NOW());";
-$result = $conn->query($sql);
-if ($result) {
-    $row = $result->fetch_assoc();
-    $monthly_due_cek_count = (int)$row['monthly_due_cek_count'];
-} else {
-    echo "Error: " . $conn->error;
-    $monthly_due_cek_count = 0;
-}
-
-// Query for counting the number of cheques Overdue
-$sql = "SELECT COUNT(*) AS Overdue_cek_count 
-        FROM detail_cek 
-        WHERE Statcek = 'Issued' 
-        AND tanggal_jatuh_tempo < NOW();";
-$result = $conn->query($sql);
-if ($result) {
-    $row = $result->fetch_assoc();
-    $Overdue_cek_count = (int)$row['Overdue_cek_count'];
-} else {
-    echo "Error: " . $conn->error;
-    $Overdue_cek_count = 0;
-}
-
-
-// Tutup koneksi
+// Close connection
 $conn->close();
 ?>
 
@@ -282,6 +188,10 @@ $conn->close();
             flex-grow: 1;
         }
 
+        .tabs {
+            margin-bottom: 20px;
+        }
+
         .stats-card {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
@@ -298,6 +208,7 @@ $conn->close();
             text-decoration: none; /* Remove underline */
             color: inherit; /* Inherit text color */
         }
+
         .card a {
             text-decoration: none; /* Remove underline */
             color: inherit; /* Inherit the text color */
@@ -311,7 +222,6 @@ $conn->close();
             transform: translateY(-5px);
             background-color: #f0f4ff; /* Optional: Change background on hover */
         }
-
 
         .card h3 {
             font-size: 18px;
@@ -376,6 +286,7 @@ $conn->close();
                         <a href="Generate.php">Generate</a>
                     </div>
                 </li>
+                <li><a href="Approve.php">Approve Generate</a></li>
                 <li><a href="#">Giro</a>
                     <div class="dropdown">
                         <a href="TulisGiro.php">Issued Giro</a>
@@ -398,132 +309,236 @@ $conn->close();
                         <a href="ReportIssuedGiro.php">Laporan Giro yang sudah terbit</a>
                     </div>
                 </li>
-                <li><a href="logout.php">Logout</a></li> <!-- Logout link -->
+                <li><a href="logout.php">Bye Bye</a></li> <!-- Logout link -->
             </ul>
         </nav>
 
     <header>
-        Selamat Datang di Aplikasi Giro
+        Aplikasi Giro
     </header>
 
-    <section>
-    <h2>Statistik Giro</h2>
-    <div class="stats-card">
-        <div class="card">
-            <a href="UnusedGiroList.php">
-                <h3>Giro Available</h3>
-                <p><?php echo htmlspecialchars($unused_count); ?></p>
-            </a>
+    <<section>
+    <div class="tabs">
+        <ul class="nav nav-tabs">
+            <li class="nav-item">
+                <a class="nav-link active" data-bs-toggle="tab" href="#listGiroCek">List Giro dan Cek</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="tab" href="#giro">Giro</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="tab" href="#cek">Cek</a>
+            </li>
+        </ul>
+    </div>
+
+    <div class="tab-content">
+        <div id="listGiroCek" class="tab-pane fade show active">
+                <!-- Combined Table for Giro and Cek -->
+                <h2 class="mt-5">List Giro & Cek</h2>
+        <form method="post" class="mb-4">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="start_date" class="form-label">Start Date</label>
+                    <input type="date" class="form-control" name="start_date" value="<?php echo htmlspecialchars($start_date); ?>">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="end_date" class="form-label">End Date</label>
+                    <input type="date" class="form-control" name="end_date" value="<?php echo htmlspecialchars($end_date); ?>">
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary">Filter</button>
+        </form>
+        <table class="table table-bordered mt-3">
+            <thead>
+                <tr>
+                    <th>Type</th>
+                    <th>Bank Name</th>
+                    <th>Account Name</th>
+                    <th>Receiver Account</th>
+                    <th>Receiver Name</th>
+                    <th>Document No.</th>
+                    <th>Total Nominal</th>
+                    <th>Due Date</th>
+                    <th>PVR No.</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php
+                // Combine both due items into one array
+                $combined_due_items = [];
+                foreach ($due_giro as $giro) {
+                    $combined_due_items[] = [
+                        'type' => 'Giro',
+                        'namabank' => $giro['namabank'],
+                        'ac_name' => $giro['ac_name'],
+                        'ac_penerima' => $giro['ac_penerima'],
+                        'nama_penerima' => $giro['nama_penerima'],
+                        'document_no' => $giro['nogiro'],
+                        'total_nominal' => number_format($giro['total_nominal'], 2),
+                        'due_date' => date('d-m-Y', strtotime($giro['tanggal_jatuh_tempo'])),
+                        'PVRNo' => $giro['PVRNo'],
+                        'keterangan' => $giro['keterangan'],
+                    ];
+                }
+
+                foreach ($due_cheques as $cek) {
+                    $combined_due_items[] = [
+                        'type' => 'Cek',
+                        'namabank' => $cek['namabank'],
+                        'ac_name' => $cek['ac_name'],
+                        'ac_penerima' => $cek['ac_penerima'],
+                        'nama_penerima' => $cek['nama_penerima'],
+                        'document_no' => $cek['nocek'],
+                        'total_nominal' => number_format($cek['total_nominal'], 2),
+                        'due_date' => date('d-m-Y', strtotime($cek['tanggal_jatuh_tempo'])),
+                        'PVRNo' => $cek['PVRNo'],
+                        'keterangan' => $cek['keterangan'],
+                    ];
+                }
+
+                // Check if there are any combined due items
+                if (!empty($combined_due_items)):
+                    foreach ($combined_due_items as $item): ?>
+                        <tr>
+                            <td><?php echo htmlspecialchars($item['type']); ?></td>
+                            <td><?php echo htmlspecialchars($item['namabank']); ?></td>
+                            <td><?php echo htmlspecialchars($item['ac_name']); ?></td>
+                            <td><?php echo htmlspecialchars($item['ac_penerima']); ?></td>
+                            <td><?php echo htmlspecialchars($item['nama_penerima']); ?></td>
+                            <td><?php echo htmlspecialchars($item['document_no']); ?></td>
+                            <td><?php echo htmlspecialchars($item['total_nominal']); ?></td>
+                            <td><?php echo htmlspecialchars($item['due_date']); ?></td>
+                            <td><?php echo htmlspecialchars($item['PVRNo']); ?></td>
+                            <td><?php echo htmlspecialchars($item['keterangan']); ?></td>
+                        </tr>
+                    <?php endforeach; 
+                else: ?>
+                    <tr>
+                        <td colspan="10" class="text-center">No due items found for the selected date range.</td>
+                    </tr>
+                <?php endif; ?>
+            </tbody>
+        </table>
+    </div>
+
+        <div id="giro" class="tab-pane fade">
+            <div class="stats-card">
+                <div class="card">
+                    <a href="UnusedGiroList.php">
+                        <h3>Giro Available</h3>
+                        <p><?php echo $unused_count; ?></p>
+                    </a>
+                </div>
+                <div class="card">
+                    <a href="IssuedGiroList.php">
+                        <h3>Giro Issued</h3>
+                        <p><?php echo $issued_count; ?></p>
+                    </a>
+                </div>
+                <div class="card">
+                    <a href="PostedGiroList.php">
+                        <h3>Giro Posted</h3>
+                        <p><?php echo $Posted_count; ?></p>
+                    </a>
+                </div>
+                <div class="card">
+                    <a href="VoidGiroList.php">
+                        <h3>Giro Voided</h3>
+                        <p><?php echo $void_count; ?></p>
+                    </a>
+                </div>
+                <div class="card">
+                    <a href="ReturnGiroList.php">
+                        <h3>Giro Returned</h3>
+                        <p><?php echo $return_count; ?></p>
+                    </a>
+                </div>
+                <div class="card">
+                    <a href="JTGiroList.php">
+                        <h3>Giro Due in 7 Days</h3>
+                        <p><?php echo $jt_count; ?></p>
+                    </a>
+                </div>
+                <div class="card">
+                    <a href="MonthlyDueGiroList.php">
+                        <h3>Giro Monthly Due</h3>
+                        <p><?php echo $monthly_due_count; ?></p>
+                    </a>
+                </div>
+                <div class="card">
+                    <a href="OverDueGiroList.php">
+                        <h3>Giro Overdue</h3>
+                        <p><?php echo $Overdue_count; ?></p>
+                    </a>
+                </div>
+            </div>
         </div>
-        <div class="card">
-            <a href="IssuedGiroList.php">
-                <h3>Giro Issued</h3>
-                <p><?php echo htmlspecialchars($issued_count); ?></p>
-            </a>
-        </div>
-        <div class="card">
-            <a href="PostedGiroList.php">
-                <h3>Giro Cair</h3>
-                <p><?php echo htmlspecialchars($Posted_count); ?></p>
-            </a>
-        </div>
-        <div class="card">
-            <a href="VoidGiroList.php">
-                <h3>Giro Void</h3>
-                <p><?php echo htmlspecialchars($void_count); ?></p>
-            </a>
-        </div>
-        <div class="card">
-            <a href="ReturnGiroList.php">
-                <h3>Giro Return</h3>
-                <p><?php echo htmlspecialchars($return_count); ?></p>
-            </a>
-        </div>
-        <div class="card">
-            <a href="JTGiroList.php">
-                <h3>Giro Akan Jatuh Tempo</h3>
-                <p><?php echo htmlspecialchars($jt_count); ?></p>
-            </a>
-        </div>
-        <div class="card">
-            <a href="MonthlyDueGiroList.php">
-                <h3>Giro Jatuh Tempo Bulan Ini</h3>
-                <p><?php echo htmlspecialchars($monthly_due_count); ?></p>
-            </a>
-        </div>
-        <div class="card">
-            <a href="OverDueGiroList.php">
-                <h3 style="color: red;">Giro Lewat Jatuh Tempo</h3>
-                <p style="color: red;"><?php echo htmlspecialchars($Overdue_count); ?></p>
-            </a>
+
+        <div id="cek" class="tab-pane fade">
+            <div class="stats-card">
+                <div class="card">
+                    <a href="UnusedCekList.php">
+                        <h3>Cek Available</h3>
+                        <p><?php echo $unused_cek_count; ?></p>
+                    </a>
+                </div>
+                <div class="card">
+                    <a href="IssuedCekList.php">
+                        <h3>Cek Issued</h3>
+                        <p><?php echo $issued_cek_count; ?></p>
+                    </a>
+                </div>
+                <div class="card">
+                    <a href="PostedCekList.php">
+                        <h3>Cek Posted</h3>
+                        <p><?php echo $Posted_cek_count; ?></p>
+                    </a>
+                </div>
+                <div class="card">
+                    <a href="VoidCekList.php">
+                        <h3>Cek Voided</h3>
+                        <p><?php echo $void_cek_count; ?></p>
+                    </a>
+                </div>
+                <div class="card">
+                    <a href="ReturnCekList.php">
+                        <h3>Cek Returned</h3>
+                        <p><?php echo $return_cek_count; ?></p>
+                    </a>
+                </div>
+                <div class="card">
+                    <a href="JTCekList.php">
+                        <h3>Cek Due in 7 Days</h3>
+                        <p><?php echo $jt_cek_count; ?></p>
+                    </a>
+                </div>
+                <div class="card">
+                    <a href="MonthlyDueCekList.php">
+                        <h3>Cek Monthly Due</h3>
+                        <p><?php echo $monthly_due_cek_count; ?></p>
+                    </a>
+                </div>
+                <div class="card">
+                    <a href="OverDueCekList.php">
+                        <h3>Cek Overdue</h3>
+                        <p><?php echo $Overdue_cek_count; ?></p>
+                    </a>
+                </div>
+            </div>
         </div>
     </div>
 </section>
 
-<section>
-    <h2>Statistik Cek</h2>
-    <div class="stats-card">
-        <div class="card">
-            <a href="UnusedCekList.php">
-                <h3>Cek Available</h3>
-                <p><?php echo htmlspecialchars($unused_cek_count); ?></p>
-            </a>
-        </div>
-        <div class="card">
-            <a href="IssuedCekList.php">
-                <h3>Cek Issued</h3>
-                <p><?php echo htmlspecialchars($issued_cek_count); ?></p>
-            </a>
-        </div>
-        <div class="card">
-            <a href="PostedCekList.php">
-                <h3>Cek Cair</h3>
-                <p><?php echo htmlspecialchars($Posted_cek_count); ?></p>
-            </a>
-        </div>
-        <div class="card">
-            <a href="VoidCekList.php">
-                <h3>Cek Void</h3>
-                <p><?php echo htmlspecialchars($void_cek_count); ?></p>
-            </a>
-        </div>
-        <div class="card">
-            <a href="ReturnCekList.php">
-                <h3>Cek Return</h3>
-                <p><?php echo htmlspecialchars($return_cek_count); ?></p>
-            </a>
-        </div>
-        <div class="card">
-            <a href="JTCekList.php">
-                <h3>Cek Akan Jatuh Tempo</h3>
-                <p><?php echo htmlspecialchars($jt_cek_count); ?></p>
-            </a>
-        </div>
-        <div class="card">
-            <a href="MonthlyDueCekList.php">
-                <h3>Cek Jatuh Tempo Bulan Ini</h3>
-                <p><?php echo htmlspecialchars($monthly_due_cek_count); ?></p>
-            </a>
-        </div>
-        <div class="card">
-            <a href="OverDueCekList.php">
-                <h3 style="color: red;">Giro Lewat Jatuh Tempo</h3>
-                <p style="color: red;"><?php echo htmlspecialchars($Overdue_cek_count); ?></p>
-            </a>
-        </div>
-    </div>
-</section>
 
     <footer>
-        &copy; <?php echo date("Y"); ?> Aplikasi Giro. All rights reserved.
+        © 2024 Aplikasi Giro. All rights reserved.
     </footer>
 
     <script>
-        const toggleNavbar = document.getElementById('toggleNavbar');
-        const navbar = document.getElementById('navbar');
-
-        toggleNavbar.addEventListener('click', () => {
-            navbar.classList.toggle('hide');
+        document.getElementById('toggleNavbar').addEventListener('click', function() {
+            document.getElementById('navbar').classList.toggle('hide');
         });
     </script>
 </body>

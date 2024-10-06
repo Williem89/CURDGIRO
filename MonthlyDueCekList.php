@@ -95,7 +95,7 @@ if (isset($_POST['export'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>cek Tempo Bulan Ini</title>
+    <title>cek Jatuh Tempo Bulan Ini</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
@@ -138,7 +138,7 @@ if (isset($_POST['export'])) {
 </head>
 <body>
     <header>
-        <h1>Cek Jatuh Tempo <?php echo htmlspecialchars(date('F Y', mktime(0, 0, 0, $selected_month, 1, $selected_year))); ?></h1>
+        <h1>cek Jatuh Tempo <?php echo htmlspecialchars(date('F Y', mktime(0, 0, 0, $selected_month, 1, $selected_year))); ?></h1>
     </header>
 
     <form method="POST" class="mb-4">
