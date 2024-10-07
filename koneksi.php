@@ -1,13 +1,8 @@
 <?php
 // koneksi.php
 $servername = "localhost"; // Ganti jika perlu
-<<<<<<< HEAD
 $username = "root"; // Ganti dengan username database Anda
-$password = ""; // Ganti dengan password database Anda
-=======
-$username = "itgel"; // Ganti dengan username database Anda
 $password = "it@123"; // Ganti dengan password database Anda
->>>>>>> d09e7efd1aa799b5caab9020925fc8a5600ecd4c
 $dbname = "curdgiro"; // Ganti dengan nama database Anda
 
 // Buat koneksi
