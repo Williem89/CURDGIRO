@@ -2,7 +2,7 @@
 include 'koneksi.php';
 
 // Calculate the current date
-$current_date = date('Y-m-d');
+$current_date = date('d-m-y');
 $stmt = $conn->prepare("
     SELECT nogiro, tanggal_jatuh_tempo, nominal 
     FROM detail_giro 

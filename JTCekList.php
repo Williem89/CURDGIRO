@@ -2,7 +2,7 @@
 include 'koneksi.php';
 
 // Calculate the date for 7 days ahead
-$seven_days_ahead = date('Y-m-d', strtotime('+7 days'));
+$seven_days_ahead = date('d-m-y', strtotime('+7 days'));
 
 // Prepare the statement to get issued cek records due in 7 days
 $stmt = $conn->prepare("

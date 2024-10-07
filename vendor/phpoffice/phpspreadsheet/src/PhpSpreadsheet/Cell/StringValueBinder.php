@@ -100,7 +100,7 @@ class StringValueBinder extends DefaultValueBinder implements IValueBinder
     {
         // Handle any objects that might be injected
         if ($value instanceof DateTimeInterface) {
-            $value = $value->format('Y-m-d H:i:s');
+            $value = $value->format('d-m-y H:i:s');
             $cell->setValueExplicit($value, DataType::TYPE_STRING);
         } elseif ($value instanceof RichText) {
             $cell->setValueExplicit($value, DataType::TYPE_INLINE);

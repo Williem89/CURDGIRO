@@ -295,21 +295,18 @@ $conn->close();
                 </li>
                 <li><a href="#">Cek</a>
                     <div class="dropdown">
-                        <a href="TulisCek.php">Tulis Cek</a>
-                        <a href="PencairanCek.php">Pencairan Cek</a>
-                        <a href="CekVoid.php">Void Cek</a>
-                        <a href="CekReturn.php">Return Cek</a>
-                        <a href="Search.php">Search Cek</a>
+                        <a href="TulisCek.php">Issued Cek</a>
+                        <a href="ProsesGiro.php">Proses Cek</a>
                     </div>
                 </li>
                 <li><a href="Search.php">Search</a></li>
-                <li><a href="#">Laporan</a>
+                <!--<li><a href="#">Laporan</a>
                     <div class="dropdown">
                         <a href="ReportStockGiro.php">Laporan Stock Giro Belum Terpakai</a>
                         <a href="ReportIssuedGiro.php">Laporan Giro yang sudah terbit</a>
                     </div>
-                </li>
-                <li><a href="logout.php">Bye Bye</a></li> <!-- Logout link -->
+                </li>-->
+                <li><a href="logout.php">Logout</a></li> <!-- Logout link -->
             </ul>
         </nav>
 

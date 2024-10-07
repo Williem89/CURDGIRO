@@ -269,6 +269,6 @@ class Week
         // This appears to be another Excel bug.
 
         return $method === Constants::DOW_SUNDAY && SharedDateHelper::getExcelCalendar() === SharedDateHelper::CALENDAR_MAC_1904
-            && !$origNull && $dateObject->format('Y-m-d') === '1904-01-01';
+            && !$origNull && $dateObject->format('d-m-y') === '1904-01-01';
     }
 }

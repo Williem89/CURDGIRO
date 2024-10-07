@@ -75,7 +75,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $nama_penerima = $customer_data[$no_cust]['nama_cust'];
 
             // Bind parameters
-            $statGiro = 'Issued';  // Set StatGiro to 'Issued'
+            $statGiro = 'Pending';  // Set StatGiro to 'Issued'
 
             $stmt->bind_param("ssssssssssss", 
                 $selected_giro_number, 

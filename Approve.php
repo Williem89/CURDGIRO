@@ -6,7 +6,7 @@ include 'koneksi.php';
 session_start();
 
 // Check if user is logged in with sufficient privileges
-if (!isset($_SESSION['username']) || !isset($_SESSION['UsrLevel']) || $_SESSION['UsrLevel'] == '2') {
+if (!isset($_SESSION['username']) || !isset($_SESSION['UsrLevel']) || $_SESSION['UsrLevel'] != '2') {
     header('Location: backoff.html');
     exit();
 }
@@ -39,7 +39,7 @@ $message = "";
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     foreach ($_POST['batch'] as $batchId => $status) {
         $newStatus = $status === 'Approved' ? 'Unused' : 'Rejected';
-        $approveAt = date('Y-m-d H:i:s'); // Get current date and time
+        $approveAt = date('d-m-y H:i:s'); // Get current date and time
         
         // Update Giro status
         $stmt = $conn->prepare("UPDATE data_giro SET statusgiro = ?, ApproveBy = ?, ApproveAt = ? WHERE BatchId = ?");
