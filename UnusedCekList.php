@@ -17,13 +17,22 @@ if ($stmt === false) {
 $stmt->execute();
 $result = $stmt->get_result();
 
-// Initialize an array to hold the counts and records
+// Initialize an array to hold the counts and records, and a variable for grand total
 $report_data = [];
+$grand_total = 0;
+
 while ($row = $result->fetch_assoc()) {
     $report_data[$row['nama_entitas']][$row['namabank']][] = [
         'nocek' => $row['nocek'],
         'ac_number' => $row['ac_number'],
     ];
+}
+
+// Calculate grand total
+foreach ($report_data as $banks) {
+    foreach ($banks as $cekList) {
+        $grand_total += count($cekList);
+    }
 }
 
 // Close the statement and connection
@@ -98,6 +107,11 @@ $conn->close();
         a:hover {
             background-color: #357ab8;
         }
+        .grand-total {
+            font-weight: bold;
+            text-align: center;
+            margin-top: 20px;
+        }
     </style>
     <script>
         function togglecekList(bank) {
@@ -121,17 +135,17 @@ $conn->close();
     </script>
 </head>
 <body>
-    <h1>Laporan Jumlah Cek Available</h1>
+    <h1>Laporan Jumlah cek Unused</h1>
     
     <?php if (empty($report_data)): ?>
-        <p style="text-align: center;">Tidak ada data Cek.</p>
+        <p style="text-align: center;">Tidak ada data cek.</p>
     <?php else: ?>
         <table>
             <thead>
                 <tr>
                     <th>Nama Entitas</th>
                     <th>Bank</th>
-                    <th>Jumlah Cek</th>
+                    <th>Jumlah cek</th>
                 </tr>
             </thead>
             <tbody>
@@ -156,8 +170,6 @@ $conn->close();
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        
-
                                         <?php 
                                         usort($cekList, function($a, $b) {
                                             return strcmp($a['ac_number'], $b['ac_number']);
@@ -178,6 +190,9 @@ $conn->close();
                 <?php endforeach; ?>
             </tbody>
         </table>
+        <div class="grand-total">
+            Grand Total: <?php echo $grand_total; ?> cek
+        </div>
     <?php endif; ?>
     
     <a href="index.php">Kembali ke Halaman Utama</a>

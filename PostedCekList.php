@@ -1,21 +1,17 @@
 <?php
 include 'koneksi.php';
 
-// Pastikan $selected_month dan $selected_year sudah di-set sebelumnya
-$selected_month = 9; // Contoh: September
-$selected_year = 2024; // Contoh: 2024
-
 // Prepare the statement
-$sql = "SELECT e.nama_entitas, d.namabank, d.ac_number, dg.nocek, SUM(dg.Nominal) AS total_nominal, dg.tanggal_jatuh_tempo 
+$sql = "SELECT e.nama_entitas, d.namabank, d.ac_number, dg.nocek, SUM(dg.Nominal) AS total_nominal, 
+               dg.tanggal_jatuh_tempo, dg.tanggal_cair_cek 
         FROM detail_cek AS dg
         INNER JOIN data_cek AS d ON dg.nocek = d.nocek
         INNER JOIN list_entitas AS e ON d.id_entitas = e.id_entitas
-        WHERE dg.Statcek = 'Issued' 
-        GROUP BY dg.tanggal_jatuh_tempo, e.nama_entitas, d.namabank, d.ac_number, dg.nocek
+        WHERE dg.Statcek = 'Posted' 
+        GROUP BY dg.tanggal_jatuh_tempo, e.nama_entitas, d.namabank, d.ac_number, dg.nocek, dg.tanggal_cair_cek
         ORDER BY dg.tanggal_jatuh_tempo ASC;";
 
 $stmt = $conn->prepare($sql);
-
 if ($stmt === false) {
     die("Preparation failed: " . $conn->error);
 }
@@ -24,10 +20,10 @@ if ($stmt === false) {
 $stmt->execute();
 $result = $stmt->get_result();
 
-// Initialize an array to hold issued cek records
-$issued_cek_records = [];
+// Initialize an array to hold Posted cek records
+$Posted_cek_records = [];
 while ($row = $result->fetch_assoc()) {
-    $issued_cek_records[] = $row;
+    $Posted_cek_records[] = $row;
 }
 
 // Close the statement and connection
@@ -40,7 +36,7 @@ $conn->close();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Daftar cek Issued</title>
+    <title>Daftar cek Posted</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
@@ -83,22 +79,23 @@ $conn->close();
 </head>
 <body>
     <div class="container">
-        <h1 class="text-center">Daftar cek Issued</h1>
+        <h1 class="text-center">Daftar cek Posted</h1>
         <table class="table table-bordered table-striped">
             <thead>
                 <tr>
                     <th>Entitas</th>
                     <th>No cek</th>
                     <th>Tanggal Jatuh Tempo</th>
+                    <th>Tanggal cek Cair</th> <!-- Kolom baru -->
                     <th>Bank</th>
                     <th>No. Rekening</th>
                     <th>Nominal</th>
                 </tr>
             </thead>
             <tbody>
-            <?php if (empty($issued_cek_records)): ?>
+            <?php if (empty($Posted_cek_records)): ?>
                 <tr>
-                    <td colspan="6" class="no-data">Tidak ada data cek.</td>
+                    <td colspan="7" class="no-data">Tidak ada data cek.</td>
                 </tr>
             <?php else: ?>
                 <?php 
@@ -107,7 +104,7 @@ $conn->close();
                 $subtotal = 0;
                 $grand_total = 0;
 
-                foreach ($issued_cek_records as $cek): 
+                foreach ($Posted_cek_records as $cek): 
                     // Update subtotal
                     $subtotal += $cek['total_nominal'];
                     $grand_total += $cek['total_nominal'];
@@ -116,26 +113,27 @@ $conn->close();
                     if ($current_entity !== $cek['nama_entitas']) {
                         // Output subtotal for the previous entity
                         if ($current_entity !== '') {
-                            echo '<tr class="subtotal"><td colspan="5">Subtotal</td><td>' . number_format($subtotal, 2, ',', '.') . '</td></tr>';
+                            echo '<tr class="subtotal"><td colspan="6">Subtotal</td><td>' . number_format($subtotal, 2, ',', '.') . '</td></tr>';
                         }
 
                         // Reset subtotal for new entity
                         $subtotal = $cek['total_nominal'];
                         $current_entity = $cek['nama_entitas'];
 
-                        echo '<tr class="group-header"><td colspan="6">' . htmlspecialchars($current_entity) . '</td></tr>';
+                        echo '<tr class="group-header"><td colspan="7">' . htmlspecialchars($current_entity) . '</td></tr>';
                     }
 
                     // Check if we need to output a new bank
                     if ($current_bank !== $cek['namabank']) {
                         $current_bank = $cek['namabank'];
-                        echo '<tr class="group-header"><td colspan="6">' . htmlspecialchars($current_bank) . '</td></tr>';
+                        echo '<tr class="group-header"><td colspan="7">' . htmlspecialchars($current_bank) . '</td></tr>';
                     }
                 ?>
                     <tr>
                         <td><?php echo htmlspecialchars($cek['nama_entitas']); ?></td>
                         <td><?php echo htmlspecialchars($cek['nocek']); ?></td>
                         <td><?php echo htmlspecialchars($cek['tanggal_jatuh_tempo']); ?></td>
+                        <td><?php echo htmlspecialchars($cek['tanggal_cair_cek']); ?></td> <!-- Kolom baru -->
                         <td><?php echo htmlspecialchars($cek['namabank']); ?></td>
                         <td><?php echo htmlspecialchars($cek['ac_number']); ?></td>
                         <td><?php echo number_format($cek['total_nominal'], 2, ',', '.'); ?></td>
@@ -143,8 +141,8 @@ $conn->close();
                 <?php endforeach; ?>
 
                 <!-- Output subtotal for the last entity -->
-                <tr class="subtotal"><td colspan="5">Subtotal</td><td><?php echo number_format($subtotal, 2, ',', '.'); ?></td></tr>
-                <tr class="grand-total"><td colspan="5">Grand Total</td><td><?php echo number_format($grand_total, 2, ',', '.'); ?></td></tr>
+                <tr class="subtotal"><td colspan="6">Subtotal</td><td><?php echo number_format($subtotal, 2, ',', '.'); ?></td></tr>
+                <tr class="grand-total"><td colspan="6">Grand Total</td><td><?php echo number_format($grand_total, 2, ',', '.'); ?></td></tr>
             <?php endif; ?>
             </tbody>
         </table>

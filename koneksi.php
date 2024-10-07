@@ -13,4 +13,7 @@ if ($conn->connect_error) {
     die("Koneksi gagal: " . $conn->connect_error);
 }
 
+// Set the timezone to GMT +7
+date_default_timezone_set('Asia/Bangkok');
+
 ?>

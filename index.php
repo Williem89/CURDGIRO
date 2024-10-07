@@ -1,6 +1,5 @@
 <?php
 // Start the session
-session_start();
 
 // Check if the user is already logged in
 if (isset($_SESSION['username'])) {
@@ -132,11 +131,7 @@ if (isset($_SESSION['username'])) {
         </style>
     </head>
     <body>
-        <div class="container">
-            <h1>Welcome to Our Site</h1>
-            <p>Please log in to continue.</p>
-            <a href="login.html">Go to Login</a>
-        </div>
+
     </body>
     </html>
     <?php

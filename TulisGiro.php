@@ -48,16 +48,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($selected_giro_number) || empty($no_cust) || empty($tanggal_giro) || empty($tanggal_jatuh_tempo) || 
         empty($nominal) || empty($customer_data[$no_cust]['nama_cust'])) {
         $message = 'Error: All fields are required.';
-    } elseif ($nominal <= 0) {
+    } else if ($nominal <= 0) {
         $message = 'Error: Nominal must be greater than zero.';
+    } else if (!is_uploaded_file($_FILES['foto_giro']['tmp_name'])) {
+        $message = 'Error: No file input';
     } else {
         // Begin transaction
         $conn->begin_transaction();
+        $filePath = $_FILES['foto_giro']['tmp_name'];
+        $fileData = file_get_contents($filePath);
+        $base64File = base64_encode($fileData);
         try {
             // Prepare statement to insert into the detail_giro table
             $stmt = $conn->prepare("INSERT INTO detail_giro (nogiro, tanggal_giro, tanggal_jatuh_tempo, nominal, 
-                nama_penerima, ac_penerima, bank_penerima, Keterangan, PVRNo, StatGiro, created_by, created_at) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
+                nama_penerima, ac_penerima, bank_penerima, Keterangan, PVRNo, StatGiro, image_giro, created_by, created_at) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
 
             // Check if statement preparation was successful
             if (!$stmt) {
@@ -72,7 +77,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Bind parameters
             $statGiro = 'Issued';  // Set StatGiro to 'Issued'
 
-            $stmt->bind_param("sssssssssss", 
+            $stmt->bind_param("ssssssssssss", 
                 $selected_giro_number, 
                 $tanggal_giro, 
                 $tanggal_jatuh_tempo, 
@@ -82,7 +87,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $bank_penerima, 
                 $Keterangan,
                 $PVRNo, 
-                $statGiro, 
+                $statGiro,
+                $base64File,
                 $createdBy
             );
 
@@ -260,7 +266,7 @@ $conn->close();
             <?php echo $message; ?>
         </div>
     <?php endif; ?>
-    <form method="POST" action="">
+    <form method="POST" action="" enctype="multipart/form-data">
         <label for="giro_number">No Giro:</label>
         <input type="text" id="search_giro_no" oninput="searchGiro()" onfocusout="clearInput()" required>
         <select id="giro_number" name="giro_number" size="5" required onchange="updateBankAndAccount()" style="display:none;">
@@ -306,6 +312,9 @@ $conn->close();
 
         <label for="Keterangan">Keterangan:</label>
         <input type="text" id="Keterangan" name="Keterangan"><br><br>
+
+        <label for="Keterangan">Foto Giro:</label>
+        <input type="file" id="Keterangan" name="foto_giro"><br><br>
 
         <input type="submit" value="Submit">
         <a href="dashboard.php" class="back-button">Kembali</a>

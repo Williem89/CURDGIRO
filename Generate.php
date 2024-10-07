@@ -14,11 +14,31 @@ if ($result) {
     }
 }
 
+// Initialize Batch ID
+$batchId = '';
+
+// Fetch the last Batch ID from the database
+$sql = "SELECT BatchId FROM data_giro ORDER BY BatchId DESC LIMIT 1";
+$result = $conn->query($sql);
+
+if ($result && $row = $result->fetch_assoc()) {
+    $lastBatchId = $row['BatchId'];
+    $lastNumber = intval(substr($lastBatchId, 0, 4));
+    $newBatchNumber = $lastNumber + 1;
+} else {
+    $newBatchNumber = 1;
+}
+
+// Generate a new Batch ID with random number and current date
+$randomNumber = rand(1000, 9999);
+$todayDate = date('Ymd');
+$batchId = str_pad($newBatchNumber, 4, '0', STR_PAD_LEFT) . $randomNumber . $todayDate;
+
 // Process form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Sanitize and retrieve input values
     $prefix = filter_input(INPUT_POST, 'prefix', FILTER_SANITIZE_STRING);
-    $start_number = filter_input(INPUT_POST, 'Start_number', FILTER_SANITIZE_NUMBER_INT);
+    $start_number = filter_input(INPUT_POST, 'Start_number', FILTER_SANITIZE_STRING);
     $jumlah_giro = filter_input(INPUT_POST, 'Jumlah_giro', FILTER_SANITIZE_NUMBER_INT);
     $namabank = filter_input(INPUT_POST, 'namabank', FILTER_SANITIZE_STRING);
     $ac_number = filter_input(INPUT_POST, 'ac_number', FILTER_SANITIZE_STRING);
@@ -33,12 +53,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($prefix) || empty($start_number) || empty($jumlah_giro) || empty($namabank) || empty($ac_number) || empty($ac_name) || empty($jenis_giro) || empty($id_entitas)) {
         echo "<script>alert('Error: All fields are required.');</script>";
     } else {
-        $end_number = $start_number + $jumlah_giro - 1;
+        // Ensure start_number is always 6 characters long
+        $start_number = str_pad($start_number, 6, '0', STR_PAD_LEFT);
+        $end_number = (int)$start_number + (int)$jumlah_giro - 1;
         $giro_numbers = [];
 
-        for ($i = $start_number; $i <= $end_number; $i++) {
+        for ($i = (int)$start_number; $i <= $end_number; $i++) {
             // Include prefix in the giro number
-            $giro_number = $prefix . "-" . str_pad($i, 3, '0', STR_PAD_LEFT);
+            $giro_number = $prefix . "-" . str_pad($i, 6, '0', STR_PAD_LEFT);
             $giro_numbers[] = $giro_number;
 
             $check_stmt = $conn->prepare("SELECT COUNT(*) FROM data_giro WHERE nogiro = ?");
@@ -53,27 +75,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 continue;
             }
 
-           // Choose the correct table and prepare the insert statement
-if ($jenis_giro === 'Giro') {
-    $stmt = $conn->prepare("INSERT INTO data_giro (nogiro, namabank, ac_number, ac_name, statusgiro, created_by, created_at, jenis_giro, id_entitas) 
-        VALUES (?, ?, ?, ?, 'Unused', ?, NOW(), ?, ?)");
-    
-    if ($stmt) {
-        $stmt->bind_param("sssssii", $giro_number, $namabank, $ac_number, $ac_name, $created_by, $jenis_giro, $id_entitas);
-    } else {
-        echo "<script>alert('Error preparing statement for data_giro: " . $conn->error . "');</script>";
-    }
-} else if ($jenis_giro === 'Cek') {
-    $stmt = $conn->prepare("INSERT INTO data_cek (NOCEK, namabank, ac_number, ac_name, statuscek, created_by, created_at, jenis_cek, id_entitas) 
-        VALUES (?, ?, ?, ?, 'Unused', ?, NOW(), ?, ?)");
-    
-    if ($stmt) {
-        $stmt->bind_param("sssssii", $giro_number, $namabank, $ac_number, $ac_name, $created_by, $jenis_giro, $id_entitas);
-    } else {
-        echo "<script>alert('Error preparing statement for data_cek: " . $conn->error . "');</script>";
-    }
-}
-
+            // Choose the correct table and prepare the insert statement
+            if ($jenis_giro === 'Giro') {
+                $stmt = $conn->prepare("INSERT INTO data_giro (BatchId, nogiro, namabank, ac_number, ac_name, statusgiro, created_by, created_at, jenis_giro, id_entitas) 
+                VALUES (?, ?, ?, ?, ?, 'Belum Aktif', ?, NOW(), ?, ?)");
+                
+                if ($stmt) {
+                    $stmt->bind_param("ssssssii", $batchId, $giro_number, $namabank, $ac_number, $ac_name, $created_by, $jenis_giro, $id_entitas);
+                } else {
+                    echo "<script>alert('Error preparing statement for data_giro: " . $conn->error . "');</script>";
+                }
+            } else if ($jenis_giro === 'Cek') {
+                $stmt = $conn->prepare("INSERT INTO data_cek (BatchId, NOCEK, namabank, ac_number, ac_name, statuscek, created_by, created_at, jenis_cek, id_entitas) 
+                VALUES (?, ?, ?, ?, ?, 'Unused', ?, NOW(), ?, ?)");
+                
+                if ($stmt) {
+                    $stmt->bind_param("ssssssii", $batchId, $giro_number, $namabank, $ac_number, $ac_name, $created_by, $jenis_giro, $id_entitas);
+                } else {
+                    echo "<script>alert('Error preparing statement for data_cek: " . $conn->error . "');</script>";
+                }
+            }
 
             // Execute the statement
             if ($stmt) {
@@ -188,6 +209,25 @@ $conn->close();
             }
         }
 
+        function validateForm() {
+            const prefix = document.getElementById('prefix').value;
+            const startNumber = document.getElementById('Start_number').value;
+
+            // Check if prefix length is greater than 3
+            if (prefix.length > 3) {
+                alert('Error: Prefix must be a maximum of 3 characters.');
+                return false;
+            }
+
+            // Check if start number is exactly 6 characters
+            if (startNumber.length !== 6) {
+                alert('Error: Start number must be exactly 6 characters.');
+                return false;
+            }
+
+            return true;
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('nama_entitas').addEventListener('change', fetchAccountNumbers);
             document.getElementById('ac_number').addEventListener('change', function() {
@@ -211,11 +251,14 @@ $conn->close();
 </head>
 <body>
     <h1>Generate Giro/Cek</h1>
-    <form method="POST" action="">
+    <form method="POST" action="" onsubmit="return validateForm();">
         <label>Jenis Giro:</label>
         <label><input type="radio" name="jenis_giro" value="Giro" required checked>Giro</label>
         <label><input type="radio" name="jenis_giro" value="Cek">Cek</label>
         <br>
+        <label for="batchId">Batch ID:</label>
+        <input type="text" id="batchId" name="batchId" value="<?php echo htmlspecialchars($batchId); ?>" readonly disabled>
+        
         <label for="nama_entitas">Entitas:</label>
         <select id="nama_entitas" name="nama_entitas" required>
             <option value="">-- Pilih Entitas --</option>
@@ -246,8 +289,9 @@ $conn->close();
         <label for="Start_number">Mulai dari no. :</label>
         <table>
             <tr>
-                <td><input type="text" id="prefix" name="prefix" required style="width:70px;"></td>
-                <td><input type="number" id="Start_number" name="Start_number" required style="width:220px;"></td>
+                <td><input type="text" id="prefix" name="prefix" required maxlength="3" style="width:70px;"></td>
+                <td>-</td> 
+                <td><input type="text" id="Start_number" name="Start_number" required maxlength="6" style="width:220px;"></td>
             </tr>
         </table>
 
