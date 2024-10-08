@@ -6,9 +6,14 @@ $seven_days_ahead = date('Y-m-d', strtotime('+7 days'));
 
 // Prepare the statement to get issued cek records due in 7 days
 $stmt = $conn->prepare("
-    SELECT nocek, DATE_FORMAT(tanggal_jatuh_tempo, '%d-%m-%Y') AS tanggal_jatuh_tempo, nominal 
-    FROM detail_cek 
-    WHERE Statcek = 'Issued' AND tanggal_jatuh_tempo BETWEEN NOW() AND ?
+    SELECT d.namabank, d.ac_name, dc.ac_penerima, dc.nama_penerima, dc.bank_penerima, dc.nocek, dc.nominal as Nominal, 
+               SUM(dc.Nominal) AS total_nominal, dc.tanggal_jatuh_tempo, dc.PVRNo, dc.keterangan 
+    FROM detail_cek AS dc
+        INNER JOIN data_cek AS d ON dc.nocek = d.nocek
+        WHERE dc.Statcek = 'Issued' 
+        AND dc.tanggal_jatuh_tempo BETWEEN NOW() AND ?
+        GROUP BY dc.tanggal_jatuh_tempo, d.namabank, d.ac_name, dc.ac_penerima, dc.nama_penerima, dc.nocek, dc.PVRNo, dc.keterangan
+        ORDER BY dc.tanggal_jatuh_tempo ASC
 ");
 
 if (!$stmt) {
@@ -119,16 +124,30 @@ $conn->close();
     <table>
         <tr>
             <th>No</th>
-            <th>No cek</th>
             <th>Tanggal Jatuh Tempo</th>
+            <th>No cek</th>
+            <th>No Rek Asal</th>
+            <th>Bank Asal</th>
+            <th>Rekening Tujuan</th>
+            <th>Atas Nama</th>
+            <th>Bank Tujuan</th>
+            <th>No PVR</th>
+            <th>Keterangan</th>         
             <th>Nominal</th>
         </tr>
         <?php foreach ($issued_cek_records as $cek): ?>
             <tr>
                 <td><?php echo $no++; ?></td>
-                <td><?php echo htmlspecialchars($cek['nocek']); ?></td>
                 <td><?php echo htmlspecialchars($cek['tanggal_jatuh_tempo']); ?></td>
-                <td><?php echo number_format($cek['nominal']); ?></td>
+                <td><?php echo htmlspecialchars($cek['nocek']); ?></td>
+                <td><?php echo htmlspecialchars($cek['ac_name']); ?></td>
+                <td><?php echo htmlspecialchars($cek['namabank']); ?></td>
+                <td><?php echo htmlspecialchars($cek['ac_penerima']); ?></td>
+                <td><?php echo htmlspecialchars($cek['nama_penerima']); ?></td>
+                <td><?php echo htmlspecialchars($cek['bank_penerima']); ?></td>
+                <td><?php echo htmlspecialchars($cek['PVRNo']); ?></td>
+                <td><?php echo htmlspecialchars($cek['keterangan']); ?></td>
+                <td><?php echo number_format($cek['Nominal']); ?></td>
             </tr>
         <?php endforeach; ?>
     </table>

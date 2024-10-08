@@ -238,6 +238,7 @@ $conn->close();
                 <select name="status" class="form-select">
                     <option value="">Pilih Status</option>
                     <option value="Void" <?php echo ($selected_status == 'Void') ? 'selected' : ''; ?>>Void</option>
+                    <option value="Pending" <?php echo ($selected_status == 'Pending') ? 'selected' : ''; ?>>Pending</option>
                     <option value="Issued" <?php echo ($selected_status == 'Issued') ? 'selected' : ''; ?>>Issued</option>
                 </select>
                 <button class="btn btn-primary" type="submit">Cari</button>
@@ -289,6 +290,18 @@ $conn->close();
                         <td><?php echo $giro['ac_number']; ?></td>
                         <td><?php echo number_format($giro['total_nominal'], 2); ?></td>
                         <td>
+                            <!--
+                            <button class="btn btn-sm btn-primary edit-btn" <?php echo $giro['StatGiro'] == "Issued" ? "disabled" : ""; ?> 
+                                    data-nogiro="<?php echo htmlspecialchars($giro['nogiro']); ?>" 
+                                    data-entitas="<?php echo htmlspecialchars($giro['nama_entitas']); ?>">
+                                <i class="bi bi-send-check"></i>
+                            </button>
+                            <button class="btn btn-sm btn-primary aprv-btn" <?php echo $giro['StatGiro'] == "Issued" ? "disabled" : ""; ?> 
+                                    data-nogiro="<?php echo htmlspecialchars($giro['nogiro']); ?>" 
+                                    data-entitas="<?php echo htmlspecialchars($giro['nama_entitas']); ?>">
+                                <i class="bi bi-send-check"></i>
+                            </button>
+                            -->
                             <button class="btn btn-sm btn-primary cair-btn" <?php echo $giro['StatGiro'] == "Void" ? "disabled" : ""; ?> 
                                     data-nogiro="<?php echo htmlspecialchars($giro['nogiro']); ?>" 
                                     data-entitas="<?php echo htmlspecialchars($giro['nama_entitas']); ?>">
@@ -369,7 +382,8 @@ $conn->close();
                     });
                 });
             }
-
+            handleButtonClick('.edit-btn', 'edit');
+            handleButtonClick('.aprv-btn', 'approve');
             handleButtonClick('.cair-btn', 'cair');
             handleButtonClick('.void-btn', 'void');
             handleButtonClick('.return-btn', 'return');

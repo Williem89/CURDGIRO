@@ -81,16 +81,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 VALUES (?, ?, ?, ?, ?, 'Belum Aktif', ?, NOW(), ?, ?)");
                 
                 if ($stmt) {
-                    $stmt->bind_param("ssssssii", $batchId, $giro_number, $namabank, $ac_number, $ac_name, $created_by, $jenis_giro, $id_entitas);
+                    $stmt->bind_param("sssssssi", $batchId, $giro_number, $namabank, $ac_number, $ac_name, $created_by, $jenis_giro, $id_entitas);
                 } else {
                     echo "<script>alert('Error preparing statement for data_giro: " . $conn->error . "');</script>";
                 }
             } else if ($jenis_giro === 'Cek') {
                 $stmt = $conn->prepare("INSERT INTO data_cek (BatchId, NOCEK, namabank, ac_number, ac_name, statuscek, created_by, created_at, jenis_cek, id_entitas) 
-                VALUES (?, ?, ?, ?, ?, 'Unused', ?, NOW(), ?, ?)");
+                VALUES (?, ?, ?, ?, ?, 'Belum Aktif', ?, NOW(), ?, ?)");
                 
                 if ($stmt) {
-                    $stmt->bind_param("ssssssii", $batchId, $giro_number, $namabank, $ac_number, $ac_name, $created_by, $jenis_giro, $id_entitas);
+                    $stmt->bind_param("sssssssi", $batchId, $giro_number, $namabank, $ac_number, $ac_name, $created_by, $jenis_giro, $id_entitas);
+                } else {
+                    echo "<script>alert('Error preparing statement for data_cek: " . $conn->error . "');</script>";
+                }
+            } else if ($jenis_giro === 'loa') {
+                $stmt = $conn->prepare("INSERT INTO data_loa (BatchId, noloa, namabank, ac_number, ac_name, statusloa, created_by, created_at, jenis_loa, id_entitas) 
+                VALUES (?, ?, ?, ?, ?, 'Belum Aktif', ?, NOW(), ?, ?)");
+                
+                if ($stmt) {
+                    $stmt->bind_param("sssssssi", $batchId, $giro_number, $namabank, $ac_number, $ac_name, $created_by, $jenis_giro, $id_entitas);
                 } else {
                     echo "<script>alert('Error preparing statement for data_cek: " . $conn->error . "');</script>";
                 }
@@ -252,9 +261,13 @@ $conn->close();
 <body>
     <h1>Generate Giro/Cek</h1>
     <form method="POST" action="" onsubmit="return validateForm();">
-        <label>Jenis Giro:</label>
-        <label><input type="radio" name="jenis_giro" value="Giro" required checked>Giro</label>
-        <label><input type="radio" name="jenis_giro" value="Cek">Cek</label>
+        <label for="jenis_giro">Jenis:</label>
+            <select id="jenis_giro" name="jenis_giro" required>
+                <option value="Giro" selected>Giro</option>
+                <option value="Cek">Cek</option>
+                <option value="loa">LOA</option>
+            </select>
+
         <br>
         <label for="batchId">Batch ID:</label>
         <input type="text" id="batchId" name="batchId" value="<?php echo htmlspecialchars($batchId); ?>" readonly disabled>

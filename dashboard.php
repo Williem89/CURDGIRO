@@ -29,7 +29,7 @@ $issued_count = countItems($conn, 'detail_giro', 'statgiro', 'Issued');
 $Posted_count = countItems($conn, 'detail_giro', 'statgiro', 'Posted');
 $void_count = countItems($conn, 'detail_giro', 'statgiro', 'void');
 $return_count = countItems($conn, 'detail_giro', 'statgiro', 'return');
-$jt_count = countChequesDue($conn, 'detail_giro', 'StatGiro', 'Issued', "DATEDIFF(tanggal_jatuh_tempo, NOW()) BETWEEN 0 AND 7");
+$jt_count = countChequesDue($conn, 'detail_giro', 'StatGiro', 'Issued', "DATEDIFF(tanggal_jatuh_tempo, CURDATE()) BETWEEN 0 AND 7");
 $monthly_due_count = countChequesDue($conn, 'detail_giro', 'StatGiro', 'Issued', "MONTH(tanggal_jatuh_tempo) = MONTH(NOW()) AND YEAR(tanggal_jatuh_tempo) = YEAR(NOW())");
 $Overdue_count = countChequesDue($conn, 'detail_giro', 'StatGiro', 'Issued', "tanggal_jatuh_tempo < CURDATE()");
 
@@ -39,9 +39,9 @@ $issued_cek_count = countItems($conn, 'detail_cek', 'statcek', 'Issued');
 $Posted_cek_count = countItems($conn, 'detail_cek', 'statcek', 'Posted');
 $void_cek_count = countItems($conn, 'detail_cek', 'statcek', 'void');
 $return_cek_count = countItems($conn, 'detail_cek', 'statcek', 'return');
-$jt_cek_count = countChequesDue($conn, 'detail_cek', 'Statcek', 'Issued', "DATEDIFF(tanggal_jatuh_tempo, NOW()) BETWEEN 0 AND 7");
+$jt_cek_count = countChequesDue($conn, 'detail_cek', 'Statcek', 'Issued', "DATEDIFF(tanggal_jatuh_tempo, CURDATE()) BETWEEN 0 AND 7");
 $monthly_due_cek_count = countChequesDue($conn, 'detail_cek', 'Statcek', 'Issued', "MONTH(tanggal_jatuh_tempo) = MONTH(NOW()) AND YEAR(tanggal_jatuh_tempo) = YEAR(NOW())");
-$Overdue_cek_count = countChequesDue($conn, 'detail_cek', 'Statcek', 'Issued', "tanggal_jatuh_tempo < NOW()");
+$Overdue_cek_count = countChequesDue($conn, 'detail_cek', 'Statcek', 'Issued', "tanggal_jatuh_tempo < CURDATE()");
 
 // Initialize counts for loa
 $unused_loa_count = countItems($conn, 'data_loa', 'statusloa', 'Unused');
@@ -49,9 +49,9 @@ $issued_loa_count = countItems($conn, 'detail_loa', 'statloa', 'Issued');
 $Posted_loa_count = countItems($conn, 'detail_loa', 'statloa', 'Posted');
 $void_loa_count = countItems($conn, 'detail_loa', 'statloa', 'void');
 $return_loa_count = countItems($conn, 'detail_loa', 'statloa', 'return');
-$jt_loa_count = countChequesDue($conn, 'detail_loa', 'Statloa', 'Issued', "DATEDIFF(tanggal_jatuh_tempo, NOW()) BETWEEN 0 AND 7");
+$jt_loa_count = countChequesDue($conn, 'detail_loa', 'Statloa', 'Issued', "DATEDIFF(tanggal_jatuh_tempo, CURDATE()) BETWEEN 0 AND 7");
 $monthly_due_loa_count = countChequesDue($conn, 'detail_loa', 'Statloa', 'Issued', "MONTH(tanggal_jatuh_tempo) = MONTH(NOW()) AND YEAR(tanggal_jatuh_tempo) = YEAR(NOW())");
-$Overdue_loa_count = countChequesDue($conn, 'detail_loa', 'Statloa', 'Issued', "tanggal_jatuh_tempo < NOW()");
+$Overdue_loa_count = countChequesDue($conn, 'detail_loa', 'Statloa', 'Issued', "tanggal_jatuh_tempo < CURDATE()");
 
 //Kebutuhan Tab List Giro
 // Initialize an empty array to store the due cheques
@@ -326,18 +326,14 @@ $conn->close();
                 <?php if (isset($_SESSION['UsrLevel']) && $_SESSION['UsrLevel'] == '2'): ?>
                     <li><a href="Approve.php">Approve Generate</a></li>
                 <?php endif; ?>
-                <li><a href="#">Giro</a>
+                <li><a href="#">Issued</a>
                     <div class="dropdown">
-                        <a href="TulisGiro.php">Issued Giro</a>
-                        <a href="ProsesGiro.php">Proses Giro</a>
+                        <a href="TulisGiro.php">Giro</a>
+                        <a href="TulisCek.php">Cek</a>
+                        <a href="Tulisloa.php">LOA</a>
                     </div>
                 </li>
-                <li><a href="#">Cek</a>
-                    <div class="dropdown">
-                        <a href="TulisCek.php">Issued Cek</a>
-                        <a href="ProsesGiro.php">Proses Cek</a>
-                    </div>
-                </li>
+                <li><a href="ProsesGiro.php">Proses Giro&Cek</a></li>
                 <li><a href="Search.php">Search</a></li>
                 <!--<li><a href="#">Laporan</a>
                     <div class="dropdown">
@@ -367,6 +363,9 @@ $conn->close();
             </li>
             <li class="nav-item">
                 <a class="nav-link" data-bs-toggle="tab" href="#loa">LOA</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="tab" href="#search">Search</a>
             </li>
         </ul>
     </div>

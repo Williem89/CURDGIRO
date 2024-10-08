@@ -6,9 +6,15 @@ $seven_days_ahead = date('Y-m-d', strtotime('+7 days'));
 
 // Prepare the statement to get issued loa records due in 7 days
 $stmt = $conn->prepare("
-    SELECT noloa, DATE_FORMAT(tanggal_jatuh_tempo, '%d-%m-%Y') AS tanggal_jatuh_tempo, nominal 
-    FROM detail_loa 
-    WHERE Statloa = 'Issued' AND tanggal_jatuh_tempo BETWEEN NOW() AND ?
+    SELECT d.namabank, d.ac_name, dc.ac_penerima, dc.nama_penerima, dc.bank_penerima, dc.noloa, dc.nominal as Nominal, 
+           SUM(dc.Nominal) AS total_nominal, dc.tanggal_jatuh_tempo, dc.PVRNo, dc.keterangan 
+    FROM detail_loa AS dc
+        INNER JOIN data_loa AS d ON dc.noloa = d.noloa
+        WHERE dc.Statloa = 'Issued' 
+        AND dc.tanggal_jatuh_tempo >= curdate()
+        AND dc.tanggal_jatuh_tempo <= ?
+        GROUP BY dc.tanggal_jatuh_tempo, d.namabank, d.ac_name, dc.ac_penerima, dc.nama_penerima, dc.noloa, dc.PVRNo, dc.keterangan
+        ORDER BY dc.tanggal_jatuh_tempo ASC
 ");
 
 if (!$stmt) {
@@ -18,7 +24,7 @@ if (!$stmt) {
 $stmt->bind_param("s", $seven_days_ahead);
 $stmt->execute();
 $result = $stmt->get_result();
-$no=1;
+$no = 1;
 
 $issued_loa_records = [];
 while ($row = $result->fetch_assoc()) {
@@ -30,7 +36,8 @@ $count_stmt = $conn->prepare("
     SELECT COUNT(*) AS jt_count 
     FROM detail_loa 
     WHERE Statloa = 'Issued' 
-    AND DATEDIFF(tanggal_jatuh_tempo, NOW()) BETWEEN 0 AND 7
+    AND tanggal_jatuh_tempo >= curdate()
+    AND tanggal_jatuh_tempo <= DATE_ADD(NOW(), INTERVAL 7 DAY)
 ");
 
 if (!$count_stmt) {
@@ -52,7 +59,7 @@ $conn->close();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Daftar loa Issued</title>
+    <title>Daftar LOA Issued</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -114,21 +121,35 @@ $conn->close();
     </style>
 </head>
 <body>
-    <h1>Daftar loa Issued yang Jatuh Tempo dalam 7 Hari</h1>
-    <p>Total loa yang Jatuh Tempo: <?php echo $jt_count; ?></p>
+    <h1>Daftar LOA Issued yang Jatuh Tempo dalam 7 Hari</h1>
+    <p>Total LOA yang Jatuh Tempo: <?php echo $jt_count; ?></p>
     <table>
         <tr>
             <th>No</th>
-            <th>No loa</th>
             <th>Tanggal Jatuh Tempo</th>
+            <th>No LOA</th>
+            <th>No Rek Asal</th>
+            <th>Bank Asal</th>
+            <th>Rekening Tujuan</th>
+            <th>Atas Nama</th>
+            <th>Bank Tujuan</th>
+            <th>No PVR</th>
+            <th>Keterangan</th>         
             <th>Nominal</th>
         </tr>
         <?php foreach ($issued_loa_records as $loa): ?>
             <tr>
                 <td><?php echo $no++; ?></td>
-                <td><?php echo htmlspecialchars($loa['noloa']); ?></td>
                 <td><?php echo htmlspecialchars($loa['tanggal_jatuh_tempo']); ?></td>
-                <td><?php echo number_format($loa['nominal']); ?></td>
+                <td><?php echo htmlspecialchars($loa['noloa']); ?></td>
+                <td><?php echo htmlspecialchars($loa['ac_name']); ?></td>
+                <td><?php echo htmlspecialchars($loa['namabank']); ?></td>
+                <td><?php echo htmlspecialchars($loa['ac_penerima']); ?></td>
+                <td><?php echo htmlspecialchars($loa['nama_penerima']); ?></td>
+                <td><?php echo htmlspecialchars($loa['bank_penerima']); ?></td>
+                <td><?php echo htmlspecialchars($loa['PVRNo']); ?></td>
+                <td><?php echo htmlspecialchars($loa['keterangan']); ?></td>
+                <td><?php echo number_format($loa['Nominal']); ?></td>
             </tr>
         <?php endforeach; ?>
     </table>

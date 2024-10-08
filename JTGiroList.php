@@ -6,9 +6,14 @@ $seven_days_ahead = date('Y-m-d', strtotime('+7 days'));
 
 // Prepare the statement to get issued giro records due in 7 days
 $stmt = $conn->prepare("
-    SELECT nogiro, DATE_FORMAT(tanggal_jatuh_tempo, '%d-%m-%Y') AS tanggal_jatuh_tempo, nominal 
-    FROM detail_giro 
-    WHERE Statgiro = 'Issued' AND tanggal_jatuh_tempo BETWEEN NOW() AND ?
+    SELECT d.namabank, d.ac_name, dg.ac_penerima, dg.nama_penerima, dg.bank_penerima, dg.nogiro, dg.nominal as Nominal, 
+               SUM(dg.Nominal) AS total_nominal, dg.tanggal_jatuh_tempo, dg.PVRNo, dg.keterangan 
+    FROM detail_giro AS dg
+        INNER JOIN data_giro AS d ON dg.nogiro = d.nogiro
+        WHERE dg.StatGiro = 'Issued' 
+        AND dg.tanggal_jatuh_tempo BETWEEN NOW() AND ?
+        GROUP BY dg.tanggal_jatuh_tempo, d.namabank, d.ac_name, dg.ac_penerima, dg.nama_penerima, dg.nogiro, dg.PVRNo, dg.keterangan
+        ORDER BY dg.tanggal_jatuh_tempo ASC
 ");
 
 if (!$stmt) {
@@ -119,16 +124,30 @@ $conn->close();
     <table>
         <tr>
             <th>No</th>
-            <th>No Giro</th>
             <th>Tanggal Jatuh Tempo</th>
+            <th>No Giro</th>
+            <th>No Rek Asal</th>
+            <th>Bank Asal</th>
+            <th>Rekening Tujuan</th>
+            <th>Atas Nama</th>
+            <th>Bank Tujuan</th>
+            <th>No PVR</th>
+            <th>Keterangan</th>         
             <th>Nominal</th>
         </tr>
         <?php foreach ($issued_giro_records as $giro): ?>
             <tr>
                 <td><?php echo $no++; ?></td>
-                <td><?php echo htmlspecialchars($giro['nogiro']); ?></td>
                 <td><?php echo htmlspecialchars($giro['tanggal_jatuh_tempo']); ?></td>
-                <td><?php echo number_format($giro['nominal']); ?></td>
+                <td><?php echo htmlspecialchars($giro['nogiro']); ?></td>
+                <td><?php echo htmlspecialchars($giro['ac_name']); ?></td>
+                <td><?php echo htmlspecialchars($giro['namabank']); ?></td>
+                <td><?php echo htmlspecialchars($giro['ac_penerima']); ?></td>
+                <td><?php echo htmlspecialchars($giro['nama_penerima']); ?></td>
+                <td><?php echo htmlspecialchars($giro['bank_penerima']); ?></td>
+                <td><?php echo htmlspecialchars($giro['PVRNo']); ?></td>
+                <td><?php echo htmlspecialchars($giro['keterangan']); ?></td>
+                <td><?php echo number_format($giro['Nominal']); ?></td>
             </tr>
         <?php endforeach; ?>
     </table>

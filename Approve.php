@@ -17,6 +17,7 @@ $approveBy = $_SESSION['username']; // Get the logged-in user
 $entries = [];
 $queryGiro = "SELECT * FROM data_giro WHERE statusgiro = 'Belum Aktif' ORDER BY BatchId, nogiro";
 $queryCek = "SELECT * FROM data_cek WHERE statuscek = 'Belum Aktif' ORDER BY BatchId, nocek";
+$queryloa = "SELECT * FROM data_loa WHERE statusloa = 'Belum Aktif' ORDER BY BatchId, noloa";
 
 if ($resultGiro = $conn->query($queryGiro)) {
     while ($row = $resultGiro->fetch_assoc()) {
@@ -29,6 +30,14 @@ if ($resultGiro = $conn->query($queryGiro)) {
 if ($resultCek = $conn->query($queryCek)) {
     while ($row = $resultCek->fetch_assoc()) {
         $entries[$row['BatchId']]['cek'][] = $row; // Group by BatchId for Cek
+    }
+} else {
+    die("Database query failed: " . $conn->error);
+}
+
+if ($resultloa = $conn->query($queryloa)) {
+    while ($row = $resultloa->fetch_assoc()) {
+        $entries[$row['BatchId']]['loa'][] = $row; // Group by BatchId for loa
     }
 } else {
     die("Database query failed: " . $conn->error);
@@ -71,31 +80,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             die("Prepare failed: " . $conn->error);
         }
 
+         // Update loa status
+         $stmt = $conn->prepare("UPDATE data_loa SET statusloa = ?, ApproveBy = ?, ApproveAt = ? WHERE BatchId = ?");
+         if ($stmt) {
+             $stmt->bind_param("ssss", $newStatus, $approveBy, $approveAt, $batchId);
+             if (!$stmt->execute()) {
+                 die("loa update failed: " . $stmt->error);
+             }
+             $stmt->close();
+         } else {
+             die("Prepare failed: " . $conn->error);
+         }
+
         // Handle rejection message
         if ($status === 'Rejected') {
             $message .= "Batch ID: " . htmlspecialchars($batchId) . " - Silahkan Hubungi administrator untuk merevisi data anda.<br>";
         }
-    }
-
-    // Fetch updated Giro and Cek entries after processing
-    $entries = [];
-    $queryGiro = "SELECT * FROM data_giro WHERE statusgiro = 'Belum Aktif' ORDER BY BatchId, nogiro";
-    $queryCek = "SELECT * FROM data_cek WHERE statuscek = 'Belum Aktif' ORDER BY BatchId, nocek";
-
-    if ($resultGiro = $conn->query($queryGiro)) {
-        while ($row = $resultGiro->fetch_assoc()) {
-            $entries[$row['BatchId']]['giro'][] = $row; // Group by BatchId for Giro
-        }
-    } else {
-        die("Database query failed: " . $conn->error);
-    }
-
-    if ($resultCek = $conn->query($queryCek)) {
-        while ($row = $resultCek->fetch_assoc()) {
-            $entries[$row['BatchId']]['cek'][] = $row; // Group by BatchId for Cek
-        }
-    } else {
-        die("Database query failed: " . $conn->error);
     }
 }
 
@@ -281,21 +281,16 @@ function confirmReject(batchId) {
     <div class="button-container">
             <button type="button" class="back" onclick="window.location.href='dashboard.php';">Back</button>
         </div>
-    <form method="POST" action="">
-        <?php 
-        $batchCounter = 1; // Initialize batch counter
-        foreach ($entries as $batchId => $batchEntries): ?>
+        <form method="POST" action="">
+    <?php 
+    $batchCounter = 1; // Initialize batch counter
+    foreach ($entries as $batchId => $batchEntries): ?>
         <section>
-        
-
-
             <h2>
                 <span><?php echo $batchCounter . ". Batch ID: " . htmlspecialchars($batchId); ?></span>
                 <div>
                     <button type="button" class="approve" onclick="confirmApproval('<?php echo $batchId; ?>')">Approve</button>
                     <button type="button" class="reject" onclick="confirmReject('<?php echo $batchId; ?>')">Reject</button>
-
-
                     <input type="hidden" id="status-<?php echo $batchId; ?>" name="batch[<?php echo $batchId; ?>]" value="">
                 </div>
             </h2>
@@ -303,6 +298,7 @@ function confirmReject(batchId) {
                 <thead>
                     <tr>
                         <th>No</th>
+                        <th>Jenis</th>
                         <th>No Giro</th>
                         <th>Nama Bank</th>
                         <th>Account Number</th>
@@ -312,11 +308,13 @@ function confirmReject(batchId) {
                 </thead>
                 <tbody>
                     <?php 
-                    $giroCounter = 1; // Initialize giro counter for each batch
-                    if (isset($batchEntries['giro'])) {
+                    // Initialize giro counter for each batch
+                    if (isset($batchEntries['giro'])): 
+                        $giroCounter = 1; 
                         foreach ($batchEntries['giro'] as $entry): ?>
                             <tr>
                                 <td><?php echo $giroCounter++; ?></td>
+                                <td><?php echo htmlspecialchars($entry['jenis_giro']); ?></td>
                                 <td><?php echo htmlspecialchars($entry['nogiro']); ?></td>
                                 <td><?php echo htmlspecialchars($entry['namabank']); ?></td>
                                 <td><?php echo htmlspecialchars($entry['ac_number']); ?></td>
@@ -324,25 +322,16 @@ function confirmReject(batchId) {
                                 <td><?php echo htmlspecialchars($entry['statusgiro']); ?></td>
                             </tr>
                         <?php endforeach; 
-                    }
+                    endif; ?>
                     
+                    <?php 
                     // Reset counter for cek
-                    $cekCounter = 1;
-                    if (isset($batchEntries['cek'])): ?>
-                        <tr>
-                            <th colspan="6">Data Cek</th>
-                        </tr>
-                        <tr>
-                            <th>No</th>
-                            <th>No Cek</th>
-                            <th>Nama Bank</th>
-                            <th>Account Number</th>
-                            <th>Account Name</th>
-                            <th>Status</th>
-                        </tr>
-                        <?php foreach ($batchEntries['cek'] as $entry): ?>
+                    if (isset($batchEntries['cek'])): 
+                        $cekCounter = 1; 
+                        foreach ($batchEntries['cek'] as $entry): ?>
                             <tr>
                                 <td><?php echo $cekCounter++; ?></td>
+                                <td><?php echo htmlspecialchars($entry['jenis_cek']); ?></td>
                                 <td><?php echo htmlspecialchars($entry['nocek']); ?></td>
                                 <td><?php echo htmlspecialchars($entry['namabank']); ?></td>
                                 <td><?php echo htmlspecialchars($entry['ac_number']); ?></td>
@@ -351,14 +340,31 @@ function confirmReject(batchId) {
                             </tr>
                         <?php endforeach; 
                     endif; ?>
+
+                    <?php 
+                    // Reset counter for loa
+                    if (isset($batchEntries['loa'])): 
+                        $loaCounter = 1; 
+                        foreach ($batchEntries['loa'] as $entry): ?>
+                            <tr>
+                                <td><?php echo $loaCounter++; ?></td>
+                                <td><?php echo htmlspecialchars($entry['jenis_loa']); ?></td>
+                                <td><?php echo htmlspecialchars($entry['noloa']); ?></td>
+                                <td><?php echo htmlspecialchars($entry['namabank']); ?></td>
+                                <td><?php echo htmlspecialchars($entry['ac_number']); ?></td>
+                                <td><?php echo htmlspecialchars($entry['ac_name']); ?></td>
+                                <td><?php echo htmlspecialchars($entry['statusloa']); ?></td>
+                            </tr>
+                        <?php endforeach; 
+                    endif; ?>
                 </tbody>
             </table>
         </section>    
 
         <?php $batchCounter++; ?>
-        <?php endforeach; ?>
-      
-    </form>
+    <?php endforeach; ?>
+</form>
+
 
     <?php if (!empty($message)): ?>
         <div class="message"><?php echo $message; ?></div>
