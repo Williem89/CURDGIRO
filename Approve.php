@@ -13,48 +13,92 @@ if (!isset($_SESSION['username']) || !isset($_SESSION['UsrLevel']) || $_SESSION[
 
 $approveBy = $_SESSION['username']; // Get the logged-in user
 
-// Function to fetch entries
-function fetchEntries($conn) {
-    $entries = []; // Initialize as an array
-    
-    // Fetch Giro entries
-    $resultGiro = $conn->query("SELECT * FROM data_giro WHERE statusgiro = 'Belum Aktif' ORDER BY BatchId, nogiro");
-    if ($resultGiro && $resultGiro->num_rows > 0) {
-        while ($row = $resultGiro->fetch_assoc()) {
-            $entries[$row['BatchId']]['giro'][] = $row; // Group by BatchId for Giro
-        }
-    }
+// Fetch Giro and Cek entries grouped by BatchId
+$entries = [];
+$queryGiro = "SELECT * FROM data_giro WHERE statusgiro = 'Belum Aktif' ORDER BY BatchId, nogiro";
+$queryCek = "SELECT * FROM data_cek WHERE statuscek = 'Belum Aktif' ORDER BY BatchId, nocek";
 
-    // Fetch Cek entries
-    $resultCek = $conn->query("SELECT * FROM data_cek WHERE statuscek = 'Belum Aktif' ORDER BY BatchId, nocek");
-    if ($resultCek && $resultCek->num_rows > 0) {
-        while ($row = $resultCek->fetch_assoc()) {
-            $entries[$row['BatchId']]['cek'][] = $row; // Group by BatchId for Cek
-        }
+if ($resultGiro = $conn->query($queryGiro)) {
+    while ($row = $resultGiro->fetch_assoc()) {
+        $entries[$row['BatchId']]['giro'][] = $row; // Group by BatchId for Giro
     }
+} else {
+    die("Database query failed: " . $conn->error);
+}
 
-    return $entries; // Always return an array
+if ($resultCek = $conn->query($queryCek)) {
+    while ($row = $resultCek->fetch_assoc()) {
+        $entries[$row['BatchId']]['cek'][] = $row; // Group by BatchId for Cek
+    }
+} else {
+    die("Database query failed: " . $conn->error);
 }
 
 // Initialize a message variable
 $message = "";
 
-/// Process approval
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // Debugging output
-    var_dump($_POST); 
-    
-    if (isset($_POST['batch'])) {
-        $batch = $_POST['batch'];
-        foreach ($batch as $id => $status) {
-            echo "Batch ID: " . htmlspecialchars($id) . " - Status: " . htmlspecialchars($status) . "<br>";
+// Process approval
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    foreach ($_POST['batch'] as $batchId => $status) {
+        if (!in_array($status, ['Approved', 'Rejected'])) {
+            continue; // Skip invalid statuses
+        }
+
+        $newStatus = $status === 'Approved' ? 'Unused' : 'Rejected';
+        $approveAt = date('d-m-y H:i:s'); // Get current date and time
+
+        // Update Giro status
+        $stmt = $conn->prepare("UPDATE data_giro SET statusgiro = ?, ApproveBy = ?, ApproveAt = ? WHERE BatchId = ?");
+        if ($stmt) {
+            $stmt->bind_param("ssss", $newStatus, $approveBy, $approveAt, $batchId);
+            if (!$stmt->execute()) {
+                die("Giro update failed: " . $stmt->error);
+            }
+            $stmt->close();
+        } else {
+            die("Prepare failed: " . $conn->error);
+        }
+
+        // Update Cek status
+        $stmt = $conn->prepare("UPDATE data_cek SET statuscek = ?, ApproveBy = ?, ApproveAt = ? WHERE BatchId = ?");
+        if ($stmt) {
+            $stmt->bind_param("ssss", $newStatus, $approveBy, $approveAt, $batchId);
+            if (!$stmt->execute()) {
+                die("Cek update failed: " . $stmt->error);
+            }
+            $stmt->close();
+        } else {
+            die("Prepare failed: " . $conn->error);
+        }
+
+        // Handle rejection message
+        if ($status === 'Rejected') {
+            $message .= "Batch ID: " . htmlspecialchars($batchId) . " - Silahkan Hubungi administrator untuk merevisi data anda.<br>";
+        }
+    }
+
+    // Fetch updated Giro and Cek entries after processing
+    $entries = [];
+    $queryGiro = "SELECT * FROM data_giro WHERE statusgiro = 'Belum Aktif' ORDER BY BatchId, nogiro";
+    $queryCek = "SELECT * FROM data_cek WHERE statuscek = 'Belum Aktif' ORDER BY BatchId, nocek";
+
+    if ($resultGiro = $conn->query($queryGiro)) {
+        while ($row = $resultGiro->fetch_assoc()) {
+            $entries[$row['BatchId']]['giro'][] = $row; // Group by BatchId for Giro
         }
     } else {
-        echo "No batch data received.";
+        die("Database query failed: " . $conn->error);
+    }
+
+    if ($resultCek = $conn->query($queryCek)) {
+        while ($row = $resultCek->fetch_assoc()) {
+            $entries[$row['BatchId']]['cek'][] = $row; // Group by BatchId for Cek
+        }
+    } else {
+        die("Database query failed: " . $conn->error);
     }
 }
-// Fetch entries
-$entries = fetchEntries($conn);
+
 
 // Close the database connection
 $conn->close();
@@ -66,197 +110,258 @@ $conn->close();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Approval Giro/Cek</title>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f8f9fa;
+            font-family: 'Arial', sans-serif;
+            background-color: #e9ecef; /* Light gray background */
             margin: 0;
             padding: 20px;
         }
+
         h1 {
             text-align: center;
-            color: #333;
+            color: #343a40; /* Dark gray */
             margin-bottom: 20px;
         }
-        h2 {
-            color: #007bff;
-            border-bottom: 2px solid #007bff;
-            padding-bottom: 5px;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 20px 0;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-        }
-        th, td {
-            padding: 15px;
-            border: 1px solid #dee2e6;
-            text-align: left;
-        }
-        th {
-            background-color: #28a745;
-            color: white;
-        }
-        tr:nth-child(even) {
-            background-color: #f2f2f2;
-        }
-        input[type="submit"], button {
-            background-color: #007bff;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-            transition: background-color 0.3s ease, transform 0.2s;
-            margin: 0 5px;
-        }
-        button:hover, input[type="submit"]:hover {
-            background-color: #0056b3;
-            transform: scale(1.05);
-        }
-        .message {
-            color: #dc3545;
-            margin-top: 20px;
-            font-weight: bold;
-        }
-        .form-container {
-            border: 1px solid #ccc;
-            border-radius: 10px;
+
+        section {
+            background: #ffffff; /* White background for sections */
+            border: 1px solid #ced4da; /* Light gray border */
+            border-radius: 10px; /* Rounded corners */
+            margin-bottom: 20px;
             padding: 20px;
-            background-color: #fff;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-            margin-bottom: 20px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Soft shadow */
         }
-        .form-header {
+
+        h2 {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            border-bottom: 3px solid #007bff; /* Blue border */
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+            color: #007bff; /* Blue text */
+        }
+
+        .button-container {
+            display: flex;
+            justify-content: flex-start; /* Aligns items to the left */
+            margin-bottom: 20px; /* Adds space below the button */
+        }
+
+        button.back {
+            background-color: #28a745; /* Green for Back button */
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button.back:hover {
+            background-color: #218838; /* Darker green on hover */
+        }
+
+        button.approve {
+            background-color: #007bff; /* Blue for Approve button */
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button.approve:hover {
+            background-color: #0056b3; /* Darker blue on hover */
+        }
+
+        button.reject {
+            background-color: #dc3545; /* Red for Reject button */
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button.reject:hover {
+            background-color: #c82333; /* Darker red on hover */
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #dee2e6; /* Light gray border */
+        }
+
+        th {
+            background-color: #007bff; /* Blue header */
+            color: white;
+        }
+
+        tr:hover {
+            background-color: #f8f9fa; /* Light gray on hover */
+        }
+
+        .message {
+            color: #dc3545; /* Red for error/success messages */
+            font-weight: bold;
+            text-align: center;
+            margin-top: 20px;
         }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        <script>
+           function confirmApproval(batchId) {
+    Swal.fire({
+        title: "Are you sure?",
+        text: "Your data is correct, right?",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Yes, approve it!"
+    }).then((result) => {
+        if (result.isConfirmed) {
+            document.getElementById('status-' + batchId).value = 'Approved';
+            document.forms[0].submit(); // Submit the form after approval
+
+            // Show success message
+            Swal.fire({
+                title: "Approved!",
+                text: "The batch has been approved.",
+                icon: "success"
+            }).then(() => {
+                location.reload(); // Reload the page after the message is confirmed
+            });
+        }
+    });
+}
+
+function confirmReject(batchId) {
+    Swal.fire({
+        title: "Are you sure?",
+        text: "You won't be able to revert this!",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#dc3545", // Red for reject
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Yes, reject it!"
+    }).then((result) => {
+        if (result.isConfirmed) {
+            document.getElementById('status-' + batchId).value = 'Rejected'; // Set the rejection status
+            document.forms[0].submit(); // Submit the form after rejection
+
+            // Show success message
+            Swal.fire({
+                title: "Rejected!",
+                text: "The batch has been rejected.",
+                icon: "success"
+            }).then(() => {
+                location.reload(); // Reload the page after the message is confirmed
+            });
+        }
+    });
+}
+
+        </script>
+
 </head>
 <body>
     <h1>Approval Giro/Cek</h1>
-    <button type="button" onclick="window.location.href='dashboard.php';">Back</button>
-
-    <?php 
-    // Display messages if available
-    if ($message) {
-        echo "<div class='message'>$message</div>";
-    }
-
-    // Check if $entries is not empty before rendering
-    if (!empty($entries)) {
+    <div class="button-container">
+            <button type="button" class="back" onclick="window.location.href='dashboard.php';">Back</button>
+        </div>
+    <form method="POST" action="">
+        <?php 
         $batchCounter = 1; // Initialize batch counter
         foreach ($entries as $batchId => $batchEntries): ?>
-            <div class="form-container">
-                <form method="POST" action="">
-                    <div class="form-header">
-                        <h2><?php echo $batchCounter . ". Batch ID: " . htmlspecialchars($batchId); ?></h2>
-                        <div>
-                            <button type="submit" name="batch[<?php echo $batchId; ?>]" value="Approved">Approve</button>
-                            <button type="submit" name="batch[<?php echo $batchId; ?>]" value="Rejected" style="background-color: #dc3545;">Reject</button>
-                        </div>
-                    </div>
-                    <table>
-                        <thead>
+        <section>
+        
+
+
+            <h2>
+                <span><?php echo $batchCounter . ". Batch ID: " . htmlspecialchars($batchId); ?></span>
+                <div>
+                    <button type="button" class="approve" onclick="confirmApproval('<?php echo $batchId; ?>')">Approve</button>
+                    <button type="button" class="reject" onclick="confirmReject('<?php echo $batchId; ?>')">Reject</button>
+
+
+                    <input type="hidden" id="status-<?php echo $batchId; ?>" name="batch[<?php echo $batchId; ?>]" value="">
+                </div>
+            </h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>No</th>
+                        <th>No Giro</th>
+                        <th>Nama Bank</th>
+                        <th>Account Number</th>
+                        <th>Account Name</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php 
+                    $giroCounter = 1; // Initialize giro counter for each batch
+                    if (isset($batchEntries['giro'])) {
+                        foreach ($batchEntries['giro'] as $entry): ?>
                             <tr>
-                                <th>No</th>
-                                <th>No Giro</th>
-                                <th>Nama Bank</th>
-                                <th>Account Number</th>
-                                <th>Account Name</th>
-                                <th>Status</th>
+                                <td><?php echo $giroCounter++; ?></td>
+                                <td><?php echo htmlspecialchars($entry['nogiro']); ?></td>
+                                <td><?php echo htmlspecialchars($entry['namabank']); ?></td>
+                                <td><?php echo htmlspecialchars($entry['ac_number']); ?></td>
+                                <td><?php echo htmlspecialchars($entry['ac_name']); ?></td>
+                                <td><?php echo htmlspecialchars($entry['statusgiro']); ?></td>
                             </tr>
-                        </thead>
-                        <tbody>
-                            <?php 
-                            $giroCounter = 1; // Initialize giro counter for each batch
-                            if (isset($batchEntries['giro'])) {
-                                foreach ($batchEntries['giro'] as $entry): ?>
-                                    <tr>
-                                        <td><?php echo $giroCounter++; ?></td>
-                                        <td><?php echo htmlspecialchars($entry['nogiro']); ?></td>
-                                        <td><?php echo htmlspecialchars($entry['namabank']); ?></td>
-                                        <td><?php echo htmlspecialchars($entry['ac_number']); ?></td>
-                                        <td><?php echo htmlspecialchars($entry['ac_name']); ?></td>
-                                        <td><?php echo htmlspecialchars($entry['statusgiro']); ?></td>
-                                    </tr>
-                                <?php endforeach; 
-                            }
-
-                            // Reset counter for cek
-                            $cekCounter = 1;
-                            if (isset($batchEntries['cek'])): ?>
-                                <tr>
-                                    <th colspan="6" style="background-color: #007bff; color: white;">Data Cek</th>
-                                </tr>
-                                <tr>
-                                    <th>No</th>
-                                    <th>No Cek</th>
-                                    <th>Nama Bank</th>
-                                    <th>Account Number</th>
-                                    <th>Account Name</th>
-                                    <th>Status</th>
-                                </tr>
-                                <?php foreach ($batchEntries['cek'] as $entry): ?>
-                                    <tr>
-                                        <td><?php echo $cekCounter++; ?></td>
-                                        <td><?php echo htmlspecialchars($entry['nocek']); ?></td>
-                                        <td><?php echo htmlspecialchars($entry['namabank']); ?></td>
-                                        <td><?php echo htmlspecialchars($entry['ac_number']); ?></td>
-                                        <td><?php echo htmlspecialchars($entry['ac_name']); ?></td>
-                                        <td><?php echo htmlspecialchars($entry['statuscek']); ?></td>
-                                    </tr>
-                                <?php endforeach; 
-                            endif; ?>
-                        </tbody>
-                    </table>
-                </form>
-            </div>
-            <?php $batchCounter++; ?>
-        <?php endforeach; 
-    } else {
-        echo "<p>No entries available for approval.</p>";
-    }
-    ?>
-    
-    <script>
-        document.querySelectorAll('form').forEach(form => {
-            form.addEventListener('submit', function (e) {
-                e.preventDefault(); // Prevent form submission
-                
-                // Determine the button value
-                const buttonValue = e.submitter.value; // Get the value of the button that was clicked
-
-                // Set up SweetAlert2 options based on the button value
-                let title, text;
-                if (buttonValue === 'Approved') {
-                    title = "Are you sure you want to approve?";
-                    text = "This action cannot be undone.";
-                } else {
-                    title = "Are you sure you want to reject?";
-                    text = "Please ensure that you contact the administrator for revisions.";
-                }
-
-                // Show the confirmation dialog
-                Swal.fire({
-                    title: title,
-                    text: text,
-                    icon: "warning",
-                    showCancelButton: true,
-                    confirmButtonColor: "#3085d6",
-                    cancelButtonColor: "#d33",
-                    confirmButtonText: buttonValue === 'Approved' ? "Yes, approve it!" : "Yes, reject it!"
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        form.submit(); // Submit the form if confirmed
+                        <?php endforeach; 
                     }
-                });
-            });
-        });
-    </script>
+                    
+                    // Reset counter for cek
+                    $cekCounter = 1;
+                    if (isset($batchEntries['cek'])): ?>
+                        <tr>
+                            <th colspan="6">Data Cek</th>
+                        </tr>
+                        <tr>
+                            <th>No</th>
+                            <th>No Cek</th>
+                            <th>Nama Bank</th>
+                            <th>Account Number</th>
+                            <th>Account Name</th>
+                            <th>Status</th>
+                        </tr>
+                        <?php foreach ($batchEntries['cek'] as $entry): ?>
+                            <tr>
+                                <td><?php echo $cekCounter++; ?></td>
+                                <td><?php echo htmlspecialchars($entry['nocek']); ?></td>
+                                <td><?php echo htmlspecialchars($entry['namabank']); ?></td>
+                                <td><?php echo htmlspecialchars($entry['ac_number']); ?></td>
+                                <td><?php echo htmlspecialchars($entry['ac_name']); ?></td>
+                                <td><?php echo htmlspecialchars($entry['statuscek']); ?></td>
+                            </tr>
+                        <?php endforeach; 
+                    endif; ?>
+                </tbody>
+            </table>
+        </section>    
+
+        <?php $batchCounter++; ?>
+        <?php endforeach; ?>
+      
+    </form>
+
+    <?php if (!empty($message)): ?>
+        <div class="message"><?php echo $message; ?></div>
+    <?php endif; ?>
 </body>
 </html>
