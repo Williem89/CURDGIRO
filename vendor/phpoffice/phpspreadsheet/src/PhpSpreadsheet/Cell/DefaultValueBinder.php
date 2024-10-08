@@ -26,7 +26,7 @@ class DefaultValueBinder implements IValueBinder
         } elseif ($value === null || is_scalar($value) || $value instanceof RichText) {
             // No need to do anything
         } elseif ($value instanceof DateTimeInterface) {
-            $value = $value->format('Y-m-d H:i:s');
+            $value = $value->format('d-m-y H:i:s');
         } elseif ($value instanceof Stringable) {
             $value = (string) $value;
         } else {

@@ -4,17 +4,17 @@ include 'koneksi.php';
 // Calculate the current date
 $current_date = date('d-m-y');
 $stmt = $conn->prepare("
-    SELECT nocek, tanggal_jatuh_tempo, nominal 
-    FROM detail_cek 
-    WHERE Statcek = 'Issued' AND tanggal_jatuh_tempo < ?
+    SELECT noloa, tanggal_jatuh_tempo, nominal 
+    FROM detail_loa 
+    WHERE Statloa = 'Issued' AND tanggal_jatuh_tempo < ?
 ");
 $stmt->bind_param("s", $current_date);
 $stmt->execute();
 $result = $stmt->get_result();
 
-$issued_cek_records = [];
+$issued_loa_records = [];
 while ($row = $result->fetch_assoc()) {
-    $issued_cek_records[] = $row;
+    $issued_loa_records[] = $row;
 }
 
 $stmt->close();
@@ -26,7 +26,7 @@ $conn->close();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Daftar cek Lewat Jatuh Tempo</title>
+    <title>Daftar loa Lewat Jatuh Tempo</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -82,18 +82,18 @@ $conn->close();
     </style>
 </head>
 <body>
-    <h1>Daftar cek yang Lewat Jatuh Tempo</h1>
+    <h1>Daftar loa yang Lewat Jatuh Tempo</h1>
     <table>
         <tr>
-            <th>No cek</th>
+            <th>No loa</th>
             <th>Tanggal Jatuh Tempo</th>
             <th>Nominal</th>
         </tr>
-        <?php foreach ($issued_cek_records as $cek): ?>
+        <?php foreach ($issued_loa_records as $loa): ?>
             <tr>
-                <td><?php echo htmlspecialchars($cek['nocek']); ?></td>
-                <td><?php echo htmlspecialchars($cek['tanggal_jatuh_tempo']); ?></td>
-                <td><?php echo number_format($cek['nominal']); ?></td>
+                <td><?php echo htmlspecialchars($loa['noloa']); ?></td>
+                <td><?php echo htmlspecialchars($loa['tanggal_jatuh_tempo']); ?></td>
+                <td><?php echo number_format($loa['nominal']); ?></td>
             </tr>
         <?php endforeach; ?>
     </table>

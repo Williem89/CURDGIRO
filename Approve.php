@@ -39,7 +39,7 @@ $message = "";
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     foreach ($_POST['batch'] as $batchId => $status) {
         $newStatus = $status === 'Approved' ? 'Unused' : 'Rejected';
-        $approveAt = date('Y-m-d H:i:s'); // Get current date and time
+        $approveAt = date('d-m-y H:i:s'); // Get current date and time
         
         // Update Giro status
         $stmt = $conn->prepare("UPDATE data_giro SET statusgiro = ?, ApproveBy = ?, ApproveAt = ? WHERE BatchId = ?");

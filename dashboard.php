@@ -43,24 +43,51 @@ $jt_cek_count = countChequesDue($conn, 'detail_cek', 'Statcek', 'Issued', "DATED
 $monthly_due_cek_count = countChequesDue($conn, 'detail_cek', 'Statcek', 'Issued', "MONTH(tanggal_jatuh_tempo) = MONTH(NOW()) AND YEAR(tanggal_jatuh_tempo) = YEAR(NOW())");
 $Overdue_cek_count = countChequesDue($conn, 'detail_cek', 'Statcek', 'Issued', "tanggal_jatuh_tempo < NOW()");
 
+// Initialize counts for loa
+$unused_loa_count = countItems($conn, 'data_loa', 'statusloa', 'Unused');
+$issued_loa_count = countItems($conn, 'detail_loa', 'statloa', 'Issued');
+$Posted_loa_count = countItems($conn, 'detail_loa', 'statloa', 'Posted');
+$void_loa_count = countItems($conn, 'detail_loa', 'statloa', 'void');
+$return_loa_count = countItems($conn, 'detail_loa', 'statloa', 'return');
+$jt_loa_count = countChequesDue($conn, 'detail_loa', 'Statloa', 'Issued', "DATEDIFF(tanggal_jatuh_tempo, NOW()) BETWEEN 0 AND 7");
+$monthly_due_loa_count = countChequesDue($conn, 'detail_loa', 'Statloa', 'Issued', "MONTH(tanggal_jatuh_tempo) = MONTH(NOW()) AND YEAR(tanggal_jatuh_tempo) = YEAR(NOW())");
+$Overdue_loa_count = countChequesDue($conn, 'detail_loa', 'Statloa', 'Issued', "tanggal_jatuh_tempo < NOW()");
+
 //Kebutuhan Tab List Giro
 // Initialize an empty array to store the due cheques
 $due_cheques = [];
 // Initialize variables
 $due_giros = []; // Initialize as an empty array
 $due_checks = []; // Initialize as an empty array
+$due_loas = [];
 
 // Get the selected start and end dates or default to today
 $start_date = isset($_POST['start_date']) ? $_POST['start_date'] : date('d-m-y');
 $end_date = isset($_POST['end_date']) ? $_POST['end_date'] : date('d-m-y');
 
-// Function to fetch due items
+/// Function to fetch due items
 function fetchDueItems($conn, $type, $start_date, $end_date) {
-    $tableDetail = $type === 'giro' ? 'detail_giro' : 'detail_cek';
-    $tableData = $type === 'giro' ? 'data_giro' : 'data_cek';
-    $statusColumn = $type === 'giro' ? 'StatGiro' : 'StatCek';
-    $numberColumn = $type === 'giro' ? 'nogiro' : 'nocek';
+    // Define the table and column names based on the type
+    if ($type === 'giro') {
+        $tableDetail = 'detail_giro';
+        $tableData = 'data_giro';
+        $statusColumn = 'StatGiro';
+        $numberColumn = 'nogiro';
+    } elseif ($type === 'cek') {
+        $tableDetail = 'detail_cek';
+        $tableData = 'data_cek';
+        $statusColumn = 'StatCek';
+        $numberColumn = 'nocek';
+    } elseif ($type === 'loa') {
+        $tableDetail = 'detail_loa';
+        $tableData = 'data_loa';
+        $statusColumn = 'StatLoa';
+        $numberColumn = 'noloa';
+    } else {
+        throw new Exception("Invalid type specified");
+    }
 
+    // Prepare the SQL query
     $sql = "SELECT d.namabank, d.ac_name, dg.ac_penerima, dg.nama_penerima, dg.$numberColumn, 
                    SUM(dg.Nominal) AS total_nominal, dg.tanggal_jatuh_tempo, dg.PVRNo, dg.keterangan 
             FROM $tableDetail AS dg
@@ -70,11 +97,13 @@ function fetchDueItems($conn, $type, $start_date, $end_date) {
             GROUP BY dg.tanggal_jatuh_tempo, d.namabank, d.ac_name, dg.ac_penerima, dg.nama_penerima, dg.$numberColumn, dg.PVRNo, dg.keterangan
             ORDER BY dg.tanggal_jatuh_tempo ASC;";
 
+    // Execute the prepared statement
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("ss", $start_date, $end_date);
     $stmt->execute();
     $result = $stmt->get_result();
 
+    // Fetch the results
     $items = [];
     while ($row = $result->fetch_assoc()) {
         $items[] = $row;
@@ -84,12 +113,14 @@ function fetchDueItems($conn, $type, $start_date, $end_date) {
     return $items;
 }
 
-// Fetch due cheques and giro
+// Fetch due cheques, giro, and LOA
 $due_cheques = fetchDueItems($conn, 'cek', $start_date, $end_date);
 $due_giro = fetchDueItems($conn, 'giro', $start_date, $end_date);
+$due_loa = fetchDueItems($conn, 'loa', $start_date, $end_date);
 
-// Combine both arrays if needed
-$due_items = array_merge($due_cheques, $due_giro);
+// Combine all arrays if needed
+$due_items = array_merge($due_cheques, $due_giro, $due_loa);
+
 
 // Close connection
 $conn->close();
@@ -303,21 +334,18 @@ $conn->close();
                 </li>
                 <li><a href="#">Cek</a>
                     <div class="dropdown">
-                        <a href="TulisCek.php">Tulis Cek</a>
-                        <a href="PencairanCek.php">Pencairan Cek</a>
-                        <a href="CekVoid.php">Void Cek</a>
-                        <a href="CekReturn.php">Return Cek</a>
-                        <a href="Search.php">Search Cek</a>
+                        <a href="TulisCek.php">Issued Cek</a>
+                        <a href="ProsesGiro.php">Proses Cek</a>
                     </div>
                 </li>
                 <li><a href="Search.php">Search</a></li>
-                <li><a href="#">Laporan</a>
+                <!--<li><a href="#">Laporan</a>
                     <div class="dropdown">
                         <a href="ReportStockGiro.php">Laporan Stock Giro Belum Terpakai</a>
                         <a href="ReportIssuedGiro.php">Laporan Giro yang sudah terbit</a>
                     </div>
-                </li>
-                <li><a href="logout.php">Bye Bye</a></li> <!-- Logout link -->
+                </li>-->
+                <li><a href="logout.php">Logout</a></li> <!-- Logout link -->
             </ul>
         </nav>
 
@@ -336,6 +364,9 @@ $conn->close();
             </li>
             <li class="nav-item">
                 <a class="nav-link" data-bs-toggle="tab" href="#cek">Cek</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="tab" href="#loa">LOA</a>
             </li>
         </ul>
     </div>
@@ -431,112 +462,165 @@ $conn->close();
         </table>
     </div>
 
-        <div id="giro" class="tab-pane fade">
-            <div class="stats-card">
-                <div class="card">
-                    <a href="UnusedGiroList.php">
-                        <h3>Giro Available</h3>
-                        <p><?php echo $unused_count; ?></p>
-                    </a>
-                </div>
-                <div class="card">
-                    <a href="IssuedGiroList.php">
-                        <h3>Giro Issued</h3>
-                        <p><?php echo $issued_count; ?></p>
-                    </a>
-                </div>
-                <div class="card">
-                    <a href="PostedGiroList.php">
-                        <h3>Giro Posted</h3>
-                        <p><?php echo $Posted_count; ?></p>
-                    </a>
-                </div>
-                <div class="card">
-                    <a href="VoidGiroList.php">
-                        <h3>Giro Voided</h3>
-                        <p><?php echo $void_count; ?></p>
-                    </a>
-                </div>
-                <div class="card">
-                    <a href="ReturnGiroList.php">
-                        <h3>Giro Returned</h3>
-                        <p><?php echo $return_count; ?></p>
-                    </a>
-                </div>
-                <div class="card">
-                    <a href="JTGiroList.php">
-                        <h3>Giro Due in 7 Days</h3>
-                        <p><?php echo $jt_count; ?></p>
-                    </a>
-                </div>
-                <div class="card">
-                    <a href="MonthlyDueGiroList.php">
-                        <h3>Giro Monthly Due</h3>
-                        <p><?php echo $monthly_due_count; ?></p>
-                    </a>
-                </div>
-                <div class="card">
-                    <a href="OverDueGiroList.php">
-                        <h3>Giro Overdue</h3>
-                        <p><?php echo $Overdue_count; ?></p>
-                    </a>
-                </div>
-            </div>
+    <div id="giro" class="tab-pane fade">
+    <div class="stats-card">
+        <div class="card">
+            <a href="UnusedGiroList.php">
+                <h3>Giro Available</h3>
+                <p><?php echo $unused_count; ?></p>
+            </a>
         </div>
-
-        <div id="cek" class="tab-pane fade">
-            <div class="stats-card">
-                <div class="card">
-                    <a href="UnusedCekList.php">
-                        <h3>Cek Available</h3>
-                        <p><?php echo $unused_cek_count; ?></p>
-                    </a>
-                </div>
-                <div class="card">
-                    <a href="IssuedCekList.php">
-                        <h3>Cek Issued</h3>
-                        <p><?php echo $issued_cek_count; ?></p>
-                    </a>
-                </div>
-                <div class="card">
-                    <a href="PostedCekList.php">
-                        <h3>Cek Posted</h3>
-                        <p><?php echo $Posted_cek_count; ?></p>
-                    </a>
-                </div>
-                <div class="card">
-                    <a href="VoidCekList.php">
-                        <h3>Cek Voided</h3>
-                        <p><?php echo $void_cek_count; ?></p>
-                    </a>
-                </div>
-                <div class="card">
-                    <a href="ReturnCekList.php">
-                        <h3>Cek Returned</h3>
-                        <p><?php echo $return_cek_count; ?></p>
-                    </a>
-                </div>
-                <div class="card">
-                    <a href="JTCekList.php">
-                        <h3>Cek Due in 7 Days</h3>
-                        <p><?php echo $jt_cek_count; ?></p>
-                    </a>
-                </div>
-                <div class="card">
-                    <a href="MonthlyDueCekList.php">
-                        <h3>Cek Monthly Due</h3>
-                        <p><?php echo $monthly_due_cek_count; ?></p>
-                    </a>
-                </div>
-                <div class="card">
-                    <a href="OverDueCekList.php">
-                        <h3>Cek Overdue</h3>
-                        <p><?php echo $Overdue_cek_count; ?></p>
-                    </a>
-                </div>
-            </div>
+        <div class="card">
+            <a href="IssuedGiroList.php">
+                <h3>Giro Issued</h3>
+                <p><?php echo $issued_count; ?></p>
+            </a>
+        </div>
+        <div class="card">
+            <a href="PostedGiroList.php">
+                <h3>Giro Posted</h3>
+                <p><?php echo $Posted_count; ?></p>
+            </a>
+        </div>
+        <div class="card">
+            <a href="VoidGiroList.php">
+                <h3>Giro Voided</h3>
+                <p><?php echo $void_count; ?></p>
+            </a>
+        </div>
+        <div class="card">
+            <a href="ReturnGiroList.php">
+                <h3>Giro Returned</h3>
+                <p><?php echo $return_count; ?></p>
+            </a>
+        </div>
+        <div class="card">
+            <a href="JTGiroList.php">
+                <h3>Giro Due in 7 Days</h3>
+                <p><?php echo $jt_count; ?></p>
+            </a>
+        </div>
+        <div class="card">
+            <a href="MonthlyDueGiroList.php">
+                <h3>Giro Monthly Due</h3>
+                <p><?php echo $monthly_due_count; ?></p>
+            </a>
+        </div>
+        <div class="card">
+            <a href="OverDueGiroList.php">
+                <h3>Giro Overdue</h3>
+                <p><?php echo $Overdue_count; ?></p>
+            </a>
         </div>
     </div>
+</div>
+
+<div id="cek" class="tab-pane fade">
+    <div class="stats-card">
+        <div class="card">
+            <a href="UnusedCekList.php">
+                <h3>Cek Available</h3>
+                <p><?php echo $unused_cek_count; ?></p>
+            </a>
+        </div>
+        <div class="card">
+            <a href="IssuedCekList.php">
+                <h3>Cek Issued</h3>
+                <p><?php echo $issued_cek_count; ?></p>
+            </a>
+        </div>
+        <div class="card">
+            <a href="PostedCekList.php">
+                <h3>Cek Posted</h3>
+                <p><?php echo $Posted_cek_count; ?></p>
+            </a>
+        </div>
+        <div class="card">
+            <a href="VoidCekList.php">
+                <h3>Cek Voided</h3>
+                <p><?php echo $void_cek_count; ?></p>
+            </a>
+        </div>
+        <div class="card">
+            <a href="ReturnCekList.php">
+                <h3>Cek Returned</h3>
+                <p><?php echo $return_cek_count; ?></p>
+            </a>
+        </div>
+        <div class="card">
+            <a href="JTCekList.php">
+                <h3>Cek Due in 7 Days</h3>
+                <p><?php echo $jt_cek_count; ?></p>
+            </a>
+        </div>
+        <div class="card">
+            <a href="MonthlyDueCekList.php">
+                <h3>Cek Monthly Due</h3>
+                <p><?php echo $monthly_due_cek_count; ?></p>
+            </a>
+        </div>
+        <div class="card">
+            <a href="OverDueCekList.php">
+                <h3>Cek Overdue</h3>
+                <p><?php echo $Overdue_cek_count; ?></p>
+            </a>
+        </div>
+    </div>
+</div>
+
+<div id="loa" class="tab-pane fade">
+    <div class="stats-card">
+        <div class="card">
+            <a href="UnusedloaList.php">
+                <h3>LOA Available</h3>
+                <p><?php echo $unused_loa_count; ?></p>
+            </a>
+        </div>
+        <div class="card">
+            <a href="IssuedloaList.php">
+                <h3>LOA Issued</h3>
+                <p><?php echo $issued_loa_count; ?></p>
+            </a>
+        </div>
+        <div class="card">
+            <a href="PostedloaList.php">
+                <h3>LOA Posted</h3>
+                <p><?php echo $Posted_loa_count; ?></p>
+            </a>
+        </div>
+        <div class="card">
+            <a href="VoidloaList.php">
+                <h3>LOA Voided</h3>
+                <p><?php echo $void_loa_count; ?></p>
+            </a>
+        </div>
+        <div class="card">
+            <a href="ReturnloaList.php">
+                <h3>LOA Returned</h3>
+                <p><?php echo $return_loa_count; ?></p>
+            </a>
+        </div>
+        <div class="card">
+            <a href="JTloaList.php">
+                <h3>LOA Due in 7 Days</h3>
+                <p><?php echo $jt_loa_count; ?></p>
+            </a>
+        </div>
+        <div class="card">
+            <a href="MonthlyDueloaList.php">
+                <h3>LOA Monthly Due</h3>
+                <p><?php echo $monthly_due_loa_count; ?></p>
+            </a>
+        </div>
+        <div class="card">
+            <a href="OverDueloaList.php">
+                <h3>LOA Overdue</h3>
+                <p><?php echo $Overdue_loa_count; ?></p>
+            </a>
+        </div>
+    </div>
+</div>
+
 </section>
 
 

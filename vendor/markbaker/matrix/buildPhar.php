@@ -21,7 +21,7 @@ $metaData = array(
     'Copyright'   => 'Mark Baker (c) 2013-' . date('Y'),
     'Timestamp'   => time(),
     'Version'     => '0.1.0',
-    'Date'        => date('Y-m-d')
+    'Date'        => date('d-m-y')
 );
 
 // cleanup
