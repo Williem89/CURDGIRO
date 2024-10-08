@@ -150,11 +150,10 @@ $conn->close();
     ">
         Back
     </button>
-    <form method="POST" action="">
         <?php 
         $batchCounter = 1; // Initialize batch counter
         foreach ($entries as $batchId => $batchEntries): ?>
-            <section>
+            <form method="POST" action="">
             <div style="display: flex; justify-content: space-between; align-items: center;">
                 <h2><?php echo $batchCounter . ". Batch ID: " . htmlspecialchars($batchId); ?></h2>
                 <div>
@@ -243,34 +242,35 @@ $conn->close();
                 <br>
             </section>
             <?php $batchCounter++; ?>
+            </form>
         <?php endforeach; ?>
         <div class="button-container">
-            <input type="submit" value="Submit" onclick="setTimeout(() => { location.reload(); }, 1000);">
+            <!-- <input type="submit" value="Submit" onclick="setTimeout(() => { location.reload(); }, 1000);">
             
-            </div>
-    </form>
+            </div> -->
+    
 
     <?php if (!empty($message)): ?>
         <div class="message"><?php echo $message; ?></div>
     <?php endif; ?>
 </body>
 <script>
-    Swal.fire({
-        title: "Are you sure?",
-        text: "You won't be able to revert this!",
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonColor: "#3085d6",
-        cancelButtonColor: "#d33",
-        confirmButtonText: "Yes, delete it!"
-        }).then((result) => {
-        if (result.isConfirmed) {
-            Swal.fire({
-            title: "Deleted!",
-            text: "Your file has been deleted.",
-            icon: "success"
-            });
-        }
-        });
+    // Swal.fire({
+    //     title: "Are you sure?",
+    //     text: "You won't be able to revert this!",
+    //     icon: "warning",
+    //     showCancelButton: true,
+    //     confirmButtonColor: "#3085d6",
+    //     cancelButtonColor: "#d33",
+    //     confirmButtonText: "Yes, delete it!"
+    //     }).then((result) => {
+    //     if (result.isConfirmed) {
+    //         Swal.fire({
+    //         title: "Deleted!",
+    //         text: "Your file has been deleted.",
+    //         icon: "success"
+    //         });
+    //     }
+    //     });
 </script>
 </html>

@@ -138,13 +138,13 @@ $conn->close();
                         <td><?php echo htmlspecialchars($loa['tanggal_jatuh_tempo']); ?></td>
                         <td><?php echo htmlspecialchars($loa['namabank']); ?></td>
                         <td><?php echo htmlspecialchars($loa['ac_number']); ?></td>
-                        <td><?php echo number_format($loa['total_nominal'], 2, ',', '.'); ?></td>
+                        <td>&#36; <?php echo number_format($loa['total_nominal'], 2, ',', '.'); ?></td>
                     </tr>
                 <?php endforeach; ?>
 
                 <!-- Output subtotal for the last entity -->
-                <tr class="subtotal"><td colspan="5">Subtotal</td><td><?php echo number_format($subtotal, 2, ',', '.'); ?></td></tr>
-                <tr class="grand-total"><td colspan="5">Grand Total</td><td><?php echo number_format($grand_total, 2, ',', '.'); ?></td></tr>
+                <tr class="subtotal"><td colspan="5">Subtotal</td><td>&#36; <?php echo number_format($subtotal, 2, ',', '.'); ?></td></tr>
+                <tr class="grand-total"><td colspan="5">Grand Total</td><td>&#36; <?php echo number_format($grand_total, 2, ',', '.'); ?></td></tr>
             <?php endif; ?>
             </tbody>
         </table>

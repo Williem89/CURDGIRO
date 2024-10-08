@@ -93,7 +93,7 @@ $conn->close();
             <tr>
                 <td><?php echo htmlspecialchars($loa['noloa']); ?></td>
                 <td><?php echo htmlspecialchars($loa['tanggal_jatuh_tempo']); ?></td>
-                <td><?php echo number_format($loa['nominal']); ?></td>
+                <td>&#36; <?php echo number_format($loa['nominal']); ?></td>
             </tr>
         <?php endforeach; ?>
     </table>

@@ -253,12 +253,12 @@ if (isset($_POST['export'])) {
                                         <td><?php echo htmlspecialchars($cheque['namabank']); ?></td>
                                         <td><?php echo htmlspecialchars($cheque['PVRNo']); ?></td>
                                         <td><?php echo htmlspecialchars($cheque['keterangan']); ?></td>
-                                        <td><?php echo htmlspecialchars(number_format($cheque['total_nominal'], 2)); ?></td>
+                                        <td>&#36; <?php echo htmlspecialchars(number_format($cheque['total_nominal'], 2)); ?></td>
                                     </tr>
                                 <?php endforeach; ?>
                                 <tr>
                                     <td colspan="8" class="text-end"><strong>Total untuk <?php echo htmlspecialchars($bank_name); ?>:</strong></td>
-                                    <td><?php echo htmlspecialchars(number_format($bank_info['subtotal'], 2)); ?></td>
+                                    <td>&#36; <?php echo htmlspecialchars(number_format($bank_info['subtotal'], 2)); ?></td>
                                 </tr>
                             <?php endforeach; ?>
                         <?php endforeach; ?>

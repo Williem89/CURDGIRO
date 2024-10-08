@@ -1,20 +1,43 @@
 <?php
 include 'koneksi.php';
 
-// Calculate the current date
-$current_date = date('d-m-y');
+// Establishing database connection
+$conn = new mysqli($servername, $username, $password, $dbname);
+
+// Check connection
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
+}
+
+// Calculate the current date in the appropriate format
+$current_date = date('Y-m-d'); // Adjust the date format based on your database
+
+// Prepare the SQL statement
 $stmt = $conn->prepare("
     SELECT nogiro, tanggal_jatuh_tempo, nominal 
     FROM detail_giro 
     WHERE StatGiro = 'Issued' AND tanggal_jatuh_tempo < ?
 ");
-$stmt->bind_param("s", $current_date);
-$stmt->execute();
-$result = $stmt->get_result();
 
+// Bind parameters
+$stmt->bind_param("s", $current_date);
+
+// Execute the statement
+if (!$stmt->execute()) {
+    echo "Error executing query: " . $stmt->error;
+}
+
+// Get the result
+$result = $stmt->get_result();
 $issued_giro_records = [];
-while ($row = $result->fetch_assoc()) {
-    $issued_giro_records[] = $row;
+
+// Check if there are any results
+if ($result->num_rows > 0) {
+    while ($row = $result->fetch_assoc()) {
+        $issued_giro_records[] = $row;
+    }
+} else {
+    echo "No records found.";
 }
 
 $stmt->close();

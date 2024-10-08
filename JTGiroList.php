@@ -1,18 +1,24 @@
 <?php
 include 'koneksi.php';
 
-// Calculate the date for 7 days ahead
-$seven_days_ahead = date('d-m-y', strtotime('+7 days'));
+// Calculate the date for 7 days ahead in the correct format
+$seven_days_ahead = date('Y-m-d', strtotime('+7 days'));
 
 // Prepare the statement to get issued giro records due in 7 days
 $stmt = $conn->prepare("
-    SELECT nogiro, tanggal_jatuh_tempo, nominal 
+    SELECT nogiro, DATE_FORMAT(tanggal_jatuh_tempo, '%d-%m-%Y') AS tanggal_jatuh_tempo, nominal 
     FROM detail_giro 
-    WHERE StatGiro = 'Issued' AND tanggal_jatuh_tempo BETWEEN NOW() AND ?
+    WHERE Statgiro = 'Issued' AND tanggal_jatuh_tempo BETWEEN NOW() AND ?
 ");
+
+if (!$stmt) {
+    die("Preparation failed: " . $conn->error);
+}
+
 $stmt->bind_param("s", $seven_days_ahead);
 $stmt->execute();
 $result = $stmt->get_result();
+$no=1;
 
 $issued_giro_records = [];
 while ($row = $result->fetch_assoc()) {
@@ -23,9 +29,14 @@ while ($row = $result->fetch_assoc()) {
 $count_stmt = $conn->prepare("
     SELECT COUNT(*) AS jt_count 
     FROM detail_giro 
-    WHERE StatGiro = 'Issued' 
+    WHERE Statgiro = 'Issued' 
     AND DATEDIFF(tanggal_jatuh_tempo, NOW()) BETWEEN 0 AND 7
 ");
+
+if (!$count_stmt) {
+    die("Preparation failed: " . $conn->error);
+}
+
 $count_stmt->execute();
 $count_result = $count_stmt->get_result();
 $count_row = $count_result->fetch_assoc();
@@ -107,12 +118,14 @@ $conn->close();
     <p>Total Giro yang Jatuh Tempo: <?php echo $jt_count; ?></p>
     <table>
         <tr>
+            <th>No</th>
             <th>No Giro</th>
             <th>Tanggal Jatuh Tempo</th>
             <th>Nominal</th>
         </tr>
         <?php foreach ($issued_giro_records as $giro): ?>
             <tr>
+                <td><?php echo $no++; ?></td>
                 <td><?php echo htmlspecialchars($giro['nogiro']); ?></td>
                 <td><?php echo htmlspecialchars($giro['tanggal_jatuh_tempo']); ?></td>
                 <td><?php echo number_format($giro['nominal']); ?></td>

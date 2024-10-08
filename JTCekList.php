@@ -1,18 +1,24 @@
 <?php
 include 'koneksi.php';
 
-// Calculate the date for 7 days ahead
-$seven_days_ahead = date('d-m-y', strtotime('+7 days'));
+// Calculate the date for 7 days ahead in the correct format
+$seven_days_ahead = date('Y-m-d', strtotime('+7 days'));
 
 // Prepare the statement to get issued cek records due in 7 days
 $stmt = $conn->prepare("
-    SELECT nocek, tanggal_jatuh_tempo, nominal 
+    SELECT nocek, DATE_FORMAT(tanggal_jatuh_tempo, '%d-%m-%Y') AS tanggal_jatuh_tempo, nominal 
     FROM detail_cek 
     WHERE Statcek = 'Issued' AND tanggal_jatuh_tempo BETWEEN NOW() AND ?
 ");
+
+if (!$stmt) {
+    die("Preparation failed: " . $conn->error);
+}
+
 $stmt->bind_param("s", $seven_days_ahead);
 $stmt->execute();
 $result = $stmt->get_result();
+$no=1;
 
 $issued_cek_records = [];
 while ($row = $result->fetch_assoc()) {
@@ -26,6 +32,11 @@ $count_stmt = $conn->prepare("
     WHERE Statcek = 'Issued' 
     AND DATEDIFF(tanggal_jatuh_tempo, NOW()) BETWEEN 0 AND 7
 ");
+
+if (!$count_stmt) {
+    die("Preparation failed: " . $conn->error);
+}
+
 $count_stmt->execute();
 $count_result = $count_stmt->get_result();
 $count_row = $count_result->fetch_assoc();
@@ -107,12 +118,14 @@ $conn->close();
     <p>Total cek yang Jatuh Tempo: <?php echo $jt_count; ?></p>
     <table>
         <tr>
+            <th>No</th>
             <th>No cek</th>
             <th>Tanggal Jatuh Tempo</th>
             <th>Nominal</th>
         </tr>
         <?php foreach ($issued_cek_records as $cek): ?>
             <tr>
+                <td><?php echo $no++; ?></td>
                 <td><?php echo htmlspecialchars($cek['nocek']); ?></td>
                 <td><?php echo htmlspecialchars($cek['tanggal_jatuh_tempo']); ?></td>
                 <td><?php echo number_format($cek['nominal']); ?></td>
