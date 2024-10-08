@@ -71,6 +71,7 @@ $conn->close();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Approval Giro/Cek</title>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         
         body {
@@ -137,12 +138,54 @@ $conn->close();
 </head>
 <body>
     <h1>Approval Giro/Cek</h1>
+    <button type="button" onclick="window.location.href='dashboard.php';" style="
+        background-color: #007BFF; /* Primary color */
+        color: white; /* Text color */
+        border: none; /* No border */
+        border-radius: 5px; /* Rounded corners */
+        padding: 10px 20px; /* Padding */
+        font-size: 16px; /* Font size */
+        cursor: pointer; /* Pointer cursor on hover */
+        transition: background-color 0.3s, transform 0.2s; /* Transition effects */
+    ">
+        Back
+    </button>
     <form method="POST" action="">
         <?php 
         $batchCounter = 1; // Initialize batch counter
         foreach ($entries as $batchId => $batchEntries): ?>
             <section>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
                 <h2><?php echo $batchCounter . ". Batch ID: " . htmlspecialchars($batchId); ?></h2>
+                <div>
+                    <button type="button" onclick="postData()" style="
+                        background-color: #28a745; /* Green for approve */
+                        color: white; /* Text color */
+                        border: none; /* No border */
+                        border-radius: 5px; /* Rounded corners */
+                        padding: 10px 15px; /* Padding */
+                        font-size: 16px; /* Font size */
+                        cursor: pointer; /* Pointer cursor on hover */
+                        transition: background-color 0.3s, transform 0.2s;
+                    ">
+                        Approve
+                    </button>
+                    <button type="button" onclick="document.querySelector('input[name=\'batch[<?php echo $batchId; ?>]\'][value=\'Rejected\']').checked = true;" style="
+                        background-color: #dc3545; /* Red for reject */
+                        color: white; /* Text color */
+                        border: none; /* No border */
+                        border-radius: 5px; /* Rounded corners */
+                        padding: 10px 15px; /* Padding */
+                        font-size: 16px; /* Font size */
+                        cursor: pointer; /* Pointer cursor on hover */
+                        transition: background-color 0.3s, transform 0.2s;
+                    ">
+                        Reject
+                    </button>
+                    <input type="radio" name="batch[<?php echo $batchId; ?>]" value="Approved" style="display:none;">
+                    <input type="radio" name="batch[<?php echo $batchId; ?>]" value="Rejected" style="display:none;">
+                </div>
+            </div>
                 <table>
                     <thead>
                         <tr>
@@ -197,21 +240,13 @@ $conn->close();
                         endif; ?>
                     </tbody>
                 </table>
-                <div>
-                    <label>
-                        <input type="radio" name="batch[<?php echo $batchId; ?>]" value="Approved"> Approve
-                    </label>
-                    <label>
-                        <input type="radio" name="batch[<?php echo $batchId; ?>]" value="Rejected"> Reject
-                    </label>
-                </div>
                 <br>
             </section>
             <?php $batchCounter++; ?>
         <?php endforeach; ?>
         <div class="button-container">
-            <input type="submit" value="Approve" onclick="setTimeout(() => { location.reload(); }, 1000);">
-            <button type="button" onclick="window.location.href='dashboard.php';">Back</button>
+            <input type="submit" value="Submit" onclick="setTimeout(() => { location.reload(); }, 1000);">
+            
             </div>
     </form>
 
@@ -219,4 +254,23 @@ $conn->close();
         <div class="message"><?php echo $message; ?></div>
     <?php endif; ?>
 </body>
+<script>
+    Swal.fire({
+        title: "Are you sure?",
+        text: "You won't be able to revert this!",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Yes, delete it!"
+        }).then((result) => {
+        if (result.isConfirmed) {
+            Swal.fire({
+            title: "Deleted!",
+            text: "Your file has been deleted.",
+            icon: "success"
+            });
+        }
+        });
+</script>
 </html>
