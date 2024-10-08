@@ -6,7 +6,7 @@ include 'koneksi.php';
 session_start();
 
 // Check if user is logged in with sufficient privileges
-if (!isset($_SESSION['username']) || !isset($_SESSION['UsrLevel']) || $_SESSION['UsrLevel'] == '2') {
+if (!isset($_SESSION['username']) || !isset($_SESSION['UsrLevel']) || $_SESSION['UsrLevel'] != '2') {
     header('Location: backoff.html');
     exit();
 }

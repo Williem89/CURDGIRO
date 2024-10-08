@@ -55,9 +55,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         // Begin transaction
         $conn->begin_transaction();
-        $filePath = $_FILES['foto_giro']['tmp_name'];
-        $fileData = file_get_contents($filePath);
-        $base64File = base64_encode($fileData);
+        // Define the target directory and file name
+        $targetDir = "imggiro/";
+        $fileName = basename($_FILES["foto_giro"]["name"]);
+        
+        // Generate a random string to append to the filename
+        $randomString = bin2hex(random_bytes(8));
+        $fileName = $randomString . "_" . $fileName;
+
+        $targetFilePath = $targetDir . $fileName;
+
+        // Move the uploaded file to the target directory
+        if (!move_uploaded_file($_FILES["foto_giro"]["tmp_name"], $targetFilePath)) {
+            throw new Exception("Error uploading file.");
+        }
+
         try {
             // Prepare statement to insert into the detail_giro table
             $stmt = $conn->prepare("INSERT INTO detail_giro (nogiro, tanggal_giro, tanggal_jatuh_tempo, nominal, 
@@ -88,7 +100,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $Keterangan,
                 $PVRNo, 
                 $statGiro,
-                $base64File,
+                $fileName,
                 $createdBy
             );
 

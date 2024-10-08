@@ -1,6 +1,8 @@
 <?php
 include 'koneksi.php';
 
+session_start();
+
 // Function to count the number of items based on status
 function countItems($conn, $table, $statusColumn, $statusValue) {
     $stmt = $conn->prepare("SELECT COUNT(*) AS count FROM $table WHERE $statusColumn = ?");
@@ -286,7 +288,13 @@ $conn->close();
                         <a href="Generate.php">Generate</a>
                     </div>
                 </li>
-                <li><a href="Approve.php">Approve Generate</a></li>
+                <!-- if (!isset($_SESSION['username']) || !isset($_SESSION['UsrLevel']) || $_SESSION['UsrLevel'] != '2') {
+                    header('Location: backoff.html');
+                    exit();
+                } -->
+                <?php if (isset($_SESSION['UsrLevel']) && $_SESSION['UsrLevel'] == '2'): ?>
+                    <li><a href="Approve.php">Approve Generate</a></li>
+                <?php endif; ?>
                 <li><a href="#">Giro</a>
                     <div class="dropdown">
                         <a href="TulisGiro.php">Issued Giro</a>
