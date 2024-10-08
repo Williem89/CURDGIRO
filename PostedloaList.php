@@ -2,13 +2,13 @@
 include 'koneksi.php';
 
 // Prepare the statement
-$sql = "SELECT e.nama_entitas, d.namabank, d.ac_number, dg.nogiro, SUM(dg.Nominal) AS total_nominal, 
-               dg.tanggal_jatuh_tempo, dg.tanggal_cair_giro 
-        FROM detail_giro AS dg
-        INNER JOIN data_giro AS d ON dg.nogiro = d.nogiro
+$sql = "SELECT e.nama_entitas, d.namabank, d.ac_number, dg.noloa, SUM(dg.Nominal) AS total_nominal, 
+               dg.tanggal_jatuh_tempo, dg.tanggal_cair_loa 
+        FROM detail_loa AS dg
+        INNER JOIN data_loa AS d ON dg.noloa = d.noloa
         INNER JOIN list_entitas AS e ON d.id_entitas = e.id_entitas
-        WHERE dg.StatGiro = 'Posted' 
-        GROUP BY dg.tanggal_jatuh_tempo, e.nama_entitas, d.namabank, d.ac_number, dg.nogiro, dg.tanggal_cair_giro
+        WHERE dg.Statloa = 'Posted' 
+        GROUP BY dg.tanggal_jatuh_tempo, e.nama_entitas, d.namabank, d.ac_number, dg.noloa, dg.tanggal_cair_loa
         ORDER BY dg.tanggal_jatuh_tempo ASC;";
 
 $stmt = $conn->prepare($sql);
@@ -20,10 +20,10 @@ if ($stmt === false) {
 $stmt->execute();
 $result = $stmt->get_result();
 
-// Initialize an array to hold Posted giro records
-$Posted_giro_records = [];
+// Initialize an array to hold Posted loa records
+$Posted_loa_records = [];
 while ($row = $result->fetch_assoc()) {
-    $Posted_giro_records[] = $row;
+    $Posted_loa_records[] = $row;
 }
 
 // Close the statement and connection
@@ -36,7 +36,7 @@ $conn->close();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Daftar Giro Posted</title>
+    <title>Daftar loa Posted</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
@@ -79,23 +79,23 @@ $conn->close();
 </head>
 <body>
     <div class="container">
-        <h1 class="text-center">Daftar Giro Posted</h1>
+        <h1 class="text-center">Daftar loa Posted</h1>
         <table class="table table-bordered table-striped">
             <thead>
                 <tr>
                     <th>Entitas</th>
-                    <th>No Giro</th>
+                    <th>No loa</th>
                     <th>Tanggal Jatuh Tempo</th>
-                    <th>Tanggal Giro Cair</th> <!-- Kolom baru -->
+                    <th>Tanggal loa Cair</th> <!-- Kolom baru -->
                     <th>Bank</th>
                     <th>No. Rekening</th>
                     <th>Nominal</th>
                 </tr>
             </thead>
             <tbody>
-            <?php if (empty($Posted_giro_records)): ?>
+            <?php if (empty($Posted_loa_records)): ?>
                 <tr>
-                    <td colspan="7" class="no-data">Tidak ada data giro.</td>
+                    <td colspan="7" class="no-data">Tidak ada data loa.</td>
                 </tr>
             <?php else: ?>
                 <?php 
@@ -104,45 +104,45 @@ $conn->close();
                 $subtotal = 0;
                 $grand_total = 0;
 
-                foreach ($Posted_giro_records as $giro): 
+                foreach ($Posted_loa_records as $loa): 
                     // Update subtotal
-                    $subtotal += $giro['total_nominal'];
-                    $grand_total += $giro['total_nominal'];
+                    $subtotal += $loa['total_nominal'];
+                    $grand_total += $loa['total_nominal'];
 
                     // Check if we need to output a new entity
-                    if ($current_entity !== $giro['nama_entitas']) {
+                    if ($current_entity !== $loa['nama_entitas']) {
                         // Output subtotal for the previous entity
                         if ($current_entity !== '') {
                             echo '<tr class="subtotal"><td colspan="6">Subtotal</td><td>' . number_format($subtotal, 2, ',', '.') . '</td></tr>';
                         }
 
                         // Reset subtotal for new entity
-                        $subtotal = $giro['total_nominal'];
-                        $current_entity = $giro['nama_entitas'];
+                        $subtotal = $loa['total_nominal'];
+                        $current_entity = $loa['nama_entitas'];
 
                         echo '<tr class="group-header"><td colspan="7">' . htmlspecialchars($current_entity) . '</td></tr>';
                     }
 
                     // Check if we need to output a new bank
-                    if ($current_bank !== $giro['namabank']) {
-                        $current_bank = $giro['namabank'];
+                    if ($current_bank !== $loa['namabank']) {
+                        $current_bank = $loa['namabank'];
                         echo '<tr class="group-header"><td colspan="7">' . htmlspecialchars($current_bank) . '</td></tr>';
                     }
                 ?>
                     <tr>
-                        <td><?php echo htmlspecialchars($giro['nama_entitas']); ?></td>
-                        <td><?php echo htmlspecialchars($giro['nogiro']); ?></td>
-                        <td><?php echo htmlspecialchars($giro['tanggal_jatuh_tempo']); ?></td>
-                        <td><?php echo htmlspecialchars($giro['tanggal_cair_giro']); ?></td> <!-- Kolom baru -->
-                        <td><?php echo htmlspecialchars($giro['namabank']); ?></td>
-                        <td><?php echo htmlspecialchars($giro['ac_number']); ?></td>
-                        <td><?php echo number_format($giro['total_nominal'], 2, ',', '.'); ?></td>
+                        <td><?php echo htmlspecialchars($loa['nama_entitas']); ?></td>
+                        <td><?php echo htmlspecialchars($loa['noloa']); ?></td>
+                        <td><?php echo htmlspecialchars($loa['tanggal_jatuh_tempo']); ?></td>
+                        <td><?php echo htmlspecialchars($loa['tanggal_cair_loa']); ?></td> <!-- Kolom baru -->
+                        <td><?php echo htmlspecialchars($loa['namabank']); ?></td>
+                        <td><?php echo htmlspecialchars($loa['ac_number']); ?></td>
+                        <td>&#36; <?php echo number_format($loa['total_nominal'], 2, ',', '.'); ?> </td>
                     </tr>
                 <?php endforeach; ?>
 
                 <!-- Output subtotal for the last entity -->
-                <tr class="subtotal"><td colspan="6">Subtotal</td><td><?php echo number_format($subtotal, 2, ',', '.'); ?></td></tr>
-                <tr class="grand-total"><td colspan="6">Grand Total</td><td><?php echo number_format($grand_total, 2, ',', '.'); ?></td></tr>
+                <tr class="subtotal"><td colspan="6">Subtotal</td><td>&#36; <?php echo number_format($subtotal, 2, ',', '.'); ?></td></tr>
+                <tr class="grand-total"><td colspan="6">Grand Total</td><td>&#36; <?php echo number_format($grand_total, 2, ',', '.'); ?></td></tr>
             <?php endif; ?>
             </tbody>
         </table>

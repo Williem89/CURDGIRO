@@ -210,7 +210,7 @@ $conn->close();
             <?php $batchCounter++; ?>
         <?php endforeach; ?>
         <div class="button-container">
-            <input type="submit" value="Approve" onclick="setTimeout(() => { location.reload(); }, 1000);">
+            <input type="submit" value="Submit" onclick="setTimeout(() => { location.reload(); }, 1000);">
             <button type="button" onclick="window.location.href='dashboard.php';">Back</button>
             </div>
     </form>
