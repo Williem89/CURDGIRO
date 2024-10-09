@@ -11,15 +11,12 @@ if (!isset($_SESSION['username'])) {
 
 $user_logged_in = $_SESSION['username']; // Get the logged-in user
 
-// Enable error reporting for debugging (consider removing in production)
+// Enable error//// reporting for debugging (consider removing in production)
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
 // Get the JSON data from the request
 $data = json_decode(file_get_contents('php://input'), true);
-
-// Log incoming data for debugging
-file_put_contents('debug_log.txt', print_r($data, true), FILE_APPEND);
 
 // Check if required parameters are set
 if (isset($data['nogiro'], $data['tanggal'], $data['statgiro'], $data["action"])) {
@@ -27,17 +24,18 @@ if (isset($data['nogiro'], $data['tanggal'], $data['statgiro'], $data["action"])
     $tanggal = $data['tanggal'];
     $statgiro = $data['statgiro'];
     $action = $data['action'];
+    $alasan = $data['alasan'];
 
     // Prepare the SQL statement based on action
     switch ($action) {
         case "cairgiro":
-            $sql = "UPDATE detail_giro SET StatGiro = ?, tanggal_Cair_giro = ?, PostedBy = ? WHERE nogiro = ?";
+            $sql = "UPDATE detail_giro SET StatGiro = ?, tanggal_Cair_giro = ?, SeatleBy = ? WHERE nogiro = ?";
             break;
         case "returngiro":
             $sql = "UPDATE detail_giro SET StatGiro = ?, tglkembalikebank = ?, dikembalikanoleh = ? WHERE nogiro = ?";
             break;
         case "voidgiro":
-            $sql = "UPDATE detail_giro SET StatGiro = ?, TglVoid = ?, VoidBy = ? WHERE nogiro = ?";
+            $sql = "UPDATE detail_giro SET StatGiro = ?, TglVoid = ?, VoidBy = ?, a_void = ? WHERE nogiro = ?";
             break;
         default:
             echo json_encode(['success' => false, 'message' => 'Invalid action']);
@@ -53,8 +51,10 @@ if (isset($data['nogiro'], $data['tanggal'], $data['statgiro'], $data["action"])
     }
 
     // Bind parameters
-    if ($action === "cairgiro" || $action === "returngiro" || $action === "voidgiro") {
+    if ($action === "cairgiro" || $action === "returngiro") {
         $stmt->bind_param("ssss", $statgiro, $tanggal, $user_logged_in, $nogiro);
+    } else if ($action === "voidgiro"){
+        $stmt->bind_param("sssss", $statgiro, $tanggal, $user_logged_in, $alasan, $nogiro);
     }
 
     // Execute the statement

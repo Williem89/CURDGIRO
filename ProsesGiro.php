@@ -161,6 +161,7 @@ $conn->close();
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -169,59 +170,82 @@ $conn->close();
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
     <style>
-    body {
-        background-color: #f8f9fa;
-        padding: 30px;
-        font-family: Arial, sans-serif; /* Menggunakan font yang lebih modern */
-        font-size: 14px; /* Ukuran font lebih kecil */
-        line-height: 1.5; /* Jarak antar baris yang lebih baik */
-    }
-    h1 {
-        margin-bottom: 20px;
-        color: #0056b3;
-        font-size: 1.75rem; /* Ukuran font h1 lebih kecil */
-    }
-    table {
-        margin-top: 20px;
-        border-collapse: collapse; /* Menghilangkan jarak antar border */
-        width: 100%; /* Membuat tabel responsif */
-    }
-    th, td {
-        padding: 12px; /* Memberikan padding yang lebih baik */
-        border: 1px solid #dee2e6; /* Border pada cell tabel */
-    }
-    th {
-        background-color: #007bff;
-        color: white;
-        font-weight: bold; /* Menebalkan teks header */
-    }
-    td {
-        background-color: white;
-        color: #343a40; /* Warna teks lebih gelap untuk kontras yang lebih baik */
-    }
-    .no-data {
-        text-align: center;
-        font-style: italic;
-        color: #6c757d;
-    }
-    .group-header {
-        font-weight: bold;
-        background-color: #e9ecef;
-    }
-    .subtotal {
-        font-weight: bold;
-        background-color: #d1ecf1;
-    }
-    .grand-total {
-        font-weight: bold;
-        background-color: #c3e6cb;
-    }
-    button {
-        margin-right: 5px; /* Memberikan jarak antar tombol */
-    }
-</style>
+        body {
+            background-color: #f8f9fa;
+            padding: 30px;
+            font-family: Arial, sans-serif;
+            /* Menggunakan font yang lebih modern */
+            font-size: 14px;
+            /* Ukuran font lebih kecil */
+            line-height: 1.5;
+            /* Jarak antar baris yang lebih baik */
+        }
+
+        h1 {
+            margin-bottom: 20px;
+            color: #0056b3;
+            font-size: 1.75rem;
+            /* Ukuran font h1 lebih kecil */
+        }
+
+        table {
+            margin-top: 20px;
+            border-collapse: collapse;
+            /* Menghilangkan jarak antar border */
+            width: 100%;
+            /* Membuat tabel responsif */
+        }
+
+        th,
+        td {
+            padding: 12px;
+            /* Memberikan padding yang lebih baik */
+            border: 1px solid #dee2e6;
+            /* Border pada cell tabel */
+        }
+
+        th {
+            background-color: #007bff;
+            color: white;
+            font-weight: bold;
+            /* Menebalkan teks header */
+        }
+
+        td {
+            background-color: white;
+            color: #343a40;
+            /* Warna teks lebih gelap untuk kontras yang lebih baik */
+        }
+
+        .no-data {
+            text-align: center;
+            font-style: italic;
+            color: #6c757d;
+        }
+
+        .group-header {
+            font-weight: bold;
+            background-color: #e9ecef;
+        }
+
+        .subtotal {
+            font-weight: bold;
+            background-color: #d1ecf1;
+        }
+
+        .grand-total {
+            font-weight: bold;
+            background-color: #c3e6cb;
+        }
+
+        button {
+            margin-right: 5px;
+            /* Memberikan jarak antar tombol */
+        }
+    </style>
 
 </head>
+
 <body>
     <div class="container">
         <h1 class="text-center">Daftar Giro Issued</h1>
@@ -264,33 +288,33 @@ $conn->close();
                 </tr>
             </thead>
             <tbody>
-            <?php if (empty($records)): ?>
-                <tr>
-                    <td colspan="10" class="no-data">Tidak ada data giro.</td>
-                </tr>
-            <?php else: ?>
-                <?php 
-                $current_entity = '';
-                $current_bank = '';
-                $subtotal = 0;
-                $grand_total = 0;
-
-                foreach ($records as $giro): 
-                    $subtotal += $giro['total_nominal'];
-                    $grand_total += $giro['total_nominal'];
-                    ?>
+                <?php if (empty($records)): ?>
                     <tr>
-                        <td><?php echo $giro['jenis']; ?></td>
-                        <td><?php echo $giro['nama_entitas']; ?></td>
-                        <td><?php echo $giro['nogiro'] ?: $giro['nocek']; ?></td>
-                        <td><?php echo $giro['StatGiro'] ?: $giro['StatCek']; ?></td>
-                        <td><?php echo $giro['tanggal_jatuh_tempo']; ?></td>
-                        <td><?php echo $giro['TglVoid']; ?></td>
-                        <td><?php echo $giro['namabank']; ?></td>
-                        <td><?php echo $giro['ac_number']; ?></td>
-                        <td><?php echo number_format($giro['total_nominal'], 2); ?></td>
-                        <td>
-                            <!--
+                        <td colspan="10" class="no-data">Tidak ada data giro.</td>
+                    </tr>
+                <?php else: ?>
+                    <?php
+                    $current_entity = '';
+                    $current_bank = '';
+                    $subtotal = 0;
+                    $grand_total = 0;
+
+                    foreach ($records as $giro):
+                        $subtotal += $giro['total_nominal'];
+                        $grand_total += $giro['total_nominal'];
+                    ?>
+                        <tr>
+                            <td><?php echo $giro['jenis']; ?></td>
+                            <td><?php echo $giro['nama_entitas']; ?></td>
+                            <td><?php echo $giro['nogiro'] ?: $giro['nocek']; ?></td>
+                            <td><?php echo $giro['StatGiro'] ?: $giro['StatCek']; ?></td>
+                            <td><?php echo $giro['tanggal_jatuh_tempo']; ?></td>
+                            <td><?php echo $giro['TglVoid']; ?></td>
+                            <td><?php echo $giro['namabank']; ?></td>
+                            <td><?php echo $giro['ac_number']; ?></td>
+                            <td><?php echo number_format($giro['total_nominal'], 2); ?></td>
+                            <td>
+                                <!--
                             <button class="btn btn-sm btn-primary edit-btn" <?php echo $giro['StatGiro'] == "Issued" ? "disabled" : ""; ?> 
                                     data-nogiro="<?php echo htmlspecialchars($giro['nogiro']); ?>" 
                                     data-entitas="<?php echo htmlspecialchars($giro['nama_entitas']); ?>">
@@ -302,37 +326,37 @@ $conn->close();
                                 <i class="bi bi-send-check"></i>
                             </button>
                             -->
-                            <button class="btn btn-sm btn-primary cair-btn" <?php echo $giro['StatGiro'] == "Void" ? "disabled" : ""; ?> 
-                                    data-nogiro="<?php echo htmlspecialchars($giro['nogiro']); ?>" 
+                                <button class="btn btn-sm btn-primary cair-btn" <?php echo $giro['StatGiro'] == "Void" ? "disabled" : ""; ?>
+                                    data-nogiro="<?php echo htmlspecialchars($giro['nogiro']); ?>"
                                     data-entitas="<?php echo htmlspecialchars($giro['nama_entitas']); ?>">
-                                <i class="bi bi-send-check"></i>
-                            </button>
-                           
-                            <button class="btn btn-sm btn-danger void-btn" <?php echo $giro['StatGiro'] == "Void" ? "disabled" : ""; ?>
-                                    data-nogiro="<?php echo htmlspecialchars($giro['nogiro']); ?>" 
-                                    data-entitas="<?php echo htmlspecialchars($giro['nama_entitas']); ?>">
-                                <i class="bi bi-x-circle"></i>
-                            </button>
+                                    <i class="bi bi-send-check"></i>
+                                </button>
 
-                            <button class="btn btn-sm btn-info return-btn" <?php echo $giro['StatGiro'] == "Issued" ? "disabled" : ""; ?>
-                                    data-nogiro="<?php echo htmlspecialchars($giro['nogiro']); ?>" 
+                                <button class="btn btn-sm btn-danger void-btn" <?php echo $giro['StatGiro'] == "Void" ? "disabled" : ""; ?>
+                                    data-nogiro="<?php echo htmlspecialchars($giro['nogiro']); ?>"
                                     data-entitas="<?php echo htmlspecialchars($giro['nama_entitas']); ?>">
-                                <i class="bi bi-backspace"></i>
-                            </button>
-                        </td>
+                                    <i class="bi bi-x-circle"></i>
+                                </button>
+
+                                <button class="btn btn-sm btn-info return-btn" <?php echo $giro['StatGiro'] == "Issued" ? "disabled" : ""; ?>
+                                    data-nogiro="<?php echo htmlspecialchars($giro['nogiro']); ?>"
+                                    data-entitas="<?php echo htmlspecialchars($giro['nama_entitas']); ?>">
+                                    <i class="bi bi-backspace"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                    <tr class="subtotal">
+                        <td colspan="8" class="text-end">Subtotal</td>
+                        <td><?php echo number_format($subtotal, 2); ?></td>
+                        <td></td>
                     </tr>
-                <?php endforeach; ?>
-                <tr class="subtotal">
-                    <td colspan="8" class="text-end">Subtotal</td>
-                    <td><?php echo number_format($subtotal, 2); ?></td>
-                    <td></td>
-                </tr>
-                <tr class="grand-total">
-                    <td colspan="8" class="text-end">Grand Total</td>
-                    <td><?php echo number_format($grand_total, 2); ?></td>
-                    <td></td>
-                </tr>
-            <?php endif; ?>
+                    <tr class="grand-total">
+                        <td colspan="8" class="text-end">Grand Total</td>
+                        <td><?php echo number_format($grand_total, 2); ?></td>
+                        <td></td>
+                    </tr>
+                <?php endif; ?>
             </tbody>
         </table>
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -342,42 +366,62 @@ $conn->close();
                     button.addEventListener('click', async () => {
                         const nogiro = button.getAttribute('data-nogiro');
                         const entitas = button.getAttribute('data-entitas');
-                        
-                        const { value: date } = await Swal.fire({
+
+                        const {value: formValues} = await Swal.fire({
                             title: action === 'cair' ? "Tanggal Cair" : action === 'return' ? "Tanggal Return" : "Tanggal Void",
-                            input: "date",
+                            html: '<div class="form-group">' +
+                                '<label for="swal-input1" class="form-label">Tanggal</label>' +
+                                '<input id="swal-input1" class="form-control" type="date">' +
+                                '</div>' +
+                                (action === 'void' ? 
+                                '<div class="form-group mt-3">' +
+                                '<label for="swal-input2" class="form-label">Alasan</label>' +
+                                '<textarea id="swal-input2" class="form-control" placeholder="Masukkan alasan Void" rows="3"></textarea>' +
+                                '</div>' : ''),
+                            focusConfirm: false,
                             showCancelButton: true,
                             confirmButtonText: 'Submit',
-                            cancelButtonText: 'Cancel'
+                            cancelButtonText: 'Cancel',
+                            preConfirm: () => {
+                                const date = document.getElementById('swal-input1').value;
+                                if (!date) {
+                                    Swal.showValidationMessage('Both fields are required');
+                                }
+                                return {
+                                    date: date,
+                                    reason: action === 'void' ? document.getElementById('swal-input2').value : ''
+                                };
+                            }
                         });
 
-                        if (date) {
+                        if (formValues) {
                             fetch('update_statgiro.php', {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json'
-                                },
-                                body: JSON.stringify({
-                                    nogiro: nogiro,
-                                    tanggal: date,
-                                    statgiro: action === 'cair' ? 'Posted' : action === 'return' ? 'Return' : 'Void',
-                                    action: action + "giro"
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json'
+                                    },
+                                    body: JSON.stringify({
+                                        nogiro: nogiro,
+                                        tanggal: formValues.date,
+                                        alasan: action === 'void' ? formValues.reason : '',
+                                        statgiro: action === 'cair' ? 'Posted' : action === 'return' ? 'Return' : 'Void',
+                                        action: action + "giro"
+                                    })
                                 })
-                            })
-                            .then(response => response.json())
-                            .then(data => {
-                                if (data.success) {
-                                    Swal.fire(action === 'cair' ? "Giro Berhasil di Posting" : action === 'return' ? "Giro Sudah tercatat kembali ke Bank" : "Giro berhasil di void").then(() => {
-                                        location.reload(); // Refresh the page
-                                    });
-                                } else {
-                                    Swal.fire("Error", data.message, "error");
-                                }
-                            })
-                            .catch(error => {
-                                console.error('Error:', error);
-                                Swal.fire("Error", "An error occurred while updating.", "error");
-                            });
+                                .then(response => response.json())
+                                .then(data => {
+                                    if (data.success) {
+                                        Swal.fire(action === 'cair' ? "Giro Berhasil di Posting" : action === 'return' ? "Giro Sudah tercatat kembali ke Bank" : "Giro berhasil di void").then(() => {
+                                            location.reload(); // Refresh the page
+                                        });
+                                    } else {
+                                        Swal.fire("Error", data.message, "error");
+                                    }
+                                })
+                                .catch(error => {
+                                    console.error('Error:', error);
+                                    Swal.fire("Error", "An error occurred while updating.", "error");
+                                });
                         }
                     });
                 });
@@ -390,4 +434,5 @@ $conn->close();
         </script>
     </div>
 </body>
+
 </html>
