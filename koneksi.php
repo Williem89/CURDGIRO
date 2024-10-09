@@ -1,7 +1,7 @@
 <?php
 // koneksi.php
 $servername = "localhost"; // Ganti jika perlu
-$username = "itgel"; // Ganti dengan username database Anda
+$username = "root"; // Ganti dengan username database Anda
 $password = "it@123"; // Ganti dengan password database Anda
 $dbname = "curdgiro"; // Ganti dengan nama database Anda
 
