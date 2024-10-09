@@ -162,13 +162,15 @@ $conn->close();
                         <tr class="giro-list" id="<?php echo htmlspecialchars($bank); ?>">
                             <td colspan="3">
                                 <table style="width: 100%;">
-                                    <thead>
+                                    
+                                    <thead>                
                                         <tr>
                                             <th>No Urut</th>
                                             <th>No Giro</th>
                                             <th onclick="sortGiroList('<?php echo htmlspecialchars($bank); ?>')" style="cursor: pointer;">AC Number</th>
                                         </tr>
                                     </thead>
+
                                     <tbody>
                                         <?php 
                                         usort($giroList, function($a, $b) {
@@ -183,6 +185,7 @@ $conn->close();
                                             </tr>
                                         <?php endforeach; ?>
                                     </tbody>
+
                                 </table>
                             </td>
                         </tr>

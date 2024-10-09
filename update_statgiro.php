@@ -3,10 +3,15 @@
 include 'koneksi.php';
 session_start(); // Start the session to access user information
 
-// Assuming the user's information is stored in session
-$user_logged_in = $_SESSION['username']; // Adjust this based on your session variable
+// Check if the user is logged in
+if (!isset($_SESSION['username'])) {
+    echo json_encode(['success' => false, 'message' => 'User not logged in']);
+    exit;
+}
 
-// Enable error reporting for debugging
+$user_logged_in = $_SESSION['username']; // Get the logged-in user
+
+// Enable error reporting for debugging (consider removing in production)
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
@@ -18,85 +23,50 @@ file_put_contents('debug_log.txt', print_r($data, true), FILE_APPEND);
 
 // Check if required parameters are set
 if (isset($data['nogiro'], $data['tanggal'], $data['statgiro'], $data["action"])) {
-
     $nogiro = $data['nogiro'];
     $tanggal = $data['tanggal'];
     $statgiro = $data['statgiro'];
     $action = $data['action'];
 
-    if ($action == "cairgiro") {
-        $sql = "UPDATE detail_giro SET StatGiro = ?, tanggal_Cair_giro = ?, PostedBy = '$user_logged_in' WHERE nogiro = ?";
-        $stmt = $conn->prepare($sql);
-
-        // Check if preparation was successful
-        if ($stmt === false) {
-            echo json_encode(['success' => false, 'message' => 'Preparation failed: ' . $conn->error]);
+    // Prepare the SQL statement based on action
+    switch ($action) {
+        case "cairgiro":
+            $sql = "UPDATE detail_giro SET StatGiro = ?, tanggal_Cair_giro = ?, PostedBy = ? WHERE nogiro = ?";
+            break;
+        case "returngiro":
+            $sql = "UPDATE detail_giro SET StatGiro = ?, tglkembalikebank = ?, dikembalikanoleh = ? WHERE nogiro = ?";
+            break;
+        case "voidgiro":
+            $sql = "UPDATE detail_giro SET StatGiro = ?, TglVoid = ?, VoidBy = ? WHERE nogiro = ?";
+            break;
+        default:
+            echo json_encode(['success' => false, 'message' => 'Invalid action']);
             exit;
-        }
-
-        // Bind parameters
-        $stmt->bind_param("sss", $statgiro, $tanggal, $nogiro);
-
-        // Execute the statement
-        if ($stmt->execute()) {
-            echo json_encode(['success' => true]);
-        } else {
-            echo json_encode(['success' => false, 'message' => 'Execution failed: ' . $stmt->error]);
-        }
-
-        // Close the statement and connection
-        $stmt->close();
-    } else if ($action == "returngiro") {
-        $sql = "UPDATE detail_giro SET StatGiro = ?, tglkembalikebank = ?, dikembalikanoleh = '$user_logged_in' WHERE nogiro = ?";
-        $stmt = $conn->prepare($sql);
-
-        // Check if preparation was successful
-        if ($stmt === false) {
-            echo json_encode(['success' => false, 'message' => 'Preparation failed: ' . $conn->error]);
-            exit;
-        }
-
-        // Bind parameters
-        $stmt->bind_param("sss", $statgiro, $tanggal, $nogiro);
-
-        // Execute the statement
-        if ($stmt->execute()) {
-            echo json_encode(['success' => true]);
-        } else {
-            echo json_encode(['success' => false, 'message' => 'Execution failed: ' . $stmt->error]);
-        }
-
-        // Close the statement and connection
-        $stmt->close();
-    } else if ($action == "voidgiro") {
-        $sql = "UPDATE detail_giro SET StatGiro = ?, TglVoid = ?, VoidBy = '$user_logged_in' WHERE nogiro = ?";
-        $stmt = $conn->prepare($sql);
-
-        // Check if preparation was successful
-        if ($stmt === false) {
-            echo json_encode(['success' => false, 'message' => 'Preparation failed: ' . $conn->error]);
-            exit;
-        }
-
-        // Bind parameters
-        $stmt->bind_param("sss", $statgiro, $tanggal, $nogiro);
-
-        // Execute the statement
-        if ($stmt->execute()) {
-            echo json_encode(['success' => true]);
-        } else {
-            echo json_encode(['success' => false, 'message' => 'Execution failed: ' . $stmt->error]);
-        }
-
-        // Close the statement and connection
-        $stmt->close();
     }
-    //$PostedBy = $data['PostedBy'];
 
-    // Prepare the SQL statement    
+    // Prepare the statement
+    $stmt = $conn->prepare($sql);
+    if ($stmt === false) {
+        error_log("Preparation failed: " . htmlspecialchars($conn->error, ENT_QUOTES, 'UTF-8'));
+        echo json_encode(['success' => false, 'message' => 'Preparation failed']);
+        exit;
+    }
 
+    // Bind parameters
+    if ($action === "cairgiro" || $action === "returngiro" || $action === "voidgiro") {
+        $stmt->bind_param("ssss", $statgiro, $tanggal, $user_logged_in, $nogiro);
+    }
 
+    // Execute the statement
+    if ($stmt->execute()) {
+        echo json_encode(['success' => true]);
+    } else {
+        error_log("Execution failed: " . htmlspecialchars($stmt->error, ENT_QUOTES, 'UTF-8'));
+        echo json_encode(['success' => false, 'message' => 'Execution failed']);
+    }
 
+    // Close the statement
+    $stmt->close();
 } else {
     echo json_encode(['success' => false, 'message' => 'Invalid input']);
 }
