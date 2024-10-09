@@ -1,6 +1,6 @@
 <?php
 include 'koneksi.php';
-// Prepare the statement
+
 $sql = "SELECT e.nama_entitas, 
        d.namabank, 
        d.ac_number, 
@@ -27,36 +27,56 @@ GROUP BY e.nama_entitas,
          dg.tanggal_jatuh_tempo, 
          dg.PVRNo, 
          dg.keterangan
-ORDER BY e.nama_entitas, dg.nogiro;
-";
+ORDER BY e.nama_entitas, dg.nogiro;";
 
 $stmt = $conn->prepare($sql);
-
 if ($stmt === false) {
     die("Preparation failed: " . $conn->error);
 }
 
-// Execute the statement
 $stmt->execute();
 $result = $stmt->get_result();
 
-// Initialize an array to hold Void giro records
 $Void_giro_records = [];
 while ($row = $result->fetch_assoc()) {
     $Void_giro_records[] = $row;
 }
 
-// Close the statement and connection
 $stmt->close();
 $conn->close();
-?>
 
+$subtotals = [];
+$grand_total = 0;
+
+foreach ($Void_giro_records as $giro) {
+    $entity = $giro['nama_entitas'];
+    if (!isset($subtotals[$entity])) {
+        $subtotals[$entity] = 0;
+    }
+    $subtotals[$entity] += $giro['total_nominal'];
+    $grand_total += $giro['total_nominal'];
+}
+// var_dump($subtotals);
+
+$total_records = count($Void_giro_records);
+$records_per_page = 30;
+$total_pages = ceil($total_records / $records_per_page);
+$current_page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+$offset = ($current_page - 1) * $records_per_page;
+$current_records = array_slice($Void_giro_records, $offset, $records_per_page);
+
+$current_entity = '';
+$subtotal = 0;
+$no = $offset + 1;
+
+?>
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Daftar Giro Void</title>
+    <title>Daftar Giro Posted</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
@@ -107,83 +127,113 @@ $conn->close();
         }
     </style>
 </head>
+
 <body>
     <div class="container" style="width:100%; max-width:2000px">
-        <h1 class="text-center">Daftar Giro Void</h1>
+        <h1 class="text-center">Daftar Giro Posted</h1>
         <table class="table table-bordered table-striped">
             <thead>
-            <tr>
-                <th>No</th>
-                <th>Tanggal Jatuh Tempo</th>
-                <th>No Giro</th>
-                <th>No Rek Asal</th>
-                <th>Bank Asal</th>
-                <th>Rekening Tujuan</th>
-                <th>Atas Nama</th>
-                <th>Bank Tujuan</th>
-                <th>No PVR</th>
-                <th>Keterangan</th>
-                <th>Nominal</th>
-            </tr>
+                <tr>
+                <th style="width:5px; text-align:center;">No</th>
+                    <th style="width:90px;text-align:center;">Tanggal Giro</th>
+                    <th style="width:90px; text-align:center;">No Giro</th>
+                    <th style="width:110px;text-align:center;">No Rek Asal</th>
+                    <th style="width:150px;text-align:center;">Bank Asal</th>
+                    <th style="width:170px;text-align:center;">Rekening Tujuan</th>
+                    <th style="width:260px;text-align:center;">Atas Nama</th>
+                    <th style="width:150px;text-align:center;">Bank Tujuan</th>
+                    <th style="width:150px;text-align:center;">No PVR</th>
+                    <th style="width:150px;text-align:center;">Keterangan</th>
+                    <th style="width:150px;text-align:center;">Nominal</th>
+                </tr>
             </thead>
             <tbody>
-            <?php if (empty($Void_giro_records)): ?>
-                <tr>
-                    <td colspan="7" class="no-data">Tidak ada data giro.</td>
-                </tr>
-            <?php else: ?>
-                <?php 
-                $current_entity = '';
-                $current_bank = '';
-                $subtotal = 0;
-                $grand_total = 0;
-
-                foreach ($Void_giro_records as $giro): 
-                    // Update subtotal
-                    $subtotal += $giro['total_nominal'];
-                    $grand_total += $giro['total_nominal'];
-
-                    // Check if we need to output a new entity
-                    if ($current_entity !== $giro['nama_entitas']) {
-                        // Output subtotal for the previous entity
-                        if ($current_entity !== '') {
-                            echo '<tr class="subtotal"><td colspan="6">Subtotal</td><td>' . number_format($subtotal, 2, ',', '.') . '</td></tr>';
-                        }
-
-                        // Reset subtotal for new entity
-                        $subtotal = $giro['total_nominal'];
-                        $current_entity = $giro['nama_entitas'];
-
-                        echo '<tr class="group-header"><td colspan="7">' . htmlspecialchars($current_entity) . '</td></tr>';
-                    }
-
-                    // Check if we need to output a new bank
-                    if ($current_bank !== $giro['namabank']) {
-                        $current_bank = $giro['namabank'];
-                        echo '<tr class="group-header"><td colspan="7">' . htmlspecialchars($current_bank) . '</td></tr>';
-                    }
-                ?>
+                <?php if (empty($current_records)): ?>
                     <tr>
-                        <td><?php echo $no++; ?></td>
-                        <td><?php echo date('d-M-Y', strtotime($giro['tanggal_jatuh_tempo'])); ?></td>  
-                        <td><?php echo htmlspecialchars($giro['nogiro']); ?></td>
-                        <td><?php echo htmlspecialchars($giro['ac_number']); ?></td>
-                        <td><?php echo htmlspecialchars($giro['namabank']); ?></td>
-                        <td><?php echo htmlspecialchars($giro['ac_penerima']); ?></td>
-                        <td><?php echo htmlspecialchars($giro['nama_penerima']); ?></td>
-                        <td><?php echo htmlspecialchars($giro['bank_penerima']); ?></td>
-                        <td><?php echo htmlspecialchars($giro['PVRNo']); ?></td>
-                        <td><?php echo htmlspecialchars($giro['keterangan']); ?></td>
-                        <td><?php echo 'Rp. '. number_format($giro['Nominal'], 2, ',', '.'); ?></td>
+                        <td colspan="11" class="no-data">Tidak ada data giro.</td>
                     </tr>
-                <?php endforeach; ?>
+                <?php else: ?>
+                    <?php
+                    foreach ($current_records as $giro):
+                        if ($current_entity !== $giro['nama_entitas']) {
+                            if ($current_entity !== '') {
+                                echo '<tr class="subtotal"><td colspan="10">Subtotal</td><td>' . 'Rp. ' . number_format($subtotal, 2, ',', '.') . '</td></tr>';
+                            }
+                                // Reset subtotal for new entity
+                                $subtotal = $giro['total_nominal'];
+                                $current_entity = $giro['nama_entitas'];
 
-                <!-- Output subtotal for the last entity -->
-                <tr class="subtotal"><td colspan="6">Subtotal</td><td><?php echo number_format($subtotal, 2, ',', '.'); ?></td></tr>
-                <tr class="grand-total"><td colspan="6">Grand Total</td><td><?php echo number_format($grand_total, 2, ',', '.'); ?></td></tr>
-            <?php endif; ?>
+                            echo '<tr class="group-header"><td colspan="11">' . htmlspecialchars($current_entity) . '</td></tr>';
+                            } 
+                                else {
+                                    $subtotal += $giro['total_nominal'];
+                                }
+                    ?>
+                        <tr>
+                            <td><?php echo $no++; ?></td>
+                            <td><?php echo date('d-M-Y', strtotime($giro['tanggal_jatuh_tempo'])); ?></td>
+                            <td><?php echo htmlspecialchars($giro['nogiro']); ?></td>
+                            <td><?php echo htmlspecialchars($giro['ac_number']); ?></td>
+                            <td><?php echo htmlspecialchars($giro['namabank']); ?></td>
+                            <td><?php echo htmlspecialchars($giro['ac_penerima']); ?></td>
+                            <td><?php echo htmlspecialchars($giro['nama_penerima']); ?></td>
+                            <td><?php echo htmlspecialchars($giro['bank_penerima']); ?></td>
+                            <td><?php echo htmlspecialchars($giro['PVRNo']); ?></td>
+                            <td><?php echo htmlspecialchars($giro['keterangan']); ?></td>
+                            <td><?php echo 'Rp. ' . number_format($giro['Nominal'], 2, ',', '.'); ?></td>
+                        </tr>
+                    <?php endforeach; ?>
+
+                    <?php if ($current_entity !== ''): ?>
+                        <tr class="subtotal">
+                            <td colspan="10">Subtotal</td>
+                            <td><?php echo 'Rp. ' . number_format($subtotals[$current_entity], 2, ',', '.'); ?></td>
+                        </tr>
+                    <?php endif; ?>
+
+                    <tr class="grand-total">
+                        <td colspan="10">Grand Total</td>
+                        <td><?php echo 'Rp. ' . number_format($grand_total, 2, ',', '.'); ?></td>
+                    </tr>
+                <?php endif; ?>
             </tbody>
         </table>
+
+        <!-- Pagination Controls -->
+        <nav aria-label="Page navigation">
+            <div class="d-flex justify-content-center">
+            <ul class="pagination">
+                <?php if ($current_page > 1): ?>
+                <li class="page-item"><a class="page-link" href="?page=1">First</a></li>
+                <li class="page-item"><a class="page-link" href="?page=<?php echo $current_page - 1; ?>">Previous</a></li>
+                <?php endif; ?>
+
+                <?php
+                $start_page = max(1, $current_page - 4);
+                $end_page = min($total_pages, $start_page + 9);
+
+                if ($current_page <= 5) {
+                $end_page = min(10, $total_pages);
+                }
+
+                if ($current_page > $total_pages - 5) {
+                $start_page = max(1, $total_pages - 9);
+                }
+
+                for ($i = $start_page; $i <= $end_page; $i++): ?>
+                <li class="page-item <?php echo ($i == $current_page) ? 'active' : ''; ?>">
+                    <a class="page-link" href="?page=<?php echo $i; ?>"><?php echo $i; ?></a>
+                </li>
+                <?php endfor; ?>
+
+                <?php if ($current_page < $total_pages): ?>
+                <li class="page-item"><a class="page-link" href="?page=<?php echo $current_page + 1; ?>">Next</a></li>
+                <li class="page-item"><a class="page-link" href="?page=<?php echo $total_pages; ?>">Last</a></li>
+                <?php endif; ?>
+            </ul>
+            </div>
+        </nav>
+
         <div class="text-center mt-4">
             <a href="index.php" class="btn btn-primary">Kembali ke Halaman Utama</a>
         </div>

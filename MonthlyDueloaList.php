@@ -98,6 +98,7 @@ if (isset($_POST['export'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>loa Jatuh Tempo Bulan Ini</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <style>
         body {
             background-color: #f4f7fa;
@@ -105,14 +106,32 @@ if (isset($_POST['export'])) {
             font-family: Arial, sans-serif;
         }
 
-        header {
-            background-color: #0056b3;
-            color: white;
+        .header {
+            display: flex;
+            align-items: center;
             padding: 20px;
-            text-align: center;
-            border-radius: 5px;
-            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            text-transform: uppercase; /* Menjadikan semua teks uppercase */
+            font-family: "Roboto Slab", serif;
+            border-radius: 8px;
         }
+
+
+        .header a.btn {
+            margin: 20px; /* Jarak antara tombol dan judul */
+            padding: 10px 15px; /* Padding tombol */
+            transition: background-color 0.3s; /* Transisi pada hover */
+            border-radius: 50px; /* Sudut membulat */
+            width: 130px; /* Lebar tombol */
+        }
+
+        .header h1 {
+            flex: 0.9; /* Mengambil ruang yang tersedia */
+            text-align: center; /* Memusatkan teks */
+            margin: 0; /* Menghapus margin default */
+            line-height: 1.6; /* Mengatur jarak antar baris */
+        }
+
 
         .table-container {
             background-color: white;
@@ -162,41 +181,52 @@ if (isset($_POST['export'])) {
 </head>
 
 <body>
-    <header>
-        <h1>loa Jatuh Tempo <?php echo htmlspecialchars(date('F Y', mktime(0, 0, 0, $selected_month, 1, $selected_year))); ?></h1>
-    </header>
-
-    <form method="POST" class="mb-4">
-        <div class="row">
-            <div class="col-md-6">
-                <select name="month" class="form-select">
-                    <?php
-                    $current_month = date('n');
-                    for ($m = 1; $m <= 12; $m++) {
-                        echo '<option value="' . $m . '"' . ($current_month == $m ? ' selected' : '') . '>' . date('F', mktime(0, 0, 0, $m, 1)) . '</option>';
-                    }
-                    ?>
-                </select>
+        <div class="header d-flex align-items-center" style="padding-top: 10px;">
+                <a class="btn btn-primary d-flex align-items-center" href="/Curdloa/dashboard.php#cek" style="margin-right: 20px; transition: background-color 0.3s; border-radius: 50px; width: 130px;">
+                    <i class="bi bi-backspace" style="margin-right: 8px;"></i>
+                    Kembali
+                </a>
+                <h1 class="mb-0" style="line-height: 1; margin: 0;">Laporan Jumlah loa Available</h1>
             </div>
-            <div class="col-md-6">
-                <select name="year" class="form-select">
-                    <?php
-                    $current_year = date('Y');
-                    for ($y = $current_year - 5; $y <= $current_year + 5; $y++) {
-                        echo '<option value="' . $y . '"' . ($current_year == $y ? ' selected' : '') . '>' . $y . '</option>';
-                    }
-                    ?>
-                </select>
-            </div>
-        </div>
-        <button type="submit" class="btn btn-primary mt-2">Tampilkan</button>
-        <button type="submit" name="export" class="btn btn-success mt-2">Ekspor ke Excel</button>
+            <form method="POST" class="mb-4" style="box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); border-radius: 12px;">
+                <div class="row align-items-center" style="margin: 10px; width:2750px; ">
+                    <div class="col-md-5">
+                        <select name="month" class="form-select">
+                            <?php
+                            $current_month = date('n');
+                            for ($m = 1; $m <= 12; $m++) {
+                                echo '<option value="' . $m . '"' . ($current_month == $m ? ' selected' : '') . '>' . date('F', mktime(0, 0, 0, $m, 1)) . '</option>';
+                            }
+                            ?>
+                        </select>
+                    </div>
+                    <div class="col-md-5">
+                        <select name="year" class="form-select">
+                            <?php
+                            $current_year = date('Y');
+                            for ($y = $current_year - 5; $y <= $current_year + 5; $y++) {
+                                echo '<option value="' . $y . '"' . ($current_year == $y ? ' selected' : '') . '>' . $y . '</option>';
+                            }
+                            ?>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary mt-2" style="margin:10px; width:150px; margin-left:10px;"><i class="bi bi-collection"></i> Tampilkan</button>
+                    </div>
+                </div>
+            </form>
 
-    </form>
-    <button id="pdfexport" class="btn btn-success mt-2">Ekspor ke PDF</button>
 
-    <div class="container table-container mt-4" id="contentExport">
-        <h2 class="mb-4">Daftar loa yang Jatuh Tempo</h2>
+
+    <div class="container table-container mt-4" id="contentExport" style="width: 100%; max-width:3000px">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Daftar loa yang Jatuh Tempo</h2>
+    <div>
+        <button type="submit" name="export" class="btn btn-success mx-2"><i class="bi bi-file-earmark-spreadsheet-fill"></i> Ekspor ke Excel</button>
+        <button id="pdfexport" class="btn btn-success mx-2 ms-2"><i class="bi bi-filetype-pdf"></i> Ekspor ke PDF</button>
+    </div>
+</div>
+
         <div class="table-responsive">
             <table class="table table-bordered">
                 <thead class="table-primary">
@@ -253,12 +283,12 @@ if (isset($_POST['export'])) {
                                         <td><?php echo htmlspecialchars($cheque['namabank']); ?></td>
                                         <td><?php echo htmlspecialchars($cheque['PVRNo']); ?></td>
                                         <td><?php echo htmlspecialchars($cheque['keterangan']); ?></td>
-                                        <td>&#36; <?php echo htmlspecialchars(number_format($cheque['total_nominal'], 2)); ?></td>
+                                        <td><?php echo htmlspecialchars(number_format($cheque['total_nominal'], 2)); ?></td>
                                     </tr>
                                 <?php endforeach; ?>
                                 <tr>
                                     <td colspan="8" class="text-end"><strong>Total untuk <?php echo htmlspecialchars($bank_name); ?>:</strong></td>
-                                    <td>&#36; <?php echo htmlspecialchars(number_format($bank_info['subtotal'], 2)); ?></td>
+                                    <td><?php echo htmlspecialchars(number_format($bank_info['subtotal'], 2)); ?></td>
                                 </tr>
                             <?php endforeach; ?>
                         <?php endforeach; ?>
@@ -384,5 +414,4 @@ if (isset($_POST['export'])) {
         });
     </script>
 </body>
-
 </html>

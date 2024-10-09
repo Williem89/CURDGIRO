@@ -27,7 +27,7 @@ GROUP BY e.nama_entitas,
          dg.tanggal_jatuh_tempo, 
          dg.PVRNo, 
          dg.keterangan
-ORDER BY e.nama_entitas, nogiro;";
+ORDER BY e.nama_entitas, dg.nogiro;";
 
 $stmt = $conn->prepare($sql);
 if ($stmt === false) {
@@ -135,18 +135,17 @@ $no = $offset + 1;
         <table class="table table-bordered table-striped">
             <thead>
                 <tr>
-                <th style="width:5px; text-align:center;">No</th>
-                <th style="width:90px;text-align:center;">Tanggal Giro</th>
-                <th style="width:90px; text-align:center;">No Giro</th>
-                <th style="width:110px;text-align:center;">No Rek Asal</th>
-                <th style="width:150px;text-align:center;">Bank Asal</th>
-                <th style="width:170px;text-align:center;">Rekening Tujuan</th>
-                <th style="width:260px;text-align:center;">Atas Nama</th>
-                <th style="width:150px;text-align:center;">Bank Tujuan</th>
-                <th style="width:150px;text-align:center;">No PVR</th>
-                <th style="width:150px;text-align:center;">Keterangan</th>
-                <th style="width:150px;text-align:center;">Nominal</th>
-
+                    <th style="width:5px; text-align:center;">No</th>
+                    <th style="width:90px;text-align:center;">Tanggal Giro</th>
+                    <th style="width:90px; text-align:center;">No Giro</th>
+                    <th style="width:110px;text-align:center;">No Rek Asal</th>
+                    <th style="width:150px;text-align:center;">Bank Asal</th>
+                    <th style="width:170px;text-align:center;">Rekening Tujuan</th>
+                    <th style="width:260px;text-align:center;">Atas Nama</th>
+                    <th style="width:150px;text-align:center;">Bank Tujuan</th>
+                    <th style="width:150px;text-align:center;">No PVR</th>
+                    <th style="width:150px;text-align:center;">Keterangan</th>
+                    <th style="width:150px;text-align:center;">Nominal</th>
                 </tr>
             </thead>
             <tbody>
