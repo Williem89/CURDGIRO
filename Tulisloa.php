@@ -60,7 +60,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             // Bind parameters
-            $statloa = 'Issued';  // Set Statloa to 'Issued'
+            $statloa = 'Pending';  // Set Statloa to 'Issued'
 
             $stmt->bind_param("sssssssssss", 
                 $selected_loa_number, 
@@ -111,7 +111,7 @@ $conn->close();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Issued loa</title>
+    <title>Issued LOA</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <style>
@@ -227,7 +227,7 @@ $conn->close();
     </script>
 </head>
 <body>
-    <h1>Issued loa</h1>
+    <h1>Issued LOA</h1>
     <?php if ($message): ?>
         <div class="<?php echo strpos($message, 'Error') === false ? 'success-message' : 'message'; ?>">
             <?php echo $message; ?>

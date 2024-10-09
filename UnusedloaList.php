@@ -45,7 +45,7 @@ $conn->close();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Laporan Jumlah LOA Unused</title>
+    <title>Laporan Jumlah LOA Available</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -54,13 +54,34 @@ $conn->close();
             margin: 20px;
             line-height: 1.6;
         }
-        h1 {
-            color: #4a90e2;
-            text-align: center;
-            margin-bottom: 20px;
+
+        .header {
+            display: flex;
+            align-items: center;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            text-transform: uppercase; /* Menjadikan semua teks uppercase */
+            font-family: "Roboto Slab", serif;
         }
+
+
+        .header a.btn {
+            margin: 20px; /* Jarak antara tombol dan judul */
+            padding: 10px 15px; /* Padding tombol */
+            transition: background-color 0.3s; /* Transisi pada hover */
+            border-radius: 50px; /* Sudut membulat */
+            width: 130px; /* Lebar tombol */
+        }
+
+        .header h1 {
+            flex: 0.9; /* Mengambil ruang yang tersedia */
+            text-align: center; /* Memusatkan teks */
+            margin: 0; /* Menghapus margin default */
+            line-height: 1.6; /* Mengatur jarak antar baris */
+        }
+
         table {
-            width: 100%;
+            width: 50%;
             border-collapse: collapse;
             border-radius: 10px;
             overflow: hidden;
@@ -100,9 +121,6 @@ $conn->close();
             border-radius: 5px;
             transition: background-color 0.3s;
             text-align: center;
-            width: 200px;
-            margin-left: auto;
-            margin-right: auto;
         }
         a:hover {
             background-color: #357ab8;
@@ -112,89 +130,107 @@ $conn->close();
             text-align: center;
             margin-top: 20px;
         }
+
+        .bank-header {
+            background-color: #cce5ff; /* Warna latar belakang default */
+            cursor: pointer; /* Mengubah kursor menjadi pointer */
+            transition: background-color 0.3s; /* Transisi untuk efek halus */
+        }
+
+        .bank-header:hover {
+            background-color: #a4c8e1; /* Warna latar belakang saat hover */
+        }
+
+
     </style>
-    <script>
-        function toggleloaList(bank) {
-            const loaList = document.getElementById(bank);
-            loaList.style.display = loaList.style.display === "none" ? "table-row" : "none";
-        }
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 
-        function sortloaList(loaListId) {
-            const loaTable = document.querySelector(`#${loaListId} table tbody`);
-            const rows = Array.from(loaTable.rows);
-            const acNumberIndex = 2;
-
-            rows.sort((rowA, rowB) => {
-                const acNumberA = rowA.cells[acNumberIndex].textContent.trim();
-                const acNumberB = rowB.cells[acNumberIndex].textContent.trim();
-                return acNumberA.localeCompare(acNumberB);
-            });
-
-            rows.forEach(row => loaTable.appendChild(row));
-        }
-    </script>
 </head>
 <body>
-    <h1>Laporan Jumlah loa Unused</h1>
+
+<div class="header d-flex align-items-center" style="padding-top: 10px;">
+                <a class="btn btn-primary d-flex align-items-center" href="/CurdGiro/dashboard.php#loa" style="margin-right: 20px; transition: background-color 0.3s; border-radius: 50px; width: 120px;">
+                    <i class="bi bi-backspace" style="margin-right: 8px;"></i>
+                    Kembali
+                </a>
+                <h1 class="mb-0" style="line-height: 1; margin: 0;">Laporan Jumlah LOA Available</h1>
+            </div>
+
+
+<br><br>
     
     <?php if (empty($report_data)): ?>
-        <p style="text-align: center;">Tidak ada data loa.</p>
+        <p style="text-align: center;">Tidak ada data LOA.</p>
     <?php else: ?>
-        <table>
-            <thead>
-                <tr>
-                    <th>Nama Entitas</th>
-                    <th>Bank</th>
-                    <th>Jumlah loa</th>
+        <table class="mx-auto px-4">
+    <thead>
+        <tr>
+            <th>Nama Entitas</th>
+            <th>Bank</th>
+            <th>Jumlah LOA</th>
+        </tr>
+    </thead>
+    <tbody>
+        <?php foreach ($report_data as $nama_entitas => $banks): ?>
+            <tr class="entity-header">
+                <td colspan="3"><?php echo htmlspecialchars($nama_entitas); ?></td>
+            </tr>
+            <?php foreach ($banks as $bank => $loaList): ?>
+                <?php $uniqueId = htmlspecialchars($nama_entitas) . '-' . htmlspecialchars($bank); ?>
+                <tr class="bank-header" onclick="toggleloaList('<?php echo $uniqueId; ?>')">
+                    <td></td>
+                    <td><?php echo htmlspecialchars($bank); ?></td>
+                    <td><?php echo count($loaList); ?></td>
                 </tr>
-            </thead>
-            <tbody>
-                <?php foreach ($report_data as $nama_entitas => $banks): ?>
-                    <tr class="entity-header">
-                        <td colspan="3"><?php echo htmlspecialchars($nama_entitas); ?></td>
-                    </tr>
-                    <?php foreach ($banks as $bank => $loaList): ?>
-                        <tr class="bank-header" onclick="toggleloaList('<?php echo htmlspecialchars($bank); ?>')">
-                            <td></td>
-                            <td><?php echo htmlspecialchars($bank); ?></td>
-                            <td><?php echo count($loaList); ?></td> <!-- Count of noloa for this bank -->
-                        </tr>
-                        <tr class="loa-list" id="<?php echo htmlspecialchars($bank); ?>">
-                            <td colspan="3">
-                                <table style="width: 100%;">
-                                    <thead>
-                                        <tr>
-                                            <th>No Urut</th>
-                                            <th>No loa</th>
-                                            <th onclick="sortloaList('<?php echo htmlspecialchars($bank); ?>')" style="cursor: pointer;">AC Number</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <?php 
-                                        usort($loaList, function($a, $b) {
-                                            return strcmp($a['ac_number'], $b['ac_number']);
-                                        });
-                                        
-                                        foreach ($loaList as $index => $loa): ?>
-                                            <tr>
-                                                <td><?php echo $index + 1; ?></td> <!-- Add sequence number -->
-                                                <td><?php echo htmlspecialchars($loa['noloa']); ?></td>
-                                                <td><?php echo htmlspecialchars($loa['ac_number']); ?></td>
-                                            </tr>
-                                        <?php endforeach; ?>
-                                    </tbody>
-                                </table>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-                <?php endforeach; ?>
-            </tbody>
-        </table>
+                <tr class="loa-list" id="<?php echo $uniqueId; ?>">
+                    <td colspan="3">
+                        <table style="width: 100%;">
+                            <thead>                
+                                <tr>
+                                    <th>No Urut</th>
+                                    <th>No loa</th>
+                                    <th onclick="sortloaList('<?php echo $uniqueId; ?>')" style="cursor: pointer;">AC Number</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php 
+                                usort($loaList, function($a, $b) {
+                                    return strcmp($a['ac_number'], $b['ac_number']);
+                                });
+                                
+                                foreach ($loaList as $index => $loa): ?>
+                                    <tr>
+                                        <td><?php echo $index + 1; ?></td>
+                                        <td><?php echo htmlspecialchars($loa['noloa']); ?></td>
+                                        <td><?php echo htmlspecialchars($loa['ac_number']); ?></td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </td>
+                </tr>
+            <?php endforeach; ?>
+        <?php endforeach; ?>
+    </tbody>
+</table>
+
+<script>
+function toggleloaList(uniqueId) {
+    var loaList = document.getElementById(uniqueId);
+    if (loaList.style.display === "none" || loaList.style.display === "") {
+        loaList.style.display = "table-row"; // Show the list
+    } else {
+        loaList.style.display = "none"; // Hide the list
+    }
+}
+</script>
+
         <div class="grand-total">
-            Grand Total: <?php echo $grand_total; ?> loa
+            Grand Total: <?php echo $grand_total; ?> LOA
         </div>
+        <br><br>
     <?php endif; ?>
-    
-    <a href="index.php">Kembali ke Halaman Utama</a>
+
 </body>
 </html>

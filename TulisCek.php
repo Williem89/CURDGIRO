@@ -60,7 +60,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             // Bind parameters
-            $statcek = 'Issued';  // Set Statcek to 'Issued'
+            $statcek = 'Pending';  // Set Statcek to 'Issued'
 
             $stmt->bind_param("sssssssssss", 
                 $selected_cek_number, 

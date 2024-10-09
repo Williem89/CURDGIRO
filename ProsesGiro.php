@@ -4,7 +4,7 @@ session_start();
 
 // Pastikan pengguna terautentikasi
 if (!isset($_SESSION['username'])) {
-    header('Location: login.php');
+    header('Location: login.html');
     exit();
 }
 
@@ -16,6 +16,7 @@ $selected_status = isset($_GET['status']) ? trim($_GET['status']) : '';
 // Validasi dan sanitasi istilah pencarian
 $search_term = htmlspecialchars($search_term, ENT_QUOTES, 'UTF-8');
 
+// Prepare SQL query
 $sql = "
     SELECT 
         'Giro' AS jenis,
@@ -39,7 +40,7 @@ $sql = "
         " . ($selected_type ? "AND d.jenis_giro = ?" : "") . "
         " . ($selected_status ? "AND dg.StatGiro = ?" : "") . "
     GROUP BY 
-        dg.tanggal_jatuh_tempo, d.jenis_giro, e.nama_entitas, d.namabank, d.ac_number, dg.nogiro, dg.TglVoid
+        e.nama_entitas, d.namabank, d.ac_number, dg.nogiro, dg.tanggal_jatuh_tempo, dg.TglVoid
 
     UNION ALL
 
@@ -65,7 +66,7 @@ $sql = "
         " . ($selected_type ? "AND c.jenis_cek = ?" : "") . "
         " . ($selected_status ? "AND dc.StatCek = ?" : "") . "
     GROUP BY 
-        dc.tanggal_jatuh_tempo, c.jenis_cek, e.nama_entitas, c.namabank, c.ac_number, dc.nocek, dc.TglVoid
+        e.nama_entitas, c.namabank, c.ac_number, dc.nocek, dc.tanggal_jatuh_tempo, dc.TglVoid
 
     UNION ALL
 
@@ -91,56 +92,58 @@ $sql = "
         " . ($selected_type ? "AND l.jenis_loa = ?" : "") . "
         " . ($selected_status ? "AND dl.StatLoa = ?" : "") . "
     GROUP BY 
-        dl.tanggal_jatuh_tempo, l.jenis_loa, e.nama_entitas, l.namabank, l.ac_number, dl.noloa, dl.TglVoid
+        e.nama_entitas, l.namabank, l.ac_number, dl.noloa, dl.tanggal_jatuh_tempo, dl.TglVoid
 
     ORDER BY 
         tanggal_jatuh_tempo ASC;
 ";
 
 
-
-// Siapkan parameter untuk binding
+// Prepare parameters for binding
 $sqlParams = [];
-
-// Parameter untuk detail_giro
-$search_like = '%' . $search_term . '%';
-$sqlParams[] = $search_like;  // Parameter 1
-$sqlParams[] = $search_like;  // Parameter 2
-$sqlParams[] = $search_like;  // Parameter 3
+$sqlParams[] = '%' . $search_term . '%'; // for nogiro
+$sqlParams[] = '%' . $search_term . '%'; // for nama_entitas
+$sqlParams[] = '%' . $search_term . '%'; // for namabank
 
 if ($selected_type) {
-    $sqlParams[] = $selected_type;  // Parameter 4
+    $sqlParams[] = $selected_type; // Parameter for type
 }
-
 if ($selected_status) {
-    $sqlParams[] = $selected_status;  // Parameter 5
+    $sqlParams[] = $selected_status; // Parameter for status
 }
 
-// Parameter untuk detail_cek
-$sqlParams[] = $search_like;  // Parameter 6
-$sqlParams[] = $search_like;  // Parameter 7
-$sqlParams[] = $search_like;  // Parameter 8
+// Adjusting the parameters for the other parts of the query
+$sqlParams[] = '%' . $search_term . '%'; // for nocek
+$sqlParams[] = '%' . $search_term . '%'; // for nama_entitas
+$sqlParams[] = '%' . $search_term . '%'; // for namabank
 
 if ($selected_type) {
-    $sqlParams[] = $selected_type;  // Parameter 9
+    $sqlParams[] = $selected_type; // Parameter for type
 }
-
 if ($selected_status) {
-    $sqlParams[] = $selected_status;  // Parameter 10
+    $sqlParams[] = $selected_status; // Parameter for status
 }
 
-// Parameter untuk detail_cek
-$sqlParams[] = $search_like;  // Parameter 6
-$sqlParams[] = $search_like;  // Parameter 7
-$sqlParams[] = $search_like;  // Parameter 8
+$sqlParams[] = '%' . $search_term . '%'; // for noloa
+$sqlParams[] = '%' . $search_term . '%'; // for nama_entitas
+$sqlParams[] = '%' . $search_term . '%'; // for namabank
 
 if ($selected_type) {
-    $sqlParams[] = $selected_type;  // Parameter 9
+    $sqlParams[] = $selected_type; // Parameter for type
+}
+if ($selected_status) {
+    $sqlParams[] = $selected_status; // Parameter for status
 }
 
-if ($selected_status) {
-    $sqlParams[] = $selected_status;  // Parameter 10
+// Siapkan statement
+$stmt = $conn->prepare($sql);
+if ($stmt === false) {
+    die("Preparation failed: " . htmlspecialchars($conn->error, ENT_QUOTES, 'UTF-8'));
 }
+
+// Determine types for binding
+$types = str_repeat('s', count($sqlParams)); // 's' for string
+$stmt->bind_param($types, ...$sqlParams);
 
 
 // Siapkan statement
@@ -180,6 +183,9 @@ $conn->close();
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/magnific-popup/dist/jquery.magnific-popup.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/magnific-popup/dist/magnific-popup.css">
     <style>
         body {
             background-color: #f8f9fa;
@@ -259,7 +265,7 @@ $conn->close();
 
 <body>
     <div class="container">
-        <h1 class="text-center">Daftar Giro Issued</h1>
+        <h1 class="text-center">Daftar Data Issued</h1>
 
         <!-- Form Pencarian -->
         <form method="GET" class="mb-3">
@@ -318,45 +324,62 @@ $conn->close();
                         <tr>
                             <td><?php echo $giro['jenis']; ?></td>
                             <td><?php echo $giro['nama_entitas']; ?></td>
-                            <td><?php echo $giro['nogiro'] ?: $giro['nocek']; ?></td>
-                            <td><?php echo $giro['StatGiro'] ?: $giro['StatCek']; ?></td>
+                            <td><?php echo $giro['nomor']; ?></td>
+                            <td><?php echo $giro['status']; ?></td>
                             <td><?php echo $giro['tanggal_jatuh_tempo']; ?></td>
                             <td><?php echo $giro['TglVoid']; ?></td>
                             <td><?php echo $giro['namabank']; ?></td>
                             <td><?php echo $giro['ac_number']; ?></td>
                             <td><?php echo number_format($giro['total_nominal'], 2); ?></td>
                             <td>
-                                <!--
-                            <button class="btn btn-sm btn-primary edit-btn" <?php echo $giro['StatGiro'] == "Issued" ? "disabled" : ""; ?> 
-                                    data-nogiro="<?php echo htmlspecialchars($giro['nogiro'] ?: $giro['nocek']); ?>" 
-                                    data-entitas="<?php echo htmlspecialchars($giro['nama_entitas']); ?>">
-                                <i class="bi bi-send-check"></i>
-                            </button>
-                            <button class="btn btn-sm btn-primary aprv-btn" <?php echo $giro['StatGiro'] == "Issued" ? "disabled" : ""; ?> 
-                                    data-nogiro="<?php echo htmlspecialchars($giro['nogiro'] ?: $giro['nocek']); ?>" 
-                                    data-entitas="<?php echo htmlspecialchars($giro['nama_entitas']); ?>">
-                                <i class="bi bi-send-check"></i>
-                            </button>
-                            -->
-                                <button class="btn btn-sm btn-primary cair-btn" <?php echo $giro['StatGiro'] == "Void" ? "disabled" : ""; ?>
-                                    data-nogiro="<?php echo htmlspecialchars($giro['nogiro'] ?: $giro['nocek']); ?>"
+                                <button class="btn btn-sm btn-primary cair-btn" <?php echo $giro['status'] == "Void" ? "disabled" : ""; ?>
+                                    data-toggle="tooltip" data-placement="top" title="Post"
+                                    data-nogiro="<?php echo htmlspecialchars($giro['nomor']); ?>"
                                     data-type="<?php echo htmlspecialchars($giro['jenis']); ?>"
                                     data-entitas="<?php echo htmlspecialchars($giro['nama_entitas']); ?>">
                                     <i class="bi bi-send-check"></i>
                                 </button>
 
-                                <button class="btn btn-sm btn-danger void-btn" <?php echo $giro['StatGiro'] == "Void" ? "disabled" : ""; ?>
-                                    data-nogiro="<?php echo htmlspecialchars($giro['nogiro'] ?: $giro['nocek']); ?>"
+                                <button class="btn btn-sm btn-danger void-btn" <?php echo $giro['status'] == "Void" ? "disabled" : ""; ?>
+                                    data-toggle="tooltip" data-placement="top" title="Void"
+                                    data-nogiro="<?php echo htmlspecialchars($giro['nomor']); ?>"
                                     data-type="<?php echo htmlspecialchars($giro['jenis']); ?>"
                                     data-entitas="<?php echo htmlspecialchars($giro['nama_entitas']); ?>">
                                     <i class="bi bi-x-circle"></i>
                                 </button>
 
-                                <button class="btn btn-sm btn-info return-btn" <?php echo $giro['StatGiro'] == "Issued" ? "disabled" : ""; ?>
-                                    data-nogiro="<?php echo htmlspecialchars($giro['nogiro'] ?: $giro['nocek']); ?>"
+                                <button class="btn btn-sm btn-info return-btn" <?php echo $giro['status'] == "Issued" ? "disabled" : ""; ?>
+                                    data-toggle="tooltip" data-placement="top" title="Return"
+                                    data-nogiro="<?php echo htmlspecialchars($giro['nomor']); ?>"
                                     data-type="<?php echo htmlspecialchars($giro['jenis']); ?>"
                                     data-entitas="<?php echo htmlspecialchars($giro['nama_entitas']); ?>">
                                     <i class="bi bi-backspace"></i>
+                                </button>
+
+                                <?php if ($_SESSION['UsrLevel'] == 2): ?>
+                                    <button class="btn btn-sm btn-success aprv-btn" <?php echo $giro['status'] != "Pending" ? "disabled" : ""; ?>
+                                        data-toggle="tooltip" data-placement="top" title="Approve"
+                                        data-nogiro="<?php echo htmlspecialchars($giro['nomor']); ?>"
+                                        data-type="<?php echo htmlspecialchars($giro['jenis']); ?>"
+                                        data-entitas="<?php echo htmlspecialchars($giro['nama_entitas']); ?>">
+                                        <i class="bi bi-check-circle"></i>
+                                    </button>
+                                <?php endif; ?>
+
+                                <button class="btn btn-sm btn-warning edit-btn"
+                                    data-toggle="tooltip" data-placement="top" title="Edit Data"
+                                    data-nogiro="<?php echo htmlspecialchars($giro['nomor']); ?>"
+                                    data-type="<?php echo htmlspecialchars($giro['jenis']); ?>"
+                                    data-entitas="<?php echo htmlspecialchars($giro['nama_entitas']); ?>">
+                                    <i class="bi bi-pencil-square"></i>
+                                </button>
+
+                                <button class="btn btn-sm btn-secondary view-attachment-btn"
+                                    data-toggle="tooltip" data-placement="top" title="Tampilkan Lampiran"
+                                    data-nogiro="<?php echo htmlspecialchars($giro['nomor']); ?>"
+                                    data-type="<?php echo htmlspecialchars($giro['jenis']); ?>"
+                                    data-entitas="<?php echo htmlspecialchars($giro['nama_entitas']); ?>">
+                                    <i class="bi bi-paperclip"></i>
                                 </button>
                             </td>
                         </tr>
@@ -376,6 +399,53 @@ $conn->close();
         </table>
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         <script>
+            $(function() {
+                $('[data-toggle="tooltip"]').tooltip()
+            })
+            document.querySelectorAll('.edit-btn').forEach(button => {
+                button.addEventListener('click', async () => {
+                    const {
+                        value: formValues
+                    } = await Swal.fire({
+                        title: 'Edit Data',
+                        html: '<div class="form-group">' +
+                            '<label for="swal-input1" class="form-label">PVR No.</label>' +
+                            '<input id="swal-input1" class="form-control" rows="3"></input>' +
+                            '</div>' +
+                            '<div class="form-group mt-3">' +
+                            '<label for="swal-input2" class="form-label">Keterangan</label>' +
+                            '<input id="swal-input2" class="form-control" rows="3"></input>' +
+                            '</div>',
+                        focusConfirm: false,
+                        showCancelButton: true,
+                        confirmButtonText: 'Submit',
+                        cancelButtonText: 'Cancel',
+                        preConfirm: () => {
+                            const value = document.getElementById('swal-input1').value;
+                            if (!value) {
+                                Swal.showValidationMessage('Both fields are required');
+                            }
+                            return value;
+                        }
+                    });
+
+                    if (formValues) {
+                        Swal.fire('Submitted', formValues, 'success');
+                    }
+                });
+            });
+
+            document.querySelectorAll('.view-attachment-btn').forEach(button => {
+                button.addEventListener('click', () => {
+                    $(button).magnificPopup({
+                        items: {
+                            src: "imggiro/" + "tesu" + ".jpg",
+                        },
+                        type: 'image'
+                    }).magnificPopup('open');
+                });
+            });
+
             function handleButtonClick(selector, action) {
                 document.querySelectorAll(selector).forEach(button => {
                     button.addEventListener('click', async () => {
@@ -385,17 +455,19 @@ $conn->close();
 
                         console.log(nogiro, entitas, jenis);
 
-                        const {value: formValues} = await Swal.fire({
+                        const {
+                            value: formValues
+                        } = await Swal.fire({
                             title: action === 'cair' ? "Tanggal Cair" : action === 'return' ? "Tanggal Return" : "Tanggal Void",
                             html: '<div class="form-group">' +
                                 '<label for="swal-input1" class="form-label">Tanggal</label>' +
                                 '<input id="swal-input1" class="form-control" type="date">' +
                                 '</div>' +
-                                (action === 'void' ? 
-                                '<div class="form-group mt-3">' +
-                                '<label for="swal-input2" class="form-label">Alasan</label>' +
-                                '<textarea id="swal-input2" class="form-control" placeholder="Masukkan alasan Void" rows="3"></textarea>' +
-                                '</div>' : ''),
+                                (action === 'void' ?
+                                    '<div class="form-group mt-3">' +
+                                    '<label for="swal-input2" class="form-label">Alasan</label>' +
+                                    '<textarea id="swal-input2" class="form-control" placeholder="Masukkan alasan Void" rows="3"></textarea>' +
+                                    '</div>' : ''),
                             focusConfirm: false,
                             showCancelButton: true,
                             confirmButtonText: 'Submit',
@@ -423,14 +495,19 @@ $conn->close();
                                         tanggal: formValues.date,
                                         alasan: action === 'void' ? formValues.reason : '',
                                         statgiro: action === 'cair' ? 'Posted' : action === 'return' ? 'Return' : 'Void',
-                                        action: action + "giro",
+                                        action: action,
                                         jenis: jenis
                                     })
                                 })
                                 .then(response => response.json())
                                 .then(data => {
                                     if (data.success) {
-                                        Swal.fire(action === 'cair' ? "Giro Berhasil di Posting" : action === 'return' ? "Giro Sudah tercatat kembali ke Bank" : "Giro berhasil di void").then(() => {
+                                        Swal.fire(action === 'cair' ?
+                                            (jenis === 'Giro' ? "Giro Berhasil di Posting" : jenis === 'Cek' ? "Cek Berhasil di Posting" : "Loa Berhasil di Posting") :
+                                            action === 'return' ?
+                                            (jenis === 'Giro' ? "Giro Sudah tercatat kembali ke Bank" : jenis === 'Cek' ? "Cek Sudah tercatat kembali ke Bank" : "Loa Sudah tercatat kembali ke Bank") :
+                                            (jenis === 'Giro' ? "Giro berhasil di void" : jenis === 'Cek' ? "Cek berhasil di void" : "Loa berhasil di void")
+                                        ).then(() => {
                                             location.reload(); // Refresh the page
                                         });
                                     } else {
@@ -445,8 +522,7 @@ $conn->close();
                     });
                 });
             }
-            handleButtonClick('.edit-btn', 'edit');
-            handleButtonClick('.aprv-btn', 'approve');
+            handleButtonClick('.aprv-btn', 'acc');
             handleButtonClick('.cair-btn', 'cair');
             handleButtonClick('.void-btn', 'void');
             handleButtonClick('.return-btn', 'return');

@@ -2,6 +2,12 @@
 // koneksi.php: Database connection file
 include 'koneksi.php';
 
+// Redirect to login.html if accessed directly
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    header("Location: login.html");
+    exit;
+}
+
 // Start session
 session_start();
 

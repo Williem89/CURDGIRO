@@ -50,8 +50,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $message = 'Error: All fields are required.';
     } else if ($nominal <= 0) {
         $message = 'Error: Nominal must be greater than zero.';
-    } else if (!is_uploaded_file($_FILES['foto_giro']['tmp_name'])) {
-        $message = 'Error: No file input';
     } else {
         // Begin transaction
         $conn->begin_transaction();

@@ -103,13 +103,13 @@ if (isset($_POST['export'])) {
             padding: 30px;
             font-family: Arial, sans-serif;
         }
-        header {
-            background-color: #0056b3;
-            color: white;
+        .header {
+            display: flex;
+            align-items: center;
             padding: 20px;
-            text-align: center;
-            border-radius: 5px;
-            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            text-transform: uppercase; /* Menjadikan semua teks uppercase */
+            font-family: "Roboto Slab", serif;
         }
         .table-container {
             background-color: white;
@@ -245,7 +245,7 @@ if (isset($_POST['export'])) {
         </div>
         
     </div>
-    <a href="dashboard.php" class="btn-back">Kembali</a>
+    <a href="javascript:history.back()">Kembali ke Halaman Utama</a>
     
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"
