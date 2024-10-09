@@ -16,18 +16,17 @@ $selected_status = isset($_GET['status']) ? trim($_GET['status']) : '';
 // Validasi dan sanitasi istilah pencarian
 $search_term = htmlspecialchars($search_term, ENT_QUOTES, 'UTF-8');
 
-// Siapkan kueri SQL
 $sql = "
     SELECT 
-        d.jenis_giro AS jenis, 
-        e.nama_entitas, 
-        d.namabank, 
-        d.ac_number, 
-        dg.StatGiro, 
-        dg.nogiro, 
-        SUM(dg.Nominal) AS total_nominal, 
-        dg.tanggal_jatuh_tempo, 
-        dg.TglVoid 
+        'Giro' AS jenis,
+        e.nama_entitas,
+        d.namabank,
+        d.ac_number,
+        dg.StatGiro AS status,
+        dg.nogiro AS nomor,
+        SUM(dg.Nominal) AS total_nominal,
+        dg.tanggal_jatuh_tempo,
+        dg.TglVoid
     FROM 
         detail_giro AS dg
     INNER JOIN 
@@ -35,40 +34,25 @@ $sql = "
     INNER JOIN 
         list_entitas AS e ON d.id_entitas = e.id_entitas
     WHERE 
-        (dg.nogiro LIKE ? OR e.nama_entitas LIKE ? OR d.namabank LIKE ?)
-        AND dg.StatGiro != 'Posted'
-";
-
-if ($selected_type) {
-    $sql .= " AND d.jenis_giro = ?";
-}
-
-if ($selected_status) {
-    $sql .= " AND dg.StatGiro = ?";
-}
-
-$sql .= "
+        dg.StatGiro != 'Posted'
+        AND (dg.nogiro LIKE ? OR e.nama_entitas LIKE ? OR d.namabank LIKE ?)
+        " . ($selected_type ? "AND d.jenis_giro = ?" : "") . "
+        " . ($selected_status ? "AND dg.StatGiro = ?" : "") . "
     GROUP BY 
-        dg.tanggal_jatuh_tempo, 
-        d.jenis_giro, 
-        e.nama_entitas, 
-        d.namabank, 
-        d.ac_number, 
-        dg.nogiro, 
-        dg.TglVoid
+        dg.tanggal_jatuh_tempo, d.jenis_giro, e.nama_entitas, d.namabank, d.ac_number, dg.nogiro, dg.TglVoid
 
     UNION ALL
 
     SELECT 
-        c.jenis_cek AS jenis, 
-        e.nama_entitas, 
-        c.namabank, 
-        c.ac_number, 
-        dc.StatCek,
-        dc.nocek, 
-        SUM(dc.nominal) AS total_nominal, 
-        dc.tanggal_jatuh_tempo, 
-        dc.TglVoid 
+        'Cek' AS jenis,
+        e.nama_entitas,
+        c.namabank,
+        c.ac_number,
+        dc.StatCek AS status,
+        dc.nocek AS nomor,
+        SUM(dc.nominal) AS total_nominal,
+        dc.tanggal_jatuh_tempo,
+        dc.TglVoid
     FROM 
         detail_cek AS dc
     INNER JOIN 
@@ -76,31 +60,44 @@ $sql .= "
     INNER JOIN 
         list_entitas AS e ON c.id_entitas = e.id_entitas
     WHERE 
-        (dc.nocek LIKE ? OR e.nama_entitas LIKE ? OR c.namabank LIKE ?)
-        AND dc.StatCek != 'Posted'
-";
-
-if ($selected_type) {
-    $sql .= " AND c.jenis_cek = ?";
-}
-
-if ($selected_status) {
-    $sql .= " AND dc.StatCek = ?";
-}
-
-$sql .= "
+        dc.StatCek != 'Posted'
+        AND (dc.nocek LIKE ? OR e.nama_entitas LIKE ? OR c.namabank LIKE ?)
+        " . ($selected_type ? "AND c.jenis_cek = ?" : "") . "
+        " . ($selected_status ? "AND dc.StatCek = ?" : "") . "
     GROUP BY 
-        dc.tanggal_jatuh_tempo, 
-        c.jenis_cek, 
-        e.nama_entitas, 
-        c.namabank, 
-        c.ac_number, 
-        dc.nocek, 
-        dc.TglVoid
+        dc.tanggal_jatuh_tempo, c.jenis_cek, e.nama_entitas, c.namabank, c.ac_number, dc.nocek, dc.TglVoid
+
+    UNION ALL
+
+    SELECT 
+        'Loa' AS jenis,
+        e.nama_entitas,
+        l.namabank,
+        l.ac_number,
+        dl.StatLoa AS status,
+        dl.noloa AS nomor,
+        SUM(dl.nominal) AS total_nominal,
+        dl.tanggal_jatuh_tempo,
+        dl.TglVoid
+    FROM 
+        detail_loa AS dl
+    INNER JOIN 
+        data_loa AS l ON dl.noloa = l.noloa
+    INNER JOIN 
+        list_entitas AS e ON l.id_entitas = e.id_entitas
+    WHERE 
+        dl.StatLoa != 'Posted'
+        AND (dl.noloa LIKE ? OR e.nama_entitas LIKE ? OR l.namabank LIKE ?)
+        " . ($selected_type ? "AND l.jenis_loa = ?" : "") . "
+        " . ($selected_status ? "AND dl.StatLoa = ?" : "") . "
+    GROUP BY 
+        dl.tanggal_jatuh_tempo, l.jenis_loa, e.nama_entitas, l.namabank, l.ac_number, dl.noloa, dl.TglVoid
 
     ORDER BY 
         tanggal_jatuh_tempo ASC;
 ";
+
+
 
 // Siapkan parameter untuk binding
 $sqlParams = [];
@@ -131,6 +128,20 @@ if ($selected_type) {
 if ($selected_status) {
     $sqlParams[] = $selected_status;  // Parameter 10
 }
+
+// Parameter untuk detail_cek
+$sqlParams[] = $search_like;  // Parameter 6
+$sqlParams[] = $search_like;  // Parameter 7
+$sqlParams[] = $search_like;  // Parameter 8
+
+if ($selected_type) {
+    $sqlParams[] = $selected_type;  // Parameter 9
+}
+
+if ($selected_status) {
+    $sqlParams[] = $selected_status;  // Parameter 10
+}
+
 
 // Siapkan statement
 $stmt = $conn->prepare($sql);
@@ -258,6 +269,7 @@ $conn->close();
                     <option value="">Pilih Type</option>
                     <option value="Giro" <?php echo ($selected_type == 'Giro') ? 'selected' : ''; ?>>Giro</option>
                     <option value="Cek" <?php echo ($selected_type == 'Cek') ? 'selected' : ''; ?>>Cek</option>
+                    <option value="loa" <?php echo ($selected_type == 'loa') ? 'selected' : ''; ?>>Loa</option>
                 </select>
                 <select name="status" class="form-select">
                     <option value="">Pilih Status</option>
@@ -316,30 +328,33 @@ $conn->close();
                             <td>
                                 <!--
                             <button class="btn btn-sm btn-primary edit-btn" <?php echo $giro['StatGiro'] == "Issued" ? "disabled" : ""; ?> 
-                                    data-nogiro="<?php echo htmlspecialchars($giro['nogiro']); ?>" 
+                                    data-nogiro="<?php echo htmlspecialchars($giro['nogiro'] ?: $giro['nocek']); ?>" 
                                     data-entitas="<?php echo htmlspecialchars($giro['nama_entitas']); ?>">
                                 <i class="bi bi-send-check"></i>
                             </button>
                             <button class="btn btn-sm btn-primary aprv-btn" <?php echo $giro['StatGiro'] == "Issued" ? "disabled" : ""; ?> 
-                                    data-nogiro="<?php echo htmlspecialchars($giro['nogiro']); ?>" 
+                                    data-nogiro="<?php echo htmlspecialchars($giro['nogiro'] ?: $giro['nocek']); ?>" 
                                     data-entitas="<?php echo htmlspecialchars($giro['nama_entitas']); ?>">
                                 <i class="bi bi-send-check"></i>
                             </button>
                             -->
                                 <button class="btn btn-sm btn-primary cair-btn" <?php echo $giro['StatGiro'] == "Void" ? "disabled" : ""; ?>
-                                    data-nogiro="<?php echo htmlspecialchars($giro['nogiro']); ?>"
+                                    data-nogiro="<?php echo htmlspecialchars($giro['nogiro'] ?: $giro['nocek']); ?>"
+                                    data-type="<?php echo htmlspecialchars($giro['jenis']); ?>"
                                     data-entitas="<?php echo htmlspecialchars($giro['nama_entitas']); ?>">
                                     <i class="bi bi-send-check"></i>
                                 </button>
 
                                 <button class="btn btn-sm btn-danger void-btn" <?php echo $giro['StatGiro'] == "Void" ? "disabled" : ""; ?>
-                                    data-nogiro="<?php echo htmlspecialchars($giro['nogiro']); ?>"
+                                    data-nogiro="<?php echo htmlspecialchars($giro['nogiro'] ?: $giro['nocek']); ?>"
+                                    data-type="<?php echo htmlspecialchars($giro['jenis']); ?>"
                                     data-entitas="<?php echo htmlspecialchars($giro['nama_entitas']); ?>">
                                     <i class="bi bi-x-circle"></i>
                                 </button>
 
                                 <button class="btn btn-sm btn-info return-btn" <?php echo $giro['StatGiro'] == "Issued" ? "disabled" : ""; ?>
-                                    data-nogiro="<?php echo htmlspecialchars($giro['nogiro']); ?>"
+                                    data-nogiro="<?php echo htmlspecialchars($giro['nogiro'] ?: $giro['nocek']); ?>"
+                                    data-type="<?php echo htmlspecialchars($giro['jenis']); ?>"
                                     data-entitas="<?php echo htmlspecialchars($giro['nama_entitas']); ?>">
                                     <i class="bi bi-backspace"></i>
                                 </button>
@@ -366,6 +381,9 @@ $conn->close();
                     button.addEventListener('click', async () => {
                         const nogiro = button.getAttribute('data-nogiro');
                         const entitas = button.getAttribute('data-entitas');
+                        const jenis = button.getAttribute('data-type');
+
+                        console.log(nogiro, entitas, jenis);
 
                         const {value: formValues} = await Swal.fire({
                             title: action === 'cair' ? "Tanggal Cair" : action === 'return' ? "Tanggal Return" : "Tanggal Void",
@@ -405,7 +423,8 @@ $conn->close();
                                         tanggal: formValues.date,
                                         alasan: action === 'void' ? formValues.reason : '',
                                         statgiro: action === 'cair' ? 'Posted' : action === 'return' ? 'Return' : 'Void',
-                                        action: action + "giro"
+                                        action: action + "giro",
+                                        jenis: jenis
                                     })
                                 })
                                 .then(response => response.json())
