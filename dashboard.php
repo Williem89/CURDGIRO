@@ -383,7 +383,7 @@ $conn->close();
                     <a title="Menampilkan data Statistik CEK" class="nav-link" data-bs-toggle="tab" href="#cek">Cek</a>
                 </li>
                 <li class="nav-item">
-                    <a title="Menampilkan data Statistik" class="nav-link" data-bs-toggle="tab" href="#loa">LOA</a>
+                    <a title="Menampilkan data Statistik LOA" class="nav-link" data-bs-toggle="tab" href="#loa">LOA</a>
                 </li>   
             </ul>
         </div>
@@ -522,49 +522,49 @@ $conn->close();
             <div id="giro" class="tab-pane fade">
                 <div class="stats-card">
                     <div class="card">
-                        <a href="UnusedGiroList.php">
+                        <a title="Jumlah Giro yang Available" href="UnusedGiroList.php">
                             <h3>Giro Available</h3>
                             <p><?php echo $unused_count; ?></p>
                         </a>
                     </div>
                     <div class="card">
-                        <a href="IssuedGiroList.php">
+                        <a title="Jumlah Giro yang sudah di Issued" href="IssuedGiroList.php">
                             <h3>Giro Issued</h3>
                             <p><?php echo $issued_count; ?></p>
                         </a>
                     </div>
                     <div class="card">
-                        <a href="PostedGiroList.php">
+                        <a title="Jumlah Giro yang sudah Cair/Posted" href="PostedGiroList.php">
                             <h3>Giro Posted</h3>
                             <p><?php echo $Posted_count; ?></p>
                         </a>
                     </div>
                     <div class="card">
-                        <a href="VoidGiroList.php">
+                        <a titile="Jumlah Giro yang Void" href="VoidGiroList.php">
                             <h3>Giro Voided</h3>
                             <p><?php echo $void_count; ?></p>
                         </a>
                     </div>
                     <div class="card">
-                        <a href="ReturnGiroList.php">
+                        <a title="Jumlah Giro yang sudah di kembalikan ke Bank" href="ReturnGiroList.php">
                             <h3>Giro Returned</h3>
                             <p><?php echo $return_count; ?></p>
                         </a>
                     </div>
                     <div class="card">
-                        <a href="JTGiroList.php">
+                        <a title="JUmlah Giro yang akan jatuh tempo dalam kurung waktu 7 hari" href="JTGiroList.php">
                             <h3>Giro Due in 7 Days</h3>
                             <p><?php echo $jt_count; ?></p>
                         </a>
                     </div>
                     <div class="card">
-                        <a href="MonthlyDueGiroList.php">
+                        <a title="Jumlah Giro yang akan jatuh tempo dalam periode bulan ini" href="MonthlyDueGiroList.php">
                             <h3>Giro Monthly Due</h3>
                             <p><?php echo $monthly_due_count; ?></p>
                         </a>
                     </div>
                     <div class="card">
-                        <a href="OverDueGiroList.php">
+                        <a title="Jumlah Giro yang sudah lewat jatuh tempo" href="OverDueGiroList.php">
                             <h3>Giro Overdue</h3>
                             <p><?php echo $Overdue_count; ?></p>
                         </a>
