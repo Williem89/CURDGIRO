@@ -76,7 +76,7 @@ $no = $offset + 1;
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Daftar Giro Posted</title>
+    <title>Daftar Giro Void</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
@@ -130,7 +130,7 @@ $no = $offset + 1;
 
 <body>
     <div class="container" style="width:100%; max-width:2000px">
-        <h1 class="text-center">Daftar Giro Posted</h1>
+        <h1 class="text-center">Daftar Giro Void</h1>
         <table class="table table-bordered table-striped">
             <thead>
                 <tr>

@@ -26,6 +26,16 @@ $sql = "
     INNER JOIN list_entitas AS e ON d.id_entitas = e.id_entitas
     WHERE (dc.nocek LIKE ? OR e.nama_entitas LIKE ? OR d.namabank LIKE ?) 
     GROUP BY dc.tanggal_jatuh_tempo, d.jenis_cek, e.nama_entitas, d.namabank, d.ac_number, dc.nocek, dc.TglVoid
+    UNION ALL
+    
+    SELECT d.jenis_loa, e.nama_entitas, d.namabank, d.ac_number, NULL AS StatGiro, NULL AS nogiro, 
+           dl.noloa, dl.StatLoa, 
+           SUM(dl.Nominal) AS total_nominal, dl.tanggal_jatuh_tempo, dl.TglVoid 
+    FROM detail_loa AS dl
+    INNER JOIN data_loa AS d ON dl.noloa = d.noloa
+    INNER JOIN list_entitas AS e ON d.id_entitas = e.id_entitas
+    WHERE (dl.noloa LIKE ? OR e.nama_entitas LIKE ? OR d.namabank LIKE ?) 
+    GROUP BY dl.tanggal_jatuh_tempo, d.jenis_loa, e.nama_entitas, d.namabank, d.ac_number, dl.noloa, dl.TglVoid
     ORDER BY tanggal_jatuh_tempo ASC;
 ";
 
@@ -38,7 +48,7 @@ if ($stmt === false) {
 
 // Bind parameters for Giro
 $search_like = '%' . $search_term . '%';
-$stmt->bind_param("ssssss", $search_like, $search_like, $search_like, $search_like, $search_like, $search_like);
+$stmt->bind_param("sssssssss", $search_like, $search_like, $search_like, $search_like, $search_like, $search_like, $search_like, $search_like, $search_like);
 
 // Execute the statement
 $stmt->execute();
@@ -63,10 +73,6 @@ $conn->close();
     <title>Daftar Giro dan Cek</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        body {
-            background: linear-gradient(to right, #e0f7fa, #b2ebf2);
-            color: #333;
-        }
         h1 {
             margin: 20px 0;
             font-weight: bold;
@@ -94,7 +100,7 @@ $conn->close();
     </style>
 </head>
 <body>
-<div class="container">
+<div class="container" style="width: 100%; max-width: 2000px">
     <h1 class="text-center">Daftar Giro dan Cek</h1>
     
     <!-- Search Form -->

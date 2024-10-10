@@ -27,7 +27,7 @@ GROUP BY e.nama_entitas,
          dg.tanggal_jatuh_tempo, 
          dg.PVRNo, 
          dg.keterangan
-ORDER BY e.nama_entitas, nocek;";
+ORDER BY e.nama_entitas, dg.nocek;";
 
 $stmt = $conn->prepare($sql);
 if ($stmt === false) {
@@ -135,18 +135,17 @@ $no = $offset + 1;
         <table class="table table-bordered table-striped">
             <thead>
                 <tr>
-                <th style="width:5px; text-align:center;">No</th>
-                <th style="width:90px;text-align:center;">Tanggal cek</th>
-                <th style="width:90px; text-align:center;">No cek</th>
-                <th style="width:110px;text-align:center;">No Rek Asal</th>
-                <th style="width:150px;text-align:center;">Bank Asal</th>
-                <th style="width:170px;text-align:center;">Rekening Tujuan</th>
-                <th style="width:260px;text-align:center;">Atas Nama</th>
-                <th style="width:150px;text-align:center;">Bank Tujuan</th>
-                <th style="width:150px;text-align:center;">No PVR</th>
-                <th style="width:150px;text-align:center;">Keterangan</th>
-                <th style="width:150px;text-align:center;">Nominal</th>
-
+                    <th style="width:5px; text-align:center;">No</th>
+                    <th style="width:90px;text-align:center;">Tanggal cek</th>
+                    <th style="width:90px; text-align:center;">No cek</th>
+                    <th style="width:110px;text-align:center;">No Rek Asal</th>
+                    <th style="width:150px;text-align:center;">Bank Asal</th>
+                    <th style="width:170px;text-align:center;">Rekening Tujuan</th>
+                    <th style="width:260px;text-align:center;">Atas Nama</th>
+                    <th style="width:150px;text-align:center;">Bank Tujuan</th>
+                    <th style="width:150px;text-align:center;">No PVR</th>
+                    <th style="width:150px;text-align:center;">Keterangan</th>
+                    <th style="width:150px;text-align:center;">Nominal</th>
                 </tr>
             </thead>
             <tbody>
@@ -243,7 +242,7 @@ $no = $offset + 1;
         </nav>
 
         <div class="text-center mt-4">
-            <a href="index.php" class="btn btn-primary">Kembali ke Halaman Utama</a>
+            <a title="isi" href="index.php" class="btn btn-primary">Kembali ke Halaman Utama</a>
         </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

@@ -66,6 +66,7 @@ $due_loas = [];
 // Get the selected start and end dates or default to today
 $start_date = isset($_POST['start_date']) ? $_POST['start_date'] : date('d-m-y');
 $end_date = isset($_POST['end_date']) ? $_POST['end_date'] : date('d-m-y');
+$type = isset($_POST['filter_type']) ? $_POST['filter_type'] : 'All';
 
 /// Function to fetch due items
 function fetchDueItems($conn, $type, $start_date, $end_date)
@@ -116,13 +117,20 @@ function fetchDueItems($conn, $type, $start_date, $end_date)
     return $items;
 }
 
-// Fetch due cheques, giro, and LOA
-$due_cheques = fetchDueItems($conn, 'cek', $start_date, $end_date);
-$due_giro = fetchDueItems($conn, 'giro', $start_date, $end_date);
-$due_loa = fetchDueItems($conn, 'loa', $start_date, $end_date);
-
-// Combine all arrays if needed
-$due_items = array_merge($due_cheques, $due_giro, $due_loa);
+// Fetch due items based on the selected type
+if ($type === 'All') {
+    $due_cheques = fetchDueItems($conn, 'cek', $start_date, $end_date);
+    $due_giro = fetchDueItems($conn, 'giro', $start_date, $end_date);
+    $due_loa = fetchDueItems($conn, 'loa', $start_date, $end_date);
+    // Combine all arrays
+    $due_items = array_merge($due_cheques, $due_giro, $due_loa);
+} elseif ($type === 'Giro') {
+    $due_giro = fetchDueItems($conn, 'giro', $start_date, $end_date);
+} elseif ($type === 'Cek') {
+    $due_cheques = fetchDueItems($conn, 'cek', $start_date, $end_date);
+} elseif ($type === 'Loa') {
+    $due_loa = fetchDueItems($conn, 'loa', $start_date, $end_date);
+} 
 
 
 // Close connection
@@ -325,11 +333,11 @@ $conn->close();
         <ul>
             <li><a href="#">Master Data</a>
                 <div class="dropdown">
-                    <a href="register.html">Register User</a>
-                    <a href="inputentitas.php">Input Entitas</a>
-                    <a href="InputRekening.php">Input Rekening</a>
-                    <a href="InputCustomer.php">Input Customer</a>
-                    <a href="Generate.php">Generate</a>
+                    <a title="Untuk mendaftarkan user baru" href="register.html">Register User</a>
+                    <a title="untuk mendaftarkan perusahaan baru yang tergabung dalam GEL GROUP" href="inputentitas.php">Input Entitas</a>
+                    <a title="untuk mendaftarkan rekening baru untuk entitas yang ada" href="InputRekening.php">Input Rekening</a>
+                    <a title="untuk mendaftarkan Customer baru untuk GEL GROUP" href="InputCustomer.php">Input Customer</a>
+                    <a title="untuk membuat data lembaran GIRO/CEK/LOA" href="Generate.php">Generate</a>
                 </div>
             </li>
             <!-- if (!isset($_SESSION['username']) || !isset($_SESSION['UsrLevel']) || $_SESSION['UsrLevel'] != '2') {
@@ -337,24 +345,24 @@ $conn->close();
                     exit();
                 } -->
             <?php if (isset($_SESSION['UsrLevel']) && $_SESSION['UsrLevel'] == '2'): ?>
-                <li><a href="Approve.php">Approve Generate</a></li>
+                <li><a title="untuk memyetujui data lembaran GIRO/CEK/LOA yang baru di buat" href="Approve.php">Approve Generate</a></li>
             <?php endif; ?>
-            <li><a href="#">Issued</a>
+            <li><a title="Menulis atau mengisi Data GIRO/CEK/LOA" href="#">Issued</a>
                 <div class="dropdown">
-                    <a href="TulisGiro.php">Giro</a>
-                    <a href="TulisCek.php">Cek</a>
-                    <a href="Tulisloa.php">LOA</a>
+                    <a title="Mengisi data Giro" href="TulisGiro.php">Giro</a>
+                    <a title="Mengisi data Cek" href="TulisCek.php">Cek</a>
+                    <a title="Mengisi data LOA" href="Tulisloa.php">LOA</a>
                 </div>
             </li>
-            <li><a href="ProsesGiro.php">Proses Giro&Cek</a></li>
-            <li><a href="Search.php">Search</a></li>
+            <li><a title="Untuk Approve Issued /Mencairkan / Void / Return /Edit NoPVR& Keterangan /Preview Scan Giro yang di Attach" href="ProsesGiro.php">Proses GIRO/CEK/LOA</a></li>
+            <li><a title="Untuk Mencari GIRO/Cek/LOA " href="Search.php">Search</a></li>
             <!--<li><a href="#">Laporan</a>
                     <div class="dropdown">
                         <a href="ReportStockGiro.php">Laporan Stock Giro Belum Terpakai</a>
                         <a href="ReportIssuedGiro.php">Laporan Giro yang sudah terbit</a>
                     </div>
                 </li>-->
-            <li><a href="logout.php">Logout</a></li> <!-- Logout link -->
+            <li><a title="untuk keluar dari software" href="logout.php">Logout</a></li> <!-- Logout link -->
         </ul>
     </nav>
 
@@ -366,20 +374,17 @@ $conn->close();
         <div class="tabs">
             <ul class="nav nav-tabs">
                 <li class="nav-item">
-                    <a class="nav-link active" data-bs-toggle="tab" href="#listGiroCek">List Giro dan Cek</a>
+                    <a title="Menampilkan data GIRO/CEK/LOA yang sudah belum dicairkan" class="nav-link active" data-bs-toggle="tab" href="#listGiroCek">List Giro dan Cek</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" data-bs-toggle="tab" href="#giro">Giro</a>
+                    <a title="Menampilkan data Statistik GIRO" class="nav-link" data-bs-toggle="tab" href="#giro">Giro</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" data-bs-toggle="tab" href="#cek">Cek</a>
+                    <a title="Menampilkan data Statistik CEK" class="nav-link" data-bs-toggle="tab" href="#cek">Cek</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" data-bs-toggle="tab" href="#loa">LOA</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" data-bs-toggle="tab" href="#search">Search</a>
-                </li>
+                    <a title="Menampilkan data Statistik" class="nav-link" data-bs-toggle="tab" href="#loa">LOA</a>
+                </li>   
             </ul>
         </div>
 
@@ -389,16 +394,25 @@ $conn->close();
                 <h2 class="mt-5">List Giro & Cek</h2>
                 <form method="post" class="mb-4">
                     <div class="row">
-                        <div class="col-md-6 mb-3">
+                        <div class="col-md-3 mb-3">
+                            <label for="filter_type" class="form-label">Filter by Type</label>
+                            <select class="form-control" name="filter_type">
+                                <option value="All" <?php echo (isset($_POST['filter_type']) && $_POST['filter_type'] == 'All') ? 'selected' : ''; ?>>All</option>
+                                <option value="Giro" <?php echo (isset($_POST['filter_type']) && $_POST['filter_type'] == 'Giro') ? 'selected' : ''; ?>>Giro</option>
+                                <option value="Cek" <?php echo (isset($_POST['filter_type']) && $_POST['filter_type'] == 'Cek') ? 'selected' : ''; ?>>Cek</option>
+                                <option value="Loa" <?php echo (isset($_POST['filter_type']) && $_POST['filter_type'] == 'Loa') ? 'selected' : ''; ?>>Loa</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 mb-3">
                             <label for="start_date" class="form-label">Start Date</label>
                             <input type="date" class="form-control" name="start_date" value="<?php echo htmlspecialchars($start_date); ?>">
                         </div>
-                        <div class="col-md-6 mb-3">
+                        <div class="col-md-3 mb-3">
                             <label for="end_date" class="form-label">End Date</label>
                             <input type="date" class="form-control" name="end_date" value="<?php echo htmlspecialchars($end_date); ?>">
                         </div>
                     </div>
-                    <button type="submit" class="btn btn-primary">Filter</button>
+                    <button title="Untuk Menampilkan Data sesuai dengan kriteria yang di atur" type="submit" class="btn btn-primary">Tampilkan</button>
                 </form>
                 <table class="table table-bordered mt-3">
                     <thead>
@@ -449,22 +463,53 @@ $conn->close();
                             ];
                         }
 
+                        foreach ($due_loa as $loa) {
+                            $combined_due_items[] = [
+                                'type' => 'LOA',
+                                'namabank' => $loa['namabank'],
+                                'ac_name' => $loa['ac_name'],
+                                'ac_penerima' => $loa['ac_penerima'],
+                                'nama_penerima' => $loa['nama_penerima'],
+                                'document_no' => $loa['noloa'],
+                                'total_nominal' => number_format($loa['total_nominal'], 2),
+                                'due_date' => date('d-m-Y', strtotime($loa['tanggal_jatuh_tempo'])),
+                                'PVRNo' => $loa['PVRNo'],
+                                'keterangan' => $loa['keterangan'],
+                            ];
+                        }
+
                         // Check if there are any combined due items
                         if (!empty($combined_due_items)):
-                            foreach ($combined_due_items as $item): ?>
+                            // Sort items by due_date
+                            usort($combined_due_items, function($a, $b) {
+                                return strtotime($b['due_date']) - strtotime($a['due_date']);
+                            });
+
+                            // Group items by due_date
+                            $grouped_items = [];
+                            foreach ($combined_due_items as $item) {
+                                $grouped_items[$item['due_date']][] = $item;
+                            }
+
+                            foreach ($grouped_items as $due_date => $items): ?>
                                 <tr>
-                                    <td><?php echo htmlspecialchars($item['type']); ?></td>
-                                    <td><?php echo htmlspecialchars($item['namabank']); ?></td>
-                                    <td><?php echo htmlspecialchars($item['ac_name']); ?></td>
-                                    <td><?php echo htmlspecialchars($item['ac_penerima']); ?></td>
-                                    <td><?php echo htmlspecialchars($item['nama_penerima']); ?></td>
-                                    <td><?php echo htmlspecialchars($item['document_no']); ?></td>
-                                    <td><?php echo htmlspecialchars($item['total_nominal']); ?></td>
-                                    <td><?php echo htmlspecialchars($item['due_date']); ?></td>
-                                    <td><?php echo htmlspecialchars($item['PVRNo']); ?></td>
-                                    <td><?php echo htmlspecialchars($item['keterangan']); ?></td>
+                                    <td colspan="10" class="text-center bg-light"><strong>Due Date: <?php echo htmlspecialchars($due_date); ?></strong></td>
                                 </tr>
-                            <?php endforeach;
+                                <?php foreach ($items as $item): ?>
+                                    <tr>
+                                        <td><?php echo htmlspecialchars($item['type']); ?></td>
+                                        <td><?php echo htmlspecialchars($item['namabank']); ?></td>
+                                        <td><?php echo htmlspecialchars($item['ac_name']); ?></td>
+                                        <td><?php echo htmlspecialchars($item['ac_penerima']); ?></td>
+                                        <td><?php echo htmlspecialchars($item['nama_penerima']); ?></td>
+                                        <td><?php echo htmlspecialchars($item['document_no']); ?></td>
+                                        <td><?php echo htmlspecialchars($item['total_nominal']); ?></td>
+                                        <td><?php echo htmlspecialchars($item['due_date']); ?></td>
+                                        <td><?php echo htmlspecialchars($item['PVRNo']); ?></td>
+                                        <td><?php echo htmlspecialchars($item['keterangan']); ?></td>
+                                    </tr>
+                                <?php endforeach;
+                            endforeach;
                         else: ?>
                             <tr>
                                 <td colspan="10" class="text-center">No due items found for the selected date range.</td>

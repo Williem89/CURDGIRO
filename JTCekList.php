@@ -1,157 +1,271 @@
 <?php
 include 'koneksi.php';
 
-// Calculate the date for 7 days ahead in the correct format
-$seven_days_ahead = date('Y-m-d', strtotime('+7 days'));
+$sql = "
+    SELECT e.nama_entitas, 
+           d.namabank, 
+           d.ac_number, 
+           dg.ac_penerima, 
+           dg.nama_penerima, 
+           dg.bank_penerima, 
+           dg.nocek, 
+           SUM(dg.nominal) AS total_nominal, 
+           dg.tanggal_jatuh_tempo, 
+           dg.PVRNo, 
+           dg.keterangan, 
+           dg.nominal AS Nominal
+    FROM detail_cek AS dg
+    INNER JOIN data_cek AS d ON dg.nocek = d.nocek
+    INNER JOIN list_entitas AS e ON d.id_entitas = e.id_entitas
+    WHERE dg.Statcek = 'Issued' 
+  AND dg.tanggal_jatuh_tempo BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 7 DAY)
+    GROUP BY e.nama_entitas, 
+             d.namabank, 
+             d.ac_number, 
+             dg.ac_penerima, 
+             dg.nama_penerima, 
+             dg.bank_penerima, 
+             dg.nocek, 
+             dg.tanggal_jatuh_tempo, 
+             dg.PVRNo, 
+             dg.keterangan
+    ORDER BY e.nama_entitas, dg.nocek;
+";
 
-// Prepare the statement to get issued cek records due in 7 days
-$stmt = $conn->prepare("
-    SELECT d.namabank, d.ac_name, dc.ac_penerima, dc.nama_penerima, dc.bank_penerima, dc.nocek, dc.nominal as Nominal, 
-               SUM(dc.Nominal) AS total_nominal, dc.tanggal_jatuh_tempo, dc.PVRNo, dc.keterangan 
-    FROM detail_cek AS dc
-        INNER JOIN data_cek AS d ON dc.nocek = d.nocek
-        WHERE dc.Statcek = 'Issued' 
-        AND dc.tanggal_jatuh_tempo BETWEEN NOW() AND ?
-        GROUP BY dc.tanggal_jatuh_tempo, d.namabank, d.ac_name, dc.ac_penerima, dc.nama_penerima, dc.nocek, dc.PVRNo, dc.keterangan
-        ORDER BY dc.tanggal_jatuh_tempo ASC
-");
 
-if (!$stmt) {
+$stmt = $conn->prepare($sql);
+if ($stmt === false) {
     die("Preparation failed: " . $conn->error);
 }
 
-$stmt->bind_param("s", $seven_days_ahead);
 $stmt->execute();
 $result = $stmt->get_result();
-$no=1;
 
-$issued_cek_records = [];
+if ($result === false) {
+    die("Query failed: " . $stmt->error);
+}
+
+$jt_cek_records = [];
 while ($row = $result->fetch_assoc()) {
-    $issued_cek_records[] = $row;
+    $jt_cek_records[] = $row;
 }
 
-// Prepare the statement to count issued cek records due in 7 days
-$count_stmt = $conn->prepare("
-    SELECT COUNT(*) AS jt_count 
-    FROM detail_cek 
-    WHERE Statcek = 'Issued' 
-    AND DATEDIFF(tanggal_jatuh_tempo, NOW()) BETWEEN 0 AND 7
-");
-
-if (!$count_stmt) {
-    die("Preparation failed: " . $conn->error);
-}
-
-$count_stmt->execute();
-$count_result = $count_stmt->get_result();
-$count_row = $count_result->fetch_assoc();
-$jt_count = (int)$count_row['jt_count'];
-
-$count_stmt->close();
 $stmt->close();
 $conn->close();
-?>
 
+$subtotals = [];
+$grand_total = 0;
+
+foreach ($jt_cek_records as $cek) {
+    $entity = $cek['nama_entitas'];
+    if (!isset($subtotals[$entity])) {
+        $subtotals[$entity] = 0;
+    }
+    $subtotals[$entity] += $cek['total_nominal'];
+    $grand_total += $cek['total_nominal'];
+}
+
+$total_records = count($jt_cek_records);
+$records_per_page = 30;
+$total_pages = ceil($total_records / $records_per_page);
+$current_page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+$offset = ($current_page - 1) * $records_per_page;
+$current_records = array_slice($jt_cek_records, $offset, $records_per_page);
+
+$current_entity = '';
+$subtotal = 0;
+$no = $offset + 1;
+
+foreach ($jt_cek_records as $cek) {
+    $entity = $cek['nama_entitas'];
+    if (!isset($subtotals[$entity])) {
+        $subtotals[$entity] = 0;
+    }
+    $subtotals[$entity] += $cek['total_nominal'];
+    $grand_total += $cek['total_nominal'];
+}
+// var_dump($subtotals);
+
+$total_records = count($jt_cek_records);
+$records_per_page = 30;
+$total_pages = ceil($total_records / $records_per_page);
+$current_page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+$offset = ($current_page - 1) * $records_per_page;
+$current_records = array_slice($jt_cek_records, $offset, $records_per_page);
+
+$current_entity = '';
+$subtotal = 0;
+$no = $offset + 1;
+
+?>
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Daftar cek Issued</title>
+    <title>Daftar cek Posted</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            margin: 0;
-            padding: 20px;
+            background-color: #f8f9fa;
+            padding: 30px;
         }
 
         h1 {
-            color: #333;
-            text-align: center;
             margin-bottom: 20px;
+            color: #0056b3;
         }
 
         table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 20px 0;
-            background: white;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        }
-
-        th, td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
+            margin-top: 20px;
+            border: 1px solid #dee2e6;
+            font-size: 12px;
         }
 
         th {
-            background: linear-gradient(to right, #ffeb3b, #ffc107);
-            color: #333;
-        }
-
-        tr:hover {
-            background-color: #f1f1f1;
-        }
-
-        p {
-            text-align: center;
-            font-size: 1.2em;
-            color: #666;
-        }
-
-        a {
-            display: inline-block;
-            margin: 20px auto;
-            padding: 10px 20px;
-            background: linear-gradient(to right, #ffeb3b, #ffc107);
+            background-color: #007bff;
             color: white;
-            text-decoration: none;
-            border-radius: 5px;
             text-align: center;
-            transition: background-color 0.3s;
         }
 
-        a:hover {
-            background: linear-gradient(to right, #ffc107, #ffca28);
+        td {
+            background-color: white;
+        }
+
+        .no-data {
+            text-align: center;
+            font-style: italic;
+            color: #6c757d;
+        }
+
+        .group-header {
+            font-weight: bold;
+            background-color: #e9ecef;
+        }
+
+        .subtotal {
+            font-weight: bold;
+            background-color: #d1ecf1;
+        }
+
+        .grand-total {
+            font-weight: bold;
+            background-color: #c3e6cb;
         }
     </style>
 </head>
+
 <body>
-    <h1>Daftar cek Issued yang Jatuh Tempo dalam 7 Hari</h1>
-    <p>Total cek yang Jatuh Tempo: <?php echo $jt_count; ?></p>
-    <table>
-        <tr>
-            <th>No</th>
-            <th>Tanggal Jatuh Tempo</th>
-            <th>No cek</th>
-            <th>No Rek Asal</th>
-            <th>Bank Asal</th>
-            <th>Rekening Tujuan</th>
-            <th>Atas Nama</th>
-            <th>Bank Tujuan</th>
-            <th>No PVR</th>
-            <th>Keterangan</th>         
-            <th>Nominal</th>
-        </tr>
-        <?php foreach ($issued_cek_records as $cek): ?>
-            <tr>
-                <td><?php echo $no++; ?></td>
-                <td><?php echo htmlspecialchars($cek['tanggal_jatuh_tempo']); ?></td>
-                <td><?php echo htmlspecialchars($cek['nocek']); ?></td>
-                <td><?php echo htmlspecialchars($cek['ac_name']); ?></td>
-                <td><?php echo htmlspecialchars($cek['namabank']); ?></td>
-                <td><?php echo htmlspecialchars($cek['ac_penerima']); ?></td>
-                <td><?php echo htmlspecialchars($cek['nama_penerima']); ?></td>
-                <td><?php echo htmlspecialchars($cek['bank_penerima']); ?></td>
-                <td><?php echo htmlspecialchars($cek['PVRNo']); ?></td>
-                <td><?php echo htmlspecialchars($cek['keterangan']); ?></td>
-                <td><?php echo number_format($cek['Nominal']); ?></td>
-            </tr>
-        <?php endforeach; ?>
-    </table>
-    <br>
-    <a href="dashboard.php">Kembali ke Halaman Utama</a>
+    <div class="container" style="width:100%; max-width:2000px">
+        <h1 class="text-center">Daftar cek Posted</h1>
+        <table class="table table-bordered table-striped">
+            <thead>
+                <tr>
+                <th style="width:5px; text-align:center;">No</th>
+                    <th style="width:90px;text-align:center;">Tanggal cek</th>
+                    <th style="width:90px; text-align:center;">No cek</th>
+                    <th style="width:110px;text-align:center;">No Rek Asal</th>
+                    <th style="width:150px;text-align:center;">Bank Asal</th>
+                    <th style="width:170px;text-align:center;">Rekening Tujuan</th>
+                    <th style="width:260px;text-align:center;">Atas Nama</th>
+                    <th style="width:150px;text-align:center;">Bank Tujuan</th>
+                    <th style="width:150px;text-align:center;">No PVR</th>
+                    <th style="width:150px;text-align:center;">Keterangan</th>
+                    <th style="width:150px;text-align:center;">Nominal</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php if (empty($current_records)): ?>
+                    <tr>
+                        <td colspan="11" class="no-data">Tidak ada data cek.</td>
+                    </tr>
+                <?php else: ?>
+                    <?php
+                    foreach ($current_records as $cek):
+                        if ($current_entity !== $cek['nama_entitas']) {
+                            if ($current_entity !== '') {
+                                echo '<tr class="subtotal"><td colspan="10">Subtotal</td><td>' . 'Rp. ' . number_format($subtotal, 2, ',', '.') . '</td></tr>';
+                            }
+                                // Reset subtotal for new entity
+                                $subtotal = $cek['total_nominal'];
+                                $current_entity = $cek['nama_entitas'];
+
+                            echo '<tr class="group-header"><td colspan="11">' . htmlspecialchars($current_entity) . '</td></tr>';
+                            } 
+                                else {
+                                    $subtotal += $cek['total_nominal'];
+                                }
+                    ?>
+                        <tr>
+                            <td><?php echo $no++; ?></td>
+                            <td><?php echo date('d-M-Y', strtotime($cek['tanggal_jatuh_tempo'])); ?></td>
+                            <td><?php echo htmlspecialchars($cek['nocek']); ?></td>
+                            <td><?php echo htmlspecialchars($cek['ac_number']); ?></td>
+                            <td><?php echo htmlspecialchars($cek['namabank']); ?></td>
+                            <td><?php echo htmlspecialchars($cek['ac_penerima']); ?></td>
+                            <td><?php echo htmlspecialchars($cek['nama_penerima']); ?></td>
+                            <td><?php echo htmlspecialchars($cek['bank_penerima']); ?></td>
+                            <td><?php echo htmlspecialchars($cek['PVRNo']); ?></td>
+                            <td><?php echo htmlspecialchars($cek['keterangan']); ?></td>
+                            <td><?php echo 'Rp. ' . number_format($cek['Nominal'], 2, ',', '.'); ?></td>
+                        </tr>
+                    <?php endforeach; ?>
+
+                    <?php if ($current_entity !== ''): ?>
+                        <tr class="subtotal">
+                            <td colspan="10">Subtotal</td>
+                            <td><?php echo 'Rp. ' . number_format($subtotals[$current_entity], 2, ',', '.'); ?></td>
+                        </tr>
+                    <?php endif; ?>
+
+                    <tr class="grand-total">
+                        <td colspan="10">Grand Total</td>
+                        <td><?php echo 'Rp. ' . number_format($grand_total, 2, ',', '.'); ?></td>
+                    </tr>
+                <?php endif; ?>
+            </tbody>
+        </table>
+
+        <!-- Pagination Controls -->
+        <nav aria-label="Page navigation">
+            <div class="d-flex justify-content-center">
+            <ul class="pagination">
+                <?php if ($current_page > 1): ?>
+                <li class="page-item"><a class="page-link" href="?page=1">First</a></li>
+                <li class="page-item"><a class="page-link" href="?page=<?php echo $current_page - 1; ?>">Previous</a></li>
+                <?php endif; ?>
+
+                <?php
+                $start_page = max(1, $current_page - 4);
+                $end_page = min($total_pages, $start_page + 9);
+
+                if ($current_page <= 5) {
+                $end_page = min(10, $total_pages);
+                }
+
+                if ($current_page > $total_pages - 5) {
+                $start_page = max(1, $total_pages - 9);
+                }
+
+                for ($i = $start_page; $i <= $end_page; $i++): ?>
+                <li class="page-item <?php echo ($i == $current_page) ? 'active' : ''; ?>">
+                    <a class="page-link" href="?page=<?php echo $i; ?>"><?php echo $i; ?></a>
+                </li>
+                <?php endfor; ?>
+
+                <?php if ($current_page < $total_pages): ?>
+                <li class="page-item"><a class="page-link" href="?page=<?php echo $current_page + 1; ?>">Next</a></li>
+                <li class="page-item"><a class="page-link" href="?page=<?php echo $total_pages; ?>">Last</a></li>
+                <?php endif; ?>
+            </ul>
+            </div>
+        </nav>
+
+        <div class="text-center mt-4">
+            <a href="index.php" class="btn btn-primary">Kembali ke Halaman Utama</a>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

@@ -1,38 +1,78 @@
 <?php
 include 'koneksi.php';
 
-// Prepare the statement
-$sql = "SELECT e.nama_entitas, d.namabank, d.ac_number, dg.nocek, SUM(dg.Nominal) AS total_nominal, 
-               dg.tanggal_jatuh_tempo, dg.tanggal_cair_cek 
-        FROM detail_cek AS dg
-        INNER JOIN data_cek AS d ON dg.nocek = d.nocek
-        INNER JOIN list_entitas AS e ON d.id_entitas = e.id_entitas
-        WHERE dg.Statcek = 'Posted' 
-        GROUP BY dg.tanggal_jatuh_tempo, e.nama_entitas, d.namabank, d.ac_number, dg.nocek, dg.tanggal_cair_cek
-        ORDER BY dg.tanggal_jatuh_tempo ASC;";
+$sql = "SELECT e.nama_entitas, 
+       d.namabank, 
+       d.ac_number, 
+       dg.ac_penerima, 
+       dg.nama_penerima, 
+       dg.bank_penerima, 
+       dg.nocek, 
+       SUM(dg.nominal) AS total_nominal, 
+       dg.tanggal_jatuh_tempo, 
+       dg.PVRNo, 
+       dg.keterangan, 
+       dg.nominal as Nominal
+FROM detail_cek AS dg
+INNER JOIN data_cek AS d ON dg.nocek = d.nocek
+INNER JOIN list_entitas AS e ON d.id_entitas = e.id_entitas
+WHERE dg.Statcek='Posted'
+GROUP BY e.nama_entitas, 
+         d.namabank, 
+         d.ac_number, 
+         dg.ac_penerima, 
+         dg.nama_penerima, 
+         dg.bank_penerima, 
+         dg.nocek, 
+         dg.tanggal_jatuh_tempo, 
+         dg.PVRNo, 
+         dg.keterangan
+ORDER BY e.nama_entitas, dg.nocek;";
 
 $stmt = $conn->prepare($sql);
 if ($stmt === false) {
     die("Preparation failed: " . $conn->error);
 }
 
-// Execute the statement
 $stmt->execute();
 $result = $stmt->get_result();
 
-// Initialize an array to hold Posted cek records
-$Posted_cek_records = [];
+$posted_cek_records = [];
 while ($row = $result->fetch_assoc()) {
-    $Posted_cek_records[] = $row;
+    $posted_cek_records[] = $row;
 }
 
-// Close the statement and connection
 $stmt->close();
 $conn->close();
-?>
 
+$subtotals = [];
+$grand_total = 0;
+
+foreach ($posted_cek_records as $cek) {
+    $entity = $cek['nama_entitas'];
+    if (!isset($subtotals[$entity])) {
+        $subtotals[$entity] = 0;
+    }
+    $subtotals[$entity] += $cek['total_nominal'];
+    $grand_total += $cek['total_nominal'];
+}
+// var_dump($subtotals);
+
+$total_records = count($posted_cek_records);
+$records_per_page = 30;
+$total_pages = ceil($total_records / $records_per_page);
+$current_page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+$offset = ($current_page - 1) * $records_per_page;
+$current_records = array_slice($posted_cek_records, $offset, $records_per_page);
+
+$current_entity = '';
+$subtotal = 0;
+$no = $offset + 1;
+
+?>
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -43,109 +83,157 @@ $conn->close();
             background-color: #f8f9fa;
             padding: 30px;
         }
+
         h1 {
             margin-bottom: 20px;
             color: #0056b3;
         }
+
         table {
             margin-top: 20px;
             border: 1px solid #dee2e6;
+            font-size: 12px;
         }
+
         th {
             background-color: #007bff;
             color: white;
+            text-align: center;
         }
+
         td {
             background-color: white;
         }
+
         .no-data {
             text-align: center;
             font-style: italic;
             color: #6c757d;
         }
+
         .group-header {
             font-weight: bold;
             background-color: #e9ecef;
         }
+
         .subtotal {
             font-weight: bold;
             background-color: #d1ecf1;
         }
+
         .grand-total {
             font-weight: bold;
             background-color: #c3e6cb;
         }
     </style>
 </head>
+
 <body>
-    <div class="container">
+    <div class="container" style="width:100%; max-width:2000px">
         <h1 class="text-center">Daftar cek Posted</h1>
         <table class="table table-bordered table-striped">
             <thead>
                 <tr>
-                    <th>Entitas</th>
-                    <th>No cek</th>
-                    <th>Tanggal Jatuh Tempo</th>
-                    <th>Tanggal cek Cair</th> <!-- Kolom baru -->
-                    <th>Bank</th>
-                    <th>No. Rekening</th>
-                    <th>Nominal</th>
+                <th style="width:5px; text-align:center;">No</th>
+                    <th style="width:90px;text-align:center;">Tanggal cek</th>
+                    <th style="width:90px; text-align:center;">No cek</th>
+                    <th style="width:110px;text-align:center;">No Rek Asal</th>
+                    <th style="width:150px;text-align:center;">Bank Asal</th>
+                    <th style="width:170px;text-align:center;">Rekening Tujuan</th>
+                    <th style="width:260px;text-align:center;">Atas Nama</th>
+                    <th style="width:150px;text-align:center;">Bank Tujuan</th>
+                    <th style="width:150px;text-align:center;">No PVR</th>
+                    <th style="width:150px;text-align:center;">Keterangan</th>
+                    <th style="width:150px;text-align:center;">Nominal</th>
                 </tr>
             </thead>
             <tbody>
-            <?php if (empty($Posted_cek_records)): ?>
-                <tr>
-                    <td colspan="7" class="no-data">Tidak ada data cek.</td>
-                </tr>
-            <?php else: ?>
-                <?php 
-                $current_entity = '';
-                $current_bank = '';
-                $subtotal = 0;
-                $grand_total = 0;
-
-                foreach ($Posted_cek_records as $cek): 
-                    // Update subtotal
-                    $subtotal += $cek['total_nominal'];
-                    $grand_total += $cek['total_nominal'];
-
-                    // Check if we need to output a new entity
-                    if ($current_entity !== $cek['nama_entitas']) {
-                        // Output subtotal for the previous entity
-                        if ($current_entity !== '') {
-                            echo '<tr class="subtotal"><td colspan="6">Subtotal</td><td>' . number_format($subtotal, 2, ',', '.') . '</td></tr>';
-                        }
-
-                        // Reset subtotal for new entity
-                        $subtotal = $cek['total_nominal'];
-                        $current_entity = $cek['nama_entitas'];
-
-                        echo '<tr class="group-header"><td colspan="7">' . htmlspecialchars($current_entity) . '</td></tr>';
-                    }
-
-                    // Check if we need to output a new bank
-                    if ($current_bank !== $cek['namabank']) {
-                        $current_bank = $cek['namabank'];
-                        echo '<tr class="group-header"><td colspan="7">' . htmlspecialchars($current_bank) . '</td></tr>';
-                    }
-                ?>
+                <?php if (empty($current_records)): ?>
                     <tr>
-                        <td><?php echo htmlspecialchars($cek['nama_entitas']); ?></td>
-                        <td><?php echo htmlspecialchars($cek['nocek']); ?></td>
-                        <td><?php echo htmlspecialchars($cek['tanggal_jatuh_tempo']); ?></td>
-                        <td><?php echo htmlspecialchars($cek['tanggal_cair_cek']); ?></td> <!-- Kolom baru -->
-                        <td><?php echo htmlspecialchars($cek['namabank']); ?></td>
-                        <td><?php echo htmlspecialchars($cek['ac_number']); ?></td>
-                        <td><?php echo number_format($cek['total_nominal'], 2, ',', '.'); ?></td>
+                        <td colspan="11" class="no-data">Tidak ada data cek.</td>
                     </tr>
-                <?php endforeach; ?>
+                <?php else: ?>
+                    <?php
+                    foreach ($current_records as $cek):
+                        if ($current_entity !== $cek['nama_entitas']) {
+                            if ($current_entity !== '') {
+                                echo '<tr class="subtotal"><td colspan="10">Subtotal</td><td>' . 'Rp. ' . number_format($subtotal, 2, ',', '.') . '</td></tr>';
+                            }
+                                // Reset subtotal for new entity
+                                $subtotal = $cek['total_nominal'];
+                                $current_entity = $cek['nama_entitas'];
 
-                <!-- Output subtotal for the last entity -->
-                <tr class="subtotal"><td colspan="6">Subtotal</td><td><?php echo number_format($subtotal, 2, ',', '.'); ?></td></tr>
-                <tr class="grand-total"><td colspan="6">Grand Total</td><td><?php echo number_format($grand_total, 2, ',', '.'); ?></td></tr>
-            <?php endif; ?>
+                            echo '<tr class="group-header"><td colspan="11">' . htmlspecialchars($current_entity) . '</td></tr>';
+                            } 
+                                else {
+                                    $subtotal += $cek['total_nominal'];
+                                }
+                    ?>
+                        <tr>
+                            <td><?php echo $no++; ?></td>
+                            <td><?php echo date('d-M-Y', strtotime($cek['tanggal_jatuh_tempo'])); ?></td>
+                            <td><?php echo htmlspecialchars($cek['nocek']); ?></td>
+                            <td><?php echo htmlspecialchars($cek['ac_number']); ?></td>
+                            <td><?php echo htmlspecialchars($cek['namabank']); ?></td>
+                            <td><?php echo htmlspecialchars($cek['ac_penerima']); ?></td>
+                            <td><?php echo htmlspecialchars($cek['nama_penerima']); ?></td>
+                            <td><?php echo htmlspecialchars($cek['bank_penerima']); ?></td>
+                            <td><?php echo htmlspecialchars($cek['PVRNo']); ?></td>
+                            <td><?php echo htmlspecialchars($cek['keterangan']); ?></td>
+                            <td><?php echo 'Rp. ' . number_format($cek['Nominal'], 2, ',', '.'); ?></td>
+                        </tr>
+                    <?php endforeach; ?>
+
+                    <?php if ($current_entity !== ''): ?>
+                        <tr class="subtotal">
+                            <td colspan="10">Subtotal</td>
+                            <td><?php echo 'Rp. ' . number_format($subtotals[$current_entity], 2, ',', '.'); ?></td>
+                        </tr>
+                    <?php endif; ?>
+
+                    <tr class="grand-total">
+                        <td colspan="10">Grand Total</td>
+                        <td><?php echo 'Rp. ' . number_format($grand_total, 2, ',', '.'); ?></td>
+                    </tr>
+                <?php endif; ?>
             </tbody>
         </table>
+
+        <!-- Pagination Controls -->
+        <nav aria-label="Page navigation">
+            <div class="d-flex justify-content-center">
+            <ul class="pagination">
+                <?php if ($current_page > 1): ?>
+                <li class="page-item"><a class="page-link" href="?page=1">First</a></li>
+                <li class="page-item"><a class="page-link" href="?page=<?php echo $current_page - 1; ?>">Previous</a></li>
+                <?php endif; ?>
+
+                <?php
+                $start_page = max(1, $current_page - 4);
+                $end_page = min($total_pages, $start_page + 9);
+
+                if ($current_page <= 5) {
+                $end_page = min(10, $total_pages);
+                }
+
+                if ($current_page > $total_pages - 5) {
+                $start_page = max(1, $total_pages - 9);
+                }
+
+                for ($i = $start_page; $i <= $end_page; $i++): ?>
+                <li class="page-item <?php echo ($i == $current_page) ? 'active' : ''; ?>">
+                    <a class="page-link" href="?page=<?php echo $i; ?>"><?php echo $i; ?></a>
+                </li>
+                <?php endfor; ?>
+
+                <?php if ($current_page < $total_pages): ?>
+                <li class="page-item"><a class="page-link" href="?page=<?php echo $current_page + 1; ?>">Next</a></li>
+                <li class="page-item"><a class="page-link" href="?page=<?php echo $total_pages; ?>">Last</a></li>
+                <?php endif; ?>
+            </ul>
+            </div>
+        </nav>
+
         <div class="text-center mt-4">
             <a href="index.php" class="btn btn-primary">Kembali ke Halaman Utama</a>
         </div>

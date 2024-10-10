@@ -1,103 +1,231 @@
 <?php
 include 'koneksi.php';
 
-// Calculate the current date
-$current_date = date('d-m-y');
-$stmt = $conn->prepare("
-    SELECT noloa, tanggal_jatuh_tempo, nominal 
-    FROM detail_loa 
-    WHERE Statloa = 'Issued' AND tanggal_jatuh_tempo < ?
-");
-$stmt->bind_param("s", $current_date);
-$stmt->execute();
-$result = $stmt->get_result();
+$sql = "SELECT e.nama_entitas, 
+               d.namabank, 
+               d.ac_number, 
+               dg.ac_penerima, 
+               dg.nama_penerima, 
+               dg.bank_penerima, 
+               dg.noloa, 
+               SUM(dg.nominal) AS total_nominal, 
+               dg.tanggal_jatuh_tempo, 
+               dg.PVRNo, 
+               dg.keterangan, 
+               dg.nominal AS Nominal
+        FROM detail_loa AS dg
+        INNER JOIN data_loa AS d ON dg.noloa = d.noloa
+        INNER JOIN list_entitas AS e ON d.id_entitas = e.id_entitas
+        WHERE dg.Statloa = 'Issued' AND dg.tanggal_jatuh_tempo < CURDATE()
+        GROUP BY e.nama_entitas, 
+                 d.namabank, 
+                 d.ac_number, 
+                 dg.ac_penerima, 
+                 dg.nama_penerima, 
+                 dg.bank_penerima, 
+                 dg.noloa, 
+                 dg.tanggal_jatuh_tempo, 
+                 dg.PVRNo, 
+                 dg.keterangan
+        ORDER BY e.nama_entitas, dg.noloa";
 
-$issued_loa_records = [];
-while ($row = $result->fetch_assoc()) {
-    $issued_loa_records[] = $row;
+$stmt = $conn->prepare($sql);
+if (!$stmt) {
+    die("Preparation failed: " . $conn->error);
 }
 
+if (!$stmt->execute()) {
+    die("Error executing query: " . $stmt->error);
+}
+
+$result = $stmt->get_result();
+$issued_loa_records = $result->fetch_all(MYSQLI_ASSOC);
 $stmt->close();
 $conn->close();
-?>
 
+$subtotals = [];
+$grand_total = 0;
+
+// Calculate subtotals and grand total
+foreach ($issued_loa_records as $loa) {
+    $entity = $loa['nama_entitas'];
+    $subtotals[$entity] = ($subtotals[$entity] ?? 0) + $loa['total_nominal'];
+    $grand_total += $loa['total_nominal'];
+}
+
+// Pagination logic
+$total_records = count($issued_loa_records);
+$records_per_page = 30;
+$total_pages = ceil($total_records / $records_per_page);
+$current_page = max(1, isset($_GET['page']) ? (int)$_GET['page'] : 1);
+$offset = ($current_page - 1) * $records_per_page;
+$current_records = array_slice($issued_loa_records, $offset, $records_per_page);
+
+// Start HTML output
+?>
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Daftar loa Lewat Jatuh Tempo</title>
+    <title>Daftar loa Issued</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            margin: 0;
-            padding: 20px;
+            background-color: #f8f9fa;
+            padding: 30px;
         }
-
         h1 {
-            color: #333;
-            text-align: center;
             margin-bottom: 20px;
+            color: #0056b3;
         }
-
         table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 20px 0;
-            background: white;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-top: 20px;
+            border: 1px solid #dee2e6;
+            font-size: 12px;
         }
-
-        th, td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
-        }
-
         th {
-            background: linear-gradient(to right, #ff9eb3, #ff4d94);
+            background-color: #007bff;
             color: white;
-        }
-
-        tr:hover {
-            background-color: #f1f1f1;
-        }
-
-        a {
-            display: inline-block;
-            margin: 20px auto;
-            padding: 10px 20px;
-            background: linear-gradient(to right, #ff9eb3, #ff4d94);
-            color: white;
-            text-decoration: none;
-            border-radius: 5px;
             text-align: center;
-            transition: background 0.3s;
         }
-
-        a:hover {
-            background: linear-gradient(to right, #ff4d94, #ff6f99);
+        td {
+            background-color: white;
+        }
+        .no-data {
+            text-align: center;
+            font-style: italic;
+            color: #6c757d;
+        }
+        .group-header {
+            font-weight: bold;
+            background-color: #e9ecef;
+        }
+        .subtotal {
+            font-weight: bold;
+            background-color: #d1ecf1;
+        }
+        .grand-total {
+            font-weight: bold;
+            background-color: #c3e6cb;
         }
     </style>
 </head>
+
 <body>
-    <h1>Daftar loa yang Lewat Jatuh Tempo</h1>
-    <table>
-        <tr>
-            <th>No loa</th>
-            <th>Tanggal Jatuh Tempo</th>
-            <th>Nominal</th>
-        </tr>
-        <?php foreach ($issued_loa_records as $loa): ?>
-            <tr>
-                <td><?php echo htmlspecialchars($loa['noloa']); ?></td>
-                <td><?php echo htmlspecialchars($loa['tanggal_jatuh_tempo']); ?></td>
-                <td>&#36; <?php echo number_format($loa['nominal']); ?></td>
-            </tr>
-        <?php endforeach; ?>
-    </table>
-    <br>
-    <a href="dashboard.php">Kembali ke Halaman Utama</a>
+    <div class="container">
+        <h1 class="text-center">Daftar loa Issued</h1>
+        <div class="table-responsive">
+            <table class="table table-bordered table-striped">
+                <thead>
+                    <tr>
+                        <th>No</th>
+                        <th>Tanggal loa</th>
+                        <th>No loa</th>
+                        <th>No Rek Asal</th>
+                        <th>Bank Asal</th>
+                        <th>Rekening Tujuan</th>
+                        <th>Atas Nama</th>
+                        <th>Bank Tujuan</th>
+                        <th>No PVR</th>
+                        <th>Keterangan</th>
+                        <th>Nominal</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php if (empty($current_records)): ?>
+                        <tr>
+                            <td colspan="11" class="no-data">Tidak ada data loa.</td>
+                        </tr>
+                    <?php else: ?>
+                        <?php
+                        $current_entity = '';
+                        $subtotal = 0;
+                        $no = $offset + 1;
+
+                        foreach ($current_records as $loa) {
+                            if ($current_entity !== $loa['nama_entitas']) {
+                                if ($current_entity !== '') {
+                                    echo '<tr class="subtotal"><td colspan="10">Subtotal</td><td>' . 'Rp. ' . number_format($subtotal, 2, ',', '.') . '</td></tr>';
+                                }
+
+                                $subtotal = $loa['total_nominal'];
+                                $current_entity = $loa['nama_entitas'];
+                                echo '<tr class="group-header"><td colspan="11">' . htmlspecialchars($current_entity) . '</td></tr>';
+                            } else {
+                                $subtotal += $loa['total_nominal'];
+                            }
+                        ?>
+                            <tr>
+                                <td><?php echo $no++; ?></td>
+                                <td><?php echo date('d-M-Y', strtotime($loa['tanggal_jatuh_tempo'])); ?></td>
+                                <td><?php echo htmlspecialchars($loa['noloa']); ?></td>
+                                <td><?php echo htmlspecialchars($loa['ac_number']); ?></td>
+                                <td><?php echo htmlspecialchars($loa['namabank']); ?></td>
+                                <td><?php echo htmlspecialchars($loa['ac_penerima']); ?></td>
+                                <td><?php echo htmlspecialchars($loa['nama_penerima']); ?></td>
+                                <td><?php echo htmlspecialchars($loa['bank_penerima']); ?></td>
+                                <td><?php echo htmlspecialchars($loa['PVRNo']); ?></td>
+                                <td><?php echo htmlspecialchars($loa['keterangan']); ?></td>
+                                <td><?php echo 'Rp. ' . number_format($loa['Nominal'], 2, ',', '.'); ?></td>
+                            </tr>
+                        <?php } ?>
+                        <?php if ($current_entity !== ''): ?>
+                            <tr class="subtotal">
+                                <td colspan="10">Subtotal</td>
+                                <td><?php echo 'Rp. ' . number_format($subtotal, 2, ',', '.'); ?></td>
+                            </tr>
+                        <?php endif; ?>
+                        <tr class="grand-total">
+                            <td colspan="10">Grand Total</td>
+                            <td><?php echo 'Rp. ' . number_format($grand_total, 2, ',', '.'); ?></td>
+                        </tr>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination Controls -->
+        <nav aria-label="Page navigation">
+            <div class="d-flex justify-content-center">
+                <ul class="pagination">
+                    <?php if ($current_page > 1): ?>
+                        <li class="page-item"><a class="page-link" href="?page=1">First</a></li>
+                        <li class="page-item"><a class="page-link" href="?page=<?php echo $current_page - 1; ?>">Previous</a></li>
+                    <?php endif; ?>
+
+                    <?php
+                    $start_page = max(1, $current_page - 4);
+                    $end_page = min($total_pages, $start_page + 9);
+
+                    if ($current_page <= 5) {
+                        $end_page = min(10, $total_pages);
+                    }
+
+                    if ($current_page > $total_pages - 5) {
+                        $start_page = max(1, $total_pages - 9);
+                    }
+
+                    for ($i = $start_page; $i <= $end_page; $i++): ?>
+                        <li class="page-item <?php echo ($i == $current_page) ? 'active' : ''; ?>">
+                            <a class="page-link" href="?page=<?php echo $i; ?>"><?php echo $i; ?></a>
+                        </li>
+                    <?php endfor; ?>
+
+                    <?php if ($current_page < $total_pages): ?>
+                        <li class="page-item"><a class="page-link" href="?page=<?php echo $current_page + 1; ?>">Next</a></li>
+                        <li class="page-item"><a class="page-link" href="?page=<?php echo $total_pages; ?>">Last</a></li>
+                    <?php endif; ?>
+                </ul>
+            </div>
+        </nav>
+
+        <div class="text-center mt-4">
+            <a title="isi" href="index.php" class="btn btn-primary">Kembali ke Halaman Utama</a>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
+
 </html>
