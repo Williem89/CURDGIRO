@@ -44,15 +44,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         //$message = 'Error: No file input';
     } else {
         // Begin transaction
-            //$conn->begin_transaction();
-            //$filePath = $_FILES['foto_loa']['tmp_name'];
-           // $fileData = file_get_contents($filePath);
-           // $base64File = base64_encode($fileData);
+        $conn->begin_transaction();
+        // Define the target directory and file name
+        $targetDir = "imggiro/";
+        $fileName = basename($_FILES["foto_giro"]["name"]);
+        
+        // Generate a random string to append to the filename
+        $randomString = bin2hex(random_bytes(8));
+        $fileName = $randomString . "_" . $fileName;
+
+        $targetFilePath = $targetDir . $fileName;
         try {
             // Prepare statement to insert into the detail_loa table
             $stmt = $conn->prepare("INSERT INTO detail_loa (noloa, tanggal_loa, tanggal_jatuh_tempo, nominal, 
-                nama_penerima, ac_penerima, bank_penerima, Keterangan, PVRNo, Statloa, created_by, created_at) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
+                nama_penerima, ac_penerima, bank_penerima, Keterangan, PVRNo, Statloa, image_giro, created_by, created_at) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
 
             // Check if statement preparation was successful
             if (!$stmt) {
@@ -62,7 +68,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Bind parameters
             $statloa = 'Pending';  // Set Statloa to 'Issued'
 
-            $stmt->bind_param("sssssssssss", 
+            $stmt->bind_param("ssssssssssss", 
                 $selected_loa_number, 
                 $tanggal_loa, 
                 $tanggal_jatuh_tempo, 
@@ -73,7 +79,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $Keterangan,
                 $PVRNo, 
                 $statloa,
-                //$base64File,
+                $fileName,
                 $createdBy
             );
 
@@ -272,8 +278,8 @@ $conn->close();
         <label for="Keterangan">Keterangan:</label>
         <input type="text" id="Keterangan" name="Keterangan"><br><br>
 
-        <!--<label for="foto_loa">Foto loa:</label>
-        <input type="file" id="foto_loa" name="foto_loa"><br><br>-->
+        <label for="Keterangan">Foto Giro:</label>
+        <input type="file" id="Keterangan" name="foto_giro"><br><br>
 
         <input type="submit" value="Submit">
         <a href="dashboard.php" class="back-button">Kembali</a>
