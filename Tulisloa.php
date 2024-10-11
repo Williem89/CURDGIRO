@@ -54,6 +54,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $fileName = $randomString . "_" . $fileName;
 
         $targetFilePath = $targetDir . $fileName;
+
+        // Move the uploaded file to the target directory
+        if (!move_uploaded_file($_FILES["foto_giro"]["tmp_name"], $targetFilePath)) {
+            throw new Exception("Error uploading file.");
+        }
         try {
             // Prepare statement to insert into the detail_loa table
             $stmt = $conn->prepare("INSERT INTO detail_loa (noloa, tanggal_loa, tanggal_jatuh_tempo, nominal, 
