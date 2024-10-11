@@ -97,6 +97,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $message .= "Batch ID: " . htmlspecialchars($batchId) . " - Silahkan Hubungi administrator untuk merevisi data anda.<br>";
         }
     }
+
+    header("Location: " . $_SERVER['PHP_SELF']);
+    exit();
+
 }
 
 
