@@ -232,22 +232,28 @@ function confirmApproval(batchId) {
         confirmButtonText: "Yes, approve it!"
     }).then((result) => {
         if (result.isConfirmed) {
+            // Update status
             document.getElementById('status-' + batchId).value = 'Approved';
-            document.forms[0].submit(); // Submit the form after approval
+            // Submit the form
+            document.forms[0].submit(); 
 
-            // Show success message
+            // Optionally show success message immediately
             Swal.fire({
                 title: "Approved!",
                 text: "The batch has been approved.",
                 icon: "success",
                 timer: 1500, // Optional: auto close after 1.5 seconds
                 showConfirmButton: false
-            }).then(() => {
-                location.reload(); // Reload the page after the message is confirmed
             });
+
+            // Reload the page after form submission
+            setTimeout(() => {
+                location.reload(); // Reload the page
+            }, 1600); // Wait slightly longer than the timer duration
         }
     });
 }
+
 
 function confirmReject(batchId) {
     Swal.fire({

@@ -27,7 +27,8 @@ $sql = "
         dg.nogiro AS nomor,
         SUM(dg.Nominal) AS total_nominal,
         dg.tanggal_jatuh_tempo,
-        dg.TglVoid
+        dg.TglVoid,
+        dg.image_giro
     FROM 
         detail_giro AS dg
     INNER JOIN 
@@ -40,7 +41,7 @@ $sql = "
         " . ($selected_type ? "AND d.jenis_giro = ?" : "") . "
         " . ($selected_status ? "AND dg.StatGiro = ?" : "") . "
     GROUP BY 
-        e.nama_entitas, d.namabank, d.ac_number, dg.nogiro, dg.tanggal_jatuh_tempo, dg.TglVoid
+        e.nama_entitas, d.namabank, d.ac_number, dg.nogiro, dg.tanggal_jatuh_tempo, dg.TglVoid, dg.image_giro
 
     UNION ALL
 
@@ -53,7 +54,8 @@ $sql = "
         dc.nocek AS nomor,
         SUM(dc.nominal) AS total_nominal,
         dc.tanggal_jatuh_tempo,
-        dc.TglVoid
+        dc.TglVoid,
+        dc.image_giro
     FROM 
         detail_cek AS dc
     INNER JOIN 
@@ -66,7 +68,7 @@ $sql = "
         " . ($selected_type ? "AND c.jenis_cek = ?" : "") . "
         " . ($selected_status ? "AND dc.StatCek = ?" : "") . "
     GROUP BY 
-        e.nama_entitas, c.namabank, c.ac_number, dc.nocek, dc.tanggal_jatuh_tempo, dc.TglVoid
+        e.nama_entitas, c.namabank, c.ac_number, dc.nocek, dc.tanggal_jatuh_tempo, dc.TglVoid, dc.image_giro
 
     UNION ALL
 
@@ -79,7 +81,8 @@ $sql = "
         dl.noloa AS nomor,
         SUM(dl.nominal) AS total_nominal,
         dl.tanggal_jatuh_tempo,
-        dl.TglVoid
+        dl.TglVoid,
+        dl.image_giro
     FROM 
         detail_loa AS dl
     INNER JOIN 
@@ -92,7 +95,7 @@ $sql = "
         " . ($selected_type ? "AND l.jenis_loa = ?" : "") . "
         " . ($selected_status ? "AND dl.StatLoa = ?" : "") . "
     GROUP BY 
-        e.nama_entitas, l.namabank, l.ac_number, dl.noloa, dl.tanggal_jatuh_tempo, dl.TglVoid
+        e.nama_entitas, l.namabank, l.ac_number, dl.noloa, dl.tanggal_jatuh_tempo, dl.TglVoid, dl.image_giro
 
     ORDER BY 
         tanggal_jatuh_tempo ASC;
@@ -320,7 +323,6 @@ $conn->close();
                     foreach ($records as $giro):
                         $subtotal += $giro['total_nominal'];
                         $grand_total += $giro['total_nominal'];
-                        var_dump($giro);
                     ?>
                         <tr>
                             <td><?php echo $giro['jenis']; ?></td>
@@ -439,7 +441,9 @@ $conn->close();
 
             document.querySelectorAll('.view-attachment-btn').forEach(button => {
                 const imageGiro = button.getAttribute('data-image');
+
                 button.addEventListener('click', () => {
+                    console.log(imageGiro);
                     $(button).magnificPopup({
                         items: {
                             src: "imggiro/" + imageGiro,
