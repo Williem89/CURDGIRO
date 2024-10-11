@@ -99,7 +99,7 @@ function fetchDueItems($conn, $type, $start_date, $end_date)
             WHERE dg.$statusColumn = 'Issued' 
             AND dg.tanggal_jatuh_tempo BETWEEN ? AND ?
             GROUP BY dg.tanggal_jatuh_tempo, d.namabank, d.ac_name, dg.ac_penerima, dg.nama_penerima, dg.$numberColumn, dg.PVRNo, dg.keterangan
-            ORDER BY dg.tanggal_jatuh_tempo ASC;";
+            ORDER BY dg.tanggal_jatuh_tempo ASC";
 
     // Execute the prepared statement
     $stmt = $conn->prepare($sql);
@@ -441,7 +441,8 @@ $conn->close();
                                 'ac_penerima' => $giro['ac_penerima'],
                                 'nama_penerima' => $giro['nama_penerima'],
                                 'document_no' => $giro['nogiro'],
-                                'total_nominal' => number_format($giro['total_nominal'], 2),
+                                'total_nominal_str' => number_format($giro['total_nominal'], 2),
+                                'total_nominal' => $giro['total_nominal'],
                                 'due_date' => date('d-m-Y', strtotime($giro['tanggal_jatuh_tempo'])),
                                 'PVRNo' => $giro['PVRNo'],
                                 'keterangan' => $giro['keterangan'],
@@ -456,7 +457,8 @@ $conn->close();
                                 'ac_penerima' => $cek['ac_penerima'],
                                 'nama_penerima' => $cek['nama_penerima'],
                                 'document_no' => $cek['nocek'],
-                                'total_nominal' => number_format($cek['total_nominal'], 2),
+                                'total_nominal_str' => number_format($cek['total_nominal'], 2),
+                                'total_nominal' => $cek['total_nominal'],
                                 'due_date' => date('d-m-Y', strtotime($cek['tanggal_jatuh_tempo'])),
                                 'PVRNo' => $cek['PVRNo'],
                                 'keterangan' => $cek['keterangan'],
@@ -471,7 +473,8 @@ $conn->close();
                                 'ac_penerima' => $loa['ac_penerima'],
                                 'nama_penerima' => $loa['nama_penerima'],
                                 'document_no' => $loa['noloa'],
-                                'total_nominal' => number_format($loa['total_nominal'], 2),
+                                'total_nominal_str' => number_format($loa['total_nominal'], 2),
+                                'total_nominal' => $loa['total_nominal'],
                                 'due_date' => date('d-m-Y', strtotime($loa['tanggal_jatuh_tempo'])),
                                 'PVRNo' => $loa['PVRNo'],
                                 'keterangan' => $loa['keterangan'],
@@ -491,26 +494,34 @@ $conn->close();
                                 $grouped_items[$item['due_date']][] = $item;
                             }
 
-                            foreach ($grouped_items as $due_date => $items): ?>
+                            foreach ($grouped_items as $due_date => $items): 
+                                // Calculate subtotal for each due date
+                                $subtotal = array_sum(array_column($items, 'total_nominal'));
+                                ?>
                                 <tr>
                                     <td colspan="10" class="text-center bg-light"><strong>Due Date: <?php echo htmlspecialchars($due_date); ?></strong></td>
                                 </tr>
                                 <?php foreach ($items as $item): ?>
                                     <tr>
+                                        
                                         <td><?php echo htmlspecialchars($item['type']); ?></td>
                                         <td><?php echo htmlspecialchars($item['namabank']); ?></td>
                                         <td><?php echo htmlspecialchars($item['ac_name']); ?></td>
                                         <td><?php echo htmlspecialchars($item['ac_penerima']); ?></td>
                                         <td><?php echo htmlspecialchars($item['nama_penerima']); ?></td>
                                         <td><?php echo htmlspecialchars($item['document_no']); ?></td>
-                                        <td><?php echo htmlspecialchars($item['total_nominal']); ?></td>
+                                        <td>Rp. <?php echo htmlspecialchars($item['total_nominal_str']); ?></td>
                                         <td><?php echo htmlspecialchars($item['due_date']); ?></td>
                                         <td><?php echo htmlspecialchars($item['PVRNo']); ?></td>
                                         <td><?php echo htmlspecialchars($item['keterangan']); ?></td>
                                     </tr>
-                                <?php endforeach;
-                            endforeach;
-                        else: ?>
+                                <?php endforeach; ?>
+                                <tr>
+                                    <td colspan="6" class="text-end"><strong>Subtotal :</strong></td>
+                                    <td colspan="4"><strong>Rp. <?php echo number_format($subtotal, 2); ?></strong></td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php else: ?>
                             <tr>
                                 <td colspan="10" class="text-center">No due items found for the selected date range.</td>
                             </tr>

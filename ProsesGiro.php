@@ -378,6 +378,7 @@ $conn->close();
                                     data-toggle="tooltip" data-placement="top" title="Tampilkan Lampiran"
                                     data-nogiro="<?php echo htmlspecialchars($giro['nomor']); ?>"
                                     data-type="<?php echo htmlspecialchars($giro['jenis']); ?>"
+                                    data-image="<?php echo htmlspecialchars($giro['image_giro']); ?>"
                                     data-entitas="<?php echo htmlspecialchars($giro['nama_entitas']); ?>">
                                     <i class="bi bi-paperclip"></i>
                                 </button>
@@ -436,10 +437,11 @@ $conn->close();
             });
 
             document.querySelectorAll('.view-attachment-btn').forEach(button => {
+                const imageGiro = button.getAttribute('data-image');
                 button.addEventListener('click', () => {
                     $(button).magnificPopup({
                         items: {
-                            src: "imggiro/" + "tesu" + ".jpg",
+                            src: "imggiro/" + imageGiro,
                         },
                         type: 'image'
                     }).magnificPopup('open');
