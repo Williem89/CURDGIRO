@@ -374,7 +374,7 @@ $conn->close();
         <div class="tabs">
             <ul class="nav nav-tabs">
                 <li class="nav-item">
-                    <a title="Menampilkan data GIRO/CEK/LOA yang sudah belum dicairkan" class="nav-link active" data-bs-toggle="tab" href="#listGiroCek">List Giro dan Cek</a>
+                    <a title="Menampilkan data GIRO/CEK/LOA yang sudah belum dicairkan" class="nav-link active" data-bs-toggle="tab" href="#listGiroCek">List Outstanding</a>
                 </li>
                 <li class="nav-item">
                     <a title="Menampilkan data Statistik GIRO" class="nav-link" data-bs-toggle="tab" href="#giro">Giro</a>
@@ -391,7 +391,7 @@ $conn->close();
         <div class="tab-content">
             <div id="listGiroCek" class="tab-pane fade">
                 <!-- Combined Table for Giro and Cek -->
-                <h2 class="mt-5">List Giro & Cek</h2>
+                <h2 class="mt-5">List Outstanding</h2>
                 <form method="post" class="mb-4">
                     <div class="row">
                         <div class="col-md-3 mb-3">
@@ -400,7 +400,7 @@ $conn->close();
                                 <option value="All" <?php echo (isset($_POST['filter_type']) && $_POST['filter_type'] == 'All') ? 'selected' : ''; ?>>All</option>
                                 <option value="Giro" <?php echo (isset($_POST['filter_type']) && $_POST['filter_type'] == 'Giro') ? 'selected' : ''; ?>>Giro</option>
                                 <option value="Cek" <?php echo (isset($_POST['filter_type']) && $_POST['filter_type'] == 'Cek') ? 'selected' : ''; ?>>Cek</option>
-                                <option value="Loa" <?php echo (isset($_POST['filter_type']) && $_POST['filter_type'] == 'Loa') ? 'selected' : ''; ?>>Loa</option>
+                                <option value="Loa" <?php echo (isset($_POST['filter_type']) && $_POST['filter_type'] == 'LOA') ? 'selected' : ''; ?>>Loa</option>
                             </select>
                         </div>
                         <div class="col-md-3 mb-3">
@@ -586,49 +586,49 @@ $conn->close();
             <div id="cek" class="tab-pane fade">
                 <div class="stats-card">
                     <div class="card">
-                        <a href="UnusedCekList.php">
+                        <a title="Daftar Cek yang Available" href="UnusedCekList.php">
                             <h3>Cek Available</h3>
                             <p><?php echo $unused_cek_count; ?></p>
                         </a>
                     </div>
                     <div class="card">
-                        <a href="IssuedCekList.php">
+                        <a title="Daftar Cek yang Sudah di Issued/Tulis" href="IssuedCekList.php">
                             <h3>Cek Issued</h3>
                             <p><?php echo $issued_cek_count; ?></p>
                         </a>
                     </div>
                     <div class="card">
-                        <a href="PostedCekList.php">
+                        <a title="Daftar Cek yang sudah Posted/Cair" href="PostedCekList.php">
                             <h3>Cek Posted</h3>
                             <p><?php echo $Posted_cek_count; ?></p>
                         </a>
                     </div>
                     <div class="card">
-                        <a href="VoidCekList.php">
+                        <a title="Daftar Cek yang sudah Void" href="VoidCekList.php">
                             <h3>Cek Voided</h3>
                             <p><?php echo $void_cek_count; ?></p>
                         </a>
                     </div>
                     <div class="card">
-                        <a href="ReturnCekList.php">
+                        <a title="Daftar Cek yang sudah dikembalikan ke Bank" href="ReturnCekList.php">
                             <h3>Cek Returned</h3>
                             <p><?php echo $return_cek_count; ?></p>
                         </a>
                     </div>
                     <div class="card">
-                        <a href="JTCekList.php">
+                        <a title="Daftar Cek yang akan jatuh tempo dalam kurun waktu 7 hari" href="JTCekList.php">
                             <h3>Cek Due in 7 Days</h3>
                             <p><?php echo $jt_cek_count; ?></p>
                         </a>
                     </div>
                     <div class="card">
-                        <a href="MonthlyDueCekList.php">
+                        <a title="Daftar Cek yang akan jatuh tempo dalam bulan ini" href="MonthlyDueCekList.php">
                             <h3>Cek Monthly Due</h3>
                             <p><?php echo $monthly_due_cek_count; ?></p>
                         </a>
                     </div>
                     <div class="card">
-                        <a href="OverDueCekList.php">
+                        <a title="Daftar cek yang sudah lewat jatuh tempo" href="OverDueCekList.php">
                             <h3>Cek Overdue</h3>
                             <p><?php echo $Overdue_cek_count; ?></p>
                         </a>
@@ -639,49 +639,49 @@ $conn->close();
             <div id="loa" class="tab-pane fade">
                 <div class="stats-card">
                     <div class="card">
-                        <a href="UnusedloaList.php">
+                        <a title="Daftar LOA yang Available" href="UnusedloaList.php">
                             <h3>LOA Available</h3>
                             <p><?php echo $unused_loa_count; ?></p>
                         </a>
                     </div>
                     <div class="card">
-                        <a href="IssuedloaList.php">
+                        <a title="Daftar LOA yang sudah di Issued/Tulis" href="IssuedloaList.php">
                             <h3>LOA Issued</h3>
                             <p><?php echo $issued_loa_count; ?></p>
                         </a>
                     </div>
                     <div class="card">
-                        <a href="PostedloaList.php">
+                        <a title="Daftar LOA yang Posted/cair" href="PostedloaList.php">
                             <h3>LOA Posted</h3>
                             <p><?php echo $Posted_loa_count; ?></p>
                         </a>
                     </div>
                     <div class="card">
-                        <a href="VoidloaList.php">
+                        <a title="Daftar LOA yang sudah Void/Batal" href="VoidloaList.php">
                             <h3>LOA Voided</h3>
                             <p><?php echo $void_loa_count; ?></p>
                         </a>
                     </div>
                     <div class="card">
-                        <a href="ReturnloaList.php">
+                        <a title="Daftar LOA yang sudah Return" href="ReturnloaList.php">
                             <h3>LOA Returned</h3>
                             <p><?php echo $return_loa_count; ?></p>
                         </a>
                     </div>
                     <div class="card">
-                        <a href="JTloaList.php">
+                        <a title="Daftar LOA yang akan Jatuh Tempo dalam kurun waktu 7 hari" href="JTloaList.php">
                             <h3>LOA Due in 7 Days</h3>
                             <p><?php echo $jt_loa_count; ?></p>
                         </a>
                     </div>
                     <div class="card">
-                        <a href="MonthlyDueloaList.php">
+                        <a title="Daftar LOA yang akan Jatuh Tempo Bulan ini" href="MonthlyDueloaList.php">
                             <h3>LOA Monthly Due</h3>
                             <p><?php echo $monthly_due_loa_count; ?></p>
                         </a>
                     </div>
                     <div class="card">
-                        <a href="OverDueloaList.php">
+                        <a title="Daftar LOA yang sudah lewat Jatuh Tempo" href="OverDueloaList.php">
                             <h3>LOA Overdue</h3>
                             <p><?php echo $Overdue_loa_count; ?></p>
                         </a>

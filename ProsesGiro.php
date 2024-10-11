@@ -423,14 +423,7 @@ $conn->close();
                         focusConfirm: false,
                         showCancelButton: true,
                         confirmButtonText: 'Submit',
-                        cancelButtonText: 'Cancel',
-                        preConfirm: () => {
-                            const value = document.getElementById('swal-input1').value;
-                            if (!value) {
-                                Swal.showValidationMessage('Both fields are required');
-                            }
-                            return value;
-                        }
+                        cancelButtonText: 'Cancel'
                     });
 
                     if (formValues) {
