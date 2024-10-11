@@ -44,15 +44,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         //$message = 'Error: No file input';
     } else {
         // Begin transaction
-            //$conn->begin_transaction();
-            //$filePath = $_FILES['foto_cek']['tmp_name'];
-           // $fileData = file_get_contents($filePath);
-           // $base64File = base64_encode($fileData);
+        $conn->begin_transaction();
+        // Define the target directory and file name
+        $targetDir = "imggiro/";
+        $fileName = basename($_FILES["foto_giro"]["name"]);
+        
+        // Generate a random string to append to the filename
+        $randomString = bin2hex(random_bytes(8));
+        $fileName = $randomString . "_" . $fileName;
+
+        $targetFilePath = $targetDir . $fileName;
+
+        // Move the uploaded file to the target directory
+        if (!move_uploaded_file($_FILES["foto_giro"]["tmp_name"], $targetFilePath)) {
+            throw new Exception("Error uploading file.");
+        }
         try {
             // Prepare statement to insert into the detail_cek table
             $stmt = $conn->prepare("INSERT INTO detail_cek (nocek, tanggal_cek, tanggal_jatuh_tempo, nominal, 
-                nama_penerima, ac_penerima, bank_penerima, Keterangan, PVRNo, Statcek, created_by, created_at) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
+                nama_penerima, ac_penerima, bank_penerima, Keterangan, PVRNo, StatCek, image_giro, created_by, created_at) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
 
             // Check if statement preparation was successful
             if (!$stmt) {
@@ -62,7 +73,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Bind parameters
             $statcek = 'Pending';  // Set Statcek to 'Issued'
 
-            $stmt->bind_param("sssssssssss", 
+            $stmt->bind_param("ssssssssssss", 
                 $selected_cek_number, 
                 $tanggal_cek, 
                 $tanggal_jatuh_tempo, 
@@ -73,7 +84,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $Keterangan,
                 $PVRNo, 
                 $statcek,
-                //$base64File,
+                $fileName,
                 $createdBy
             );
 
@@ -272,8 +283,8 @@ $conn->close();
         <label for="Keterangan">Keterangan:</label>
         <input type="text" id="Keterangan" name="Keterangan"><br><br>
 
-        <!--<label for="foto_cek">Foto cek:</label>
-        <input type="file" id="foto_cek" name="foto_cek"><br><br>-->
+        <label for="Keterangan">Foto Giro:</label>
+        <input type="file" id="Keterangan" name="foto_giro"><br><br>
 
         <input type="submit" value="Submit">
         <a href="dashboard.php" class="back-button">Kembali</a>
