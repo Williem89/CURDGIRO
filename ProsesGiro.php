@@ -320,6 +320,7 @@ $conn->close();
                     foreach ($records as $giro):
                         $subtotal += $giro['total_nominal'];
                         $grand_total += $giro['total_nominal'];
+                        var_dump($giro);
                     ?>
                         <tr>
                             <td><?php echo $giro['jenis']; ?></td>

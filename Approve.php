@@ -221,7 +221,7 @@ $conn->close();
     </style>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         <script>
-           function confirmApproval(batchId) {
+function confirmApproval(batchId) {
     Swal.fire({
         title: "Are you sure?",
         text: "Your data is correct, right?",
@@ -239,7 +239,9 @@ $conn->close();
             Swal.fire({
                 title: "Approved!",
                 text: "The batch has been approved.",
-                icon: "success"
+                icon: "success",
+                timer: 1500, // Optional: auto close after 1.5 seconds
+                showConfirmButton: false
             }).then(() => {
                 location.reload(); // Reload the page after the message is confirmed
             });
