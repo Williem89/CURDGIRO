@@ -50,7 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $message = 'Error: All fields are required.';
     } else if ($nominal <= 0) {
         $message = 'Error: Nominal must be greater than zero.';
-    } else {
+    } else if (!empty($_FILES["foto_giro"]["name"])) {
         // Begin transaction
         $conn->begin_transaction();
         // Define the target directory and file name
@@ -63,11 +63,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         $targetFilePath = $targetDir . $fileName;
 
-        // Move the uploaded file to the target directory
-        if (!move_uploaded_file($_FILES["foto_giro"]["tmp_name"], $targetFilePath)) {
-            throw new Exception("Error uploading file.");
+        // Ensure the target directory exists and has the correct permissions
+        if (!is_dir($targetDir)) {
+            mkdir($targetDir, 0777, true);
         }
 
+        // Check if a file was uploaded
+        if (!empty($_FILES["foto_giro"]["name"])) {
+            // Move the uploaded file to the target directory
+            if (!move_uploaded_file($_FILES["foto_giro"]["tmp_name"], $targetFilePath)) {
+                throw new Exception("Error uploading file.");
+            }
+        } else {
+            $fileName = null; // No file uploaded
+        }
+
+    } else {
         try {
             // Prepare statement to insert into the detail_giro table
             $stmt = $conn->prepare("INSERT INTO detail_giro (nogiro, tanggal_giro, tanggal_jatuh_tempo, nominal, 
@@ -298,7 +309,29 @@ $conn->close();
         <input type="date" id="tanggal_jatuh_tempo" name="tanggal_jatuh_tempo" required><br><br>
 
         <label for="nominal">Nominal:</label>
-        <input type="number" id="nominal" name="nominal" required><br><br>
+        <input type="text" id="nominal_formatted" name="nominal_formatted" required oninput="formatRupiah(this)"><br><br>
+        <input type="hidden" id="nominal" name="nominal">
+
+        <script>
+            function formatRupiah(element) {
+                let value = element.value.replace(/[^,\d]/g, '').toString();
+                let split = value.split(',');
+                let sisa = split[0].length % 3;
+                let rupiah = split[0].substr(0, sisa);
+                let ribuan = split[0].substr(sisa).match(/\d{3}/gi);
+
+                if (ribuan) {
+                    let separator = sisa ? '.' : '';
+                    rupiah += separator + ribuan.join('.');
+                }
+
+                rupiah = split[1] !== undefined ? rupiah + ',' + split[1] : rupiah;
+                element.value = 'Rp ' + rupiah;
+
+                // Update the hidden input with the integer value
+                document.getElementById('nominal').value = value.replace(/\./g, '');
+            }
+        </script>
 
         <label for="no_cust">Customer:</label>
         <select id="no_cust" name="no_cust" required onchange="updateCustomerDetails()">

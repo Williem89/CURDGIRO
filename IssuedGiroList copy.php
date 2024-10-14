@@ -6,7 +6,7 @@ $stmt = $conn->prepare("
     SELECT e.nama_entitas, 
            d.namabank, 
            d.ac_number, 
-           dg.ac_penerima, 
+           dg.ac_penerima,  
            dg.nama_penerima, 
            dg.bank_penerima, 
            dg.nogiro, 
@@ -54,7 +54,7 @@ while ($row = $result->fetch_assoc()) {
         'ac_penerima' => $row['ac_penerima'] ?? 'Unknown Account',
         'nama_penerima' => $row['nama_penerima'] ?? 'Unknown Name',
         'bank_penerima' => $row['bank_penerima'] ?? 'Unknown Bank',
-        'PVRNo' => $row['PVRNo'] ?? 'Unknown PVR No',
+        'PVRNo' => $row['PVRNo'] ?? '',
         'keterangan' => $row['keterangan'] ?? 'No Description',
     ];
 }
@@ -79,7 +79,7 @@ $conn->close();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GIRO AVAILABLE</title>
+    <title>GIRO ISSUED</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
@@ -106,6 +106,10 @@ $conn->close();
 
         td {
             background-color: white;
+        }
+
+        .giro-list {
+        display: none; /* Hide all giro lists by default */
         }
 
         .no-data {
@@ -155,27 +159,29 @@ $conn->close();
                         <td colspan="5"><?php echo htmlspecialchars($nama_entitas); ?></td>
                     </tr>
                     <?php foreach ($banks as $bank => $acNumbers): ?>
-                        <tr class="bank-header">
-                            <td></td>
+                        <tr class="bank-header" style="text-align: center;">
+                            <td><br></td>
                             <td><?php echo htmlspecialchars($bank); ?></td>
-                            <td></td> <!-- Placeholder for AC Number -->
-                            <td></td> <!-- Placeholder for jumlah giro -->
-                            <td></td> <!-- Placeholder for nominal -->
+                            <td><br></td>
+                            <td><br></td>
+                            <td><br></td>
+
                         </tr>
                         <?php foreach ($acNumbers as $ac_number => $giroList): ?>
                             <?php 
                             $totalNominal = array_sum(array_column($giroList, 'total_nominal')); 
                             ?>
-                            <tr class="ac-header" onclick="toggleGiroList('<?php echo htmlspecialchars($nama_entitas) . '-' . htmlspecialchars($bank) . '-' . htmlspecialchars($ac_number); ?>')">
+                           <tr class="ac-header" style="text-align: center;" onclick="toggleGiroList('<?php echo htmlspecialchars($nama_entitas) . '-' . htmlspecialchars($bank) . '-' . htmlspecialchars($ac_number); ?>')">
                                 <td></td>
                                 <td></td>
                                 <td><?php echo htmlspecialchars($ac_number); ?></td>
                                 <td><?php echo count($giroList); ?></td>
-                                <td><?php echo htmlspecialchars($totalNominal); ?></td>
+                                <td><?php echo 'Rp. ' . number_format($totalNominal, 2, ',', '.'); ?></td>
+
                             </tr>
                             <tr class="giro-list" id="<?php echo htmlspecialchars($nama_entitas) . '-' . htmlspecialchars($bank) . '-' . htmlspecialchars($ac_number); ?>">
                                 <td colspan="5">
-                                <table class="table table-bordered table-striped">
+                                <table class="table table-bordered table-striped" >
                                         <thead>
                                             <tr>
                                                 <th style="width:5px; text-align:center;">No</th>
@@ -189,7 +195,7 @@ $conn->close();
                                                 <th style="width:150px;text-align:center;">No PVR</th>
                                                 <th style="width:150px;text-align:center;">Keterangan</th>
                                                 <th style="width:150px;text-align:center;">Nominal</th>
-                                                <th onclick="sortGiroList('<?php echo htmlspecialchars($nama_entitas) . '-' . htmlspecialchars($bank) . '-' . htmlspecialchars($ac_number); ?>')" style="cursor: pointer;">AC Number</th>
+                                                
                                             </tr>
                                         </thead>
                                         <tbody id="<?php echo htmlspecialchars($nama_entitas) . '-' . htmlspecialchars($bank) . '-' . htmlspecialchars($ac_number); ?>-body">
