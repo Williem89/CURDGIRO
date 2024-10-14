@@ -35,34 +35,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $PVRNo = filter_input(INPUT_POST, 'PVRNo', FILTER_SANITIZE_STRING);
 
     // Validate inputs
-    if (empty($selected_cek_number) || empty($tanggal_cek) || empty($tanggal_jatuh_tempo) || 
-        empty($nominal)) {
+    if (
+        empty($selected_cek_number) || empty($tanggal_cek) || empty($tanggal_jatuh_tempo) ||
+        empty($nominal)
+    ) {
         $message = 'Error: All fields are required.';
     } else if ($nominal <= 0) {
         $message = 'Error: Nominal must be greater than zero.';
-    //} else if (!is_uploaded_file($_FILES['foto_cek']['tmp_name'])) {
-        //$message = 'Error: No file input';
-    } else {
+    } else if (!empty($_FILES["foto_giro"]["name"])) {
         // Begin transaction
         $conn->begin_transaction();
         // Define the target directory and file name
         $targetDir = "imggiro/";
         $fileName = basename($_FILES["foto_giro"]["name"]);
-        
+
         // Generate a random string to append to the filename
         $randomString = bin2hex(random_bytes(8));
         $fileName = $randomString . "_" . $fileName;
 
         $targetFilePath = $targetDir . $fileName;
 
-        // Move the uploaded file to the target directory
-        if (!move_uploaded_file($_FILES["foto_giro"]["tmp_name"], $targetFilePath)) {
-            throw new Exception("Error uploading file.");
+        // Ensure the target directory exists and has the correct permissions
+        if (!is_dir($targetDir)) {
+            mkdir($targetDir, 0777, true);
         }
+
+        // Check if a file was upcekded
+        if (!empty($_FILES["foto_giro"]["name"])) {
+            // Move the upcekded file to the target directory
+            if (!move_upcekded_file($_FILES["foto_giro"]["tmp_name"], $targetFilePath)) {
+                throw new Exception("Error upcekding file.");
+            }
+        } else {
+            $fileName = null; // No file upcekded
+        }
+
+    } else {
         try {
             // Prepare statement to insert into the detail_cek table
             $stmt = $conn->prepare("INSERT INTO detail_cek (nocek, tanggal_cek, tanggal_jatuh_tempo, nominal, 
-                nama_penerima, ac_penerima, bank_penerima, Keterangan, PVRNo, StatCek, image_giro, created_by, created_at) 
+                nama_penerima, ac_penerima, bank_penerima, Keterangan, PVRNo, Statcek, image_giro, created_by, created_at) 
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
 
             // Check if statement preparation was successful
@@ -73,16 +85,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Bind parameters
             $statcek = 'Pending';  // Set Statcek to 'Issued'
 
-            $stmt->bind_param("ssssssssssss", 
-                $selected_cek_number, 
-                $tanggal_cek, 
-                $tanggal_jatuh_tempo, 
-                $nominal, 
-                $nama_penerima, 
-                $ac_penerima, 
-                $bank_penerima, 
+            $stmt->bind_param(
+                "ssssssssssss",
+                $selected_cek_number,
+                $tanggal_cek,
+                $tanggal_jatuh_tempo,
+                $nominal,
+                $nama_penerima,
+                $ac_penerima,
+                $bank_penerima,
                 $Keterangan,
-                $PVRNo, 
+                $PVRNo,
                 $statcek,
                 $fileName,
                 $createdBy
@@ -107,8 +120,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $message = 'An error occurred. Please try again.';
         } finally {
             // Close the statements
-            if (isset($stmt)) $stmt->close();
-            if (isset($update_stmt)) $update_stmt->close();
+            if (isset($stmt))
+                $stmt->close();
+            if (isset($update_stmt))
+                $update_stmt->close();
         }
     }
 }
@@ -119,6 +134,7 @@ $conn->close();
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -132,10 +148,12 @@ $conn->close();
             margin: 0;
             padding: 20px;
         }
+
         h1 {
             text-align: center;
             color: #343a40;
         }
+
         form {
             background: white;
             border-radius: 8px;
@@ -144,18 +162,25 @@ $conn->close();
             max-width: 500px;
             margin: auto;
         }
+
         label {
             display: block;
             margin: 10px 0 5px;
             color: #495057;
         }
-        input[type="text"], input[type="date"], input[type="number"], select {
+
+        input[type="text"],
+        input[type="date"],
+        input[type="number"],
+        select {
             width: calc(100% - 20px);
             padding: 10px;
             border: 1px solid #ced4da;
             border-radius: 4px;
         }
-        input[type="submit"], .back-button {
+
+        input[type="submit"],
+        .back-button {
             background-color: #007bff;
             color: white;
             padding: 10px;
@@ -167,20 +192,27 @@ $conn->close();
             text-align: center;
             width: calc(100% - 20px);
         }
-        input[type="submit"]:hover, .back-button:hover {
+
+        input[type="submit"]:hover,
+        .back-button:hover {
             background-color: #0056b3;
         }
+
         .back-button {
             background-color: #6c757d;
             margin-top: 20px;
         }
+
         .message {
             text-align: center;
             margin: 10px 0;
-            color: red; /* Error message color */
+            color: red;
+            /* Error message color */
         }
+
         .success-message {
-            color: green; /* Success message color */
+            color: green;
+            /* Success message color */
         }
     </style>
     <script>
@@ -221,7 +253,7 @@ $conn->close();
                 const optionText = options[i].textContent.toLowerCase();
                 const isVisible = optionText.includes(input);
                 options[i].style.display = isVisible ? 'block' : 'none';
-                
+
                 if (isVisible) {
                     hasOptions = true;
                 }
@@ -237,6 +269,7 @@ $conn->close();
         }
     </script>
 </head>
+
 <body>
     <h1>Issued cek</h1>
     <?php if ($message): ?>
@@ -247,7 +280,8 @@ $conn->close();
     <form method="POST" action="" enctype="multipart/form-data">
         <label for="cek_number">No cek:</label>
         <input type="text" id="search_cek_no" oninput="searchcek()" onfocusout="clearInput()" required>
-        <select id="cek_number" name="cek_number" size="5" required onchange="updateBankAndAccount()" style="display:none;">
+        <select id="cek_number" name="cek_number" size="5" required onchange="updateBankAndAccount()"
+            style="display:none;">
             <?php foreach (array_keys($cek_data) as $cek): ?>
                 <option value="<?php echo htmlspecialchars($cek); ?>"><?php echo htmlspecialchars($cek); ?></option>
             <?php endforeach; ?>
@@ -266,14 +300,36 @@ $conn->close();
         <input type="date" id="tanggal_jatuh_tempo" name="tanggal_jatuh_tempo" required><br><br>
 
         <label for="nominal">Nominal:</label>
-        <input type="number" id="nominal" name="nominal" required><br><br>
+        <input type="text" id="nominal_formatted" name="nominal_formatted" required
+            oninput="formatRupiah(this)"><br><br>
+        <input type="hidden" id="nominal" name="nominal">
 
+        <script>
+            function formatRupiah(element) {
+                let value = element.value.replace(/[^,\d]/g, '').toString();
+                let split = value.split(',');
+                let sisa = split[0].length % 3;
+                let rupiah = split[0].substr(0, sisa);
+                let ribuan = split[0].substr(sisa).match(/\d{3}/gi);
+
+                if (ribuan) {
+                    let separator = sisa ? '.' : '';
+                    rupiah += separator + ribuan.join('.');
+                }
+
+                rupiah = split[1] !== undefined ? rupiah + ',' + split[1] : rupiah;
+                element.value = 'Rp. ' + rupiah;
+
+                // Update the hidden input with the integer value
+                document.getElementById('nominal').value = value.replace(/\./g, '');
+            }
+        </script>
         <label for="nama_penerima">Nama Penerima:</label>
         <input type="text" id="nama_penerima" name="nama_penerima" required><br><br>
-     
+
         <label for="ac_penerima">Account Number Penerima:</label>
         <input type="text" id="ac_penerima" name="ac_penerima"><br><br>
-       
+
         <label for="bank_cust">Bank Penerima:</label>
         <input type="text" id="bank_cust" name="bank_cust"><br><br>
 
@@ -290,4 +346,5 @@ $conn->close();
         <a href="dashboard.php" class="back-button">Kembali</a>
     </form>
 </body>
+
 </html>
