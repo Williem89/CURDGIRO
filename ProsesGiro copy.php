@@ -474,21 +474,15 @@ $conn->close();
                             value: formValues
                         } = await Swal.fire({
                             title: action === 'cair' ? "Tanggal Cair" : action === 'return' ? "Tanggal Return" : "Tanggal Void",
-                            html: (action !== 'void' ? `<div class="form-group">
-                                <label for="swal-input1" class="form-label">Tanggal</label>
-                                <input id="swal-input1" class="form-control" type="date" max="<?php echo date('Y-m-d'); ?>">
-                                </div>` : '') +
+                            html: '<div class="form-group">' +
+                                '<label for="swal-input1" class="form-label">Tanggal</label>' +
+                                '<input id="swal-input1" class="form-control" type="date" max="${today}">' +
+                                '</div>' +
                                 (action === 'void' ?
                                     '<div class="form-group mt-3">' +
                                     '<label for="swal-input2" class="form-label">Alasan</label>' +
                                     '<textarea id="swal-input2" class="form-control" placeholder="Masukkan alasan Void" rows="3"></textarea>' +
-                                    '</div>' : '')+
-                                (action === 'return' ? `<div class="form-group mt-3">
-                                            <label for="swal-input3" class="form-label">File lampiran</label>
-                                            <input id="swal-input3" class="form-control" type="file">
-                                            </div>` : '')
-                                
-                                ,
+                                    '</div>' : ''),
                             focusConfirm: false,
                             showCancelButton: true,
                             confirmButtonText: 'Submit',
@@ -496,12 +490,11 @@ $conn->close();
                             preConfirm: () => {
                                 const date = document.getElementById('swal-input1').value;
                                 if (!date) {
-                                    Swal.showValidationMessage('Fields are required');
+                                    Swal.showValidationMessage('Both fields are required');
                                 }
                                 return {
                                     date: date,
-                                    reason: action === 'void' ? document.getElementById('swal-input2').value : '',
-                                    file: action === 'return' ? document.getElementById('swal-input3').files[0] : ''
+                                    reason: action === 'void' ? document.getElementById('swal-input2').value : ''
                                 };
                             }
                         });
@@ -517,7 +510,6 @@ $conn->close();
                                         tanggal: tanggal, // Use formatted date
                                         alasan: action === 'void' ? formValues.reason : '',
                                         statgiro: action === 'cair' ? 'Posted' : action === 'return' ? 'Return' : 'Void',
-                                        file: action === 'return' ? formValues.file : '',
                                         action: action,
                                         jenis: jenis
                                     })

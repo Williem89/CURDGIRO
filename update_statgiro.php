@@ -15,6 +15,40 @@ $user_logged_in = $_SESSION['username']; // Get the logged-in user
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
+// Handle file upload
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['file'])) {
+    $target_dir = "uploads/";
+    $target_file = $target_dir . basename($_FILES["file"]["name"]);
+    $uploadOk = 1;
+    $fileType = strtolower(pathinfo($target_file, PATHINFO_EXTENSION));
+    $filename = basename($_FILES["file"]["name"]);
+
+    // Check if file is a valid type (e.g., only allow certain file types)
+    $allowedTypes = ['jpg', 'png', 'pdf'];
+    if (!in_array($fileType, $allowedTypes)) {
+        echo json_encode(['success' => false, 'message' => 'Invalid file type']);
+        $uploadOk = 0;
+    }
+
+    // Check file size (e.g., limit to 5MB)
+    if ($_FILES["file"]["size"] > 5000000) {
+        echo json_encode(['success' => false, 'message' => 'File is too large']);
+        $uploadOk = 0;
+    }
+
+    // Check if $uploadOk is set to 0 by an error
+    if ($uploadOk == 0) {
+        echo json_encode(['success' => false, 'message' => 'File was not uploaded']);
+    } else {
+        // Try to upload file
+        if (move_uploaded_file($_FILES["file"]["tmp_name"], $target_file)) {
+            echo json_encode(['success' => true, 'message' => 'File uploaded successfully']);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Error uploading file']);
+        }
+    }
+}
+
 // Get the JSON data from the request
 $data = json_decode(file_get_contents('php://input'), true);
 
@@ -38,7 +72,7 @@ if (isset($data['nogiro'], $data['tanggal'], $data['statgiro'], $data["action"],
                     $sql = "UPDATE detail_giro SET StatGiro = ?, tanggal_Cair_giro = ?, SeatleBy = ? WHERE nogiro = ?";
                     break;
                 case "return":
-                    $sql = "UPDATE detail_giro SET StatGiro = ?, tglkembalikebank = ?, dikembalikanoleh = ? WHERE nogiro = ?";
+                    $sql = "UPDATE detail_giro SET StatGiro = ?, tglkembalikebank = ?, dikembalikanoleh = ?, lampiran = ? WHERE nogiro = ?";
                     break;
                 case "void":
                     $sql = "UPDATE detail_giro SET StatGiro = ?, TglVoid = ?, VoidBy = ?, a_void = ? WHERE nogiro = ?";
@@ -57,7 +91,7 @@ if (isset($data['nogiro'], $data['tanggal'], $data['statgiro'], $data["action"],
                     $sql = "UPDATE detail_cek SET StatCek = ?, tanggal_Cair_cek = ?, SeatleBy = ? WHERE nocek = ?";
                     break;
                 case "return":
-                    $sql = "UPDATE detail_cek SET StatCek = ?, tglkembalikebank = ?, dikembalikanoleh = ? WHERE nocek = ?";
+                    $sql = "UPDATE detail_cek SET StatCek = ?, tglkembalikebank = ?, dikembalikanoleh = ?, lampiran = ? WHERE nocek = ?";
                     break;
                 case "void":
                     $sql = "UPDATE detail_cek SET StatCek = ?, TglVoid = ?, VoidBy = ?, a_void = ? WHERE nocek = ?";
@@ -76,7 +110,7 @@ if (isset($data['nogiro'], $data['tanggal'], $data['statgiro'], $data["action"],
                     $sql = "UPDATE detail_loa SET StatLoa = ?, tanggal_Cair_loa = ?, SeatleBy = ? WHERE noloa = ?";
                     break;
                 case "return":
-                    $sql = "UPDATE detail_loa SET StatLoa = ?, tglkembalikebank = ?, dikembalikanoleh = ? WHERE noloa = ?";
+                    $sql = "UPDATE detail_loa SET StatLoa = ?, tglkembalikebank = ?, dikembalikanoleh = ?, lampiran = ? WHERE noloa = ?";
                     break;
                 case "void":
                     $sql = "UPDATE detail_loa SET StatLoa = ?, TglVoid = ?, VoidBy = ?, a_void = ? WHERE noloa = ?";
@@ -103,8 +137,10 @@ if (isset($data['nogiro'], $data['tanggal'], $data['statgiro'], $data["action"],
     }
 
     // Bind parameters
-    if ($action === "cair" || $action === "return") {
+    if ($action === "cair") {
         $stmt->bind_param("ssss", $statgiro, $tanggal, $user_logged_in, $nogiro);
+    } else if ($action === "return") {
+        $stmt->bind_param("sssss", $statgiro, $tanggal, $user_logged_in, $filename, $nogiro);
     } else if ($action === "void") {
         $stmt->bind_param("sssss", $statgiro, $tanggal, $user_logged_in, $alasan, $nogiro);
     } else if ($action === "acc") {
