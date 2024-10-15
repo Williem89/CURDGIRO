@@ -403,6 +403,21 @@ $conn->close();
         </table>
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         <script>
+            const options = {
+                timeZone: 'Asia/Bangkok', // GMT+7
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false // 24-hour format
+            };
+
+            const tanggal = new Date().toLocaleString('sv-SE', options).replace(' ', 'T');
+
+
+
             $(function() {
                 $('[data-toggle="tooltip"]').tooltip()
             })
@@ -492,7 +507,7 @@ $conn->close();
                                     },
                                     body: JSON.stringify({
                                         nogiro: nogiro,
-                                        tanggal: formValues.date,
+                                        tanggal: tanggal, // Use formatted date
                                         alasan: action === 'void' ? formValues.reason : '',
                                         statgiro: action === 'cair' ? 'Posted' : action === 'return' ? 'Return' : 'Void',
                                         action: action,
