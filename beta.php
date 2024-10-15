@@ -20,7 +20,7 @@
     </style>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
-    
+        
 
 
     $(document).ready(function() {
@@ -127,11 +127,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($ac_number) {
         $saldo_sql = "
             SELECT 
-                saldo_awal AS saldo_awal
+                saldoawal AS saldo_awal
             FROM 
-                your_saldo_table 
+                list_rekening 
             WHERE 
-                ac_number = ?"; // Replace with your actual saldo table and field
+                no_akun = ?"; // Replace with your actual saldo table and field
 
         $saldo_stmt = $conn->prepare($saldo_sql);
         $saldo_stmt->bind_param('s', $ac_number);
