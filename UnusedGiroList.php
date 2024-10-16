@@ -162,6 +162,31 @@ $conn->close();
 
             rows.forEach(row => giroTable.appendChild(row));
         }
+
+        let sortOrder = {};
+
+function sortGiroList(giroListId) {
+    const giroTable = document.querySelector(`#${giroListId} table tbody`);
+    const rows = Array.from(giroTable.rows);
+    const acNumberIndex = 2;
+
+    // Determine sort order
+    sortOrder[giroListId] = !sortOrder[giroListId]; // Toggle the order
+
+    rows.sort((rowA, rowB) => {
+        const acNumberA = rowA.cells[acNumberIndex].textContent.trim();
+        const acNumberB = rowB.cells[acNumberIndex].textContent.trim();
+        return sortOrder[giroListId] ? acNumberA.localeCompare(acNumberB) : acNumberB.localeCompare(acNumberA);
+    });
+
+    // Update rows in table
+    rows.forEach(row => giroTable.appendChild(row));
+
+    // Update sort icon
+    const sortIcon = document.getElementById(`sort-icon-${giroListId}`);
+    sortIcon.className = sortOrder[giroListId] ? 'bi bi-sort-down' : 'bi bi-sort-up';
+}
+
     </script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
@@ -207,13 +232,16 @@ $conn->close();
                         <tr class="giro-list" id="<?php echo $uniqueId; ?>">
                             <td colspan="3">
                                 <table style="width: 100%;">
-                                    <thead>                
+                                    <thead>
                                         <tr>
                                             <th>No Urut</th>
                                             <th>No Giro</th>
-                                            <th onclick="sortGiroList('<?php echo $uniqueId; ?>')" style="cursor: pointer;">AC Number</th>
+                                            <th onclick="sortGiroList('<?php echo $uniqueId; ?>')" style="cursor: pointer;">
+                                                AC Number <span id="sort-icon-<?php echo $uniqueId; ?>" class="bi bi-sort" style="font-size: 0.8em;"></span>
+                                            </th>
                                         </tr>
                                     </thead>
+
                                     <tbody>
                                         <?php 
                                         usort($giroList, function($a, $b) {

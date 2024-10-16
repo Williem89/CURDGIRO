@@ -28,7 +28,8 @@ $sql = "
         SUM(dg.Nominal) AS total_nominal,
         dg.tanggal_jatuh_tempo,
         dg.TglVoid,
-        dg.image_giro
+        dg.image_giro,
+        dg.Keterangan
     FROM 
         detail_giro AS dg
     INNER JOIN 
@@ -55,7 +56,8 @@ $sql = "
         SUM(dc.nominal) AS total_nominal,
         dc.tanggal_jatuh_tempo,
         dc.TglVoid,
-        dc.image_giro
+        dc.image_giro,
+        dc.Keterangan
     FROM 
         detail_cek AS dc
     INNER JOIN 
@@ -82,7 +84,8 @@ $sql = "
         SUM(dl.nominal) AS total_nominal,
         dl.tanggal_jatuh_tempo,
         dl.TglVoid,
-        dl.image_giro
+        dl.image_giro,
+        dl.Keterangan
     FROM 
         detail_loa AS dl
     INNER JOIN 
@@ -182,7 +185,7 @@ $conn->close();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Daftar Giro Void</title>
+    <title>Prosess Giro/Cek/LOA</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
@@ -268,7 +271,7 @@ $conn->close();
 
 <body>
     <div class="container">
-        <h1 class="text-center">Daftar Data Issued</h1>
+        <h1 class="text-center">PROSES GIRO / CEK/ LOA</h1>
 
         <!-- Form Pencarian -->
         <form method="GET" class="mb-3">
@@ -283,7 +286,9 @@ $conn->close();
                 <select name="status" class="form-select">
                     <option value="">Pilih Status</option>
                     <option value="Void" <?php echo ($selected_status == 'Void') ? 'selected' : ''; ?>>Void</option>
-                    <option value="Pending" <?php echo ($selected_status == 'Pending') ? 'selected' : ''; ?>>Pending</option>
+                    <option value="Pending Issued" <?php echo ($selected_status == 'Pending Issued') ? 'selected' : ''; ?>>Pending Issued</option>
+                    <option value="Pending Void" <?php echo ($selected_status == 'Pending Void') ? 'selected' : ''; ?>>Pending Void</option>
+                    <option value="Pending Return" <?php echo ($selected_status == 'Pending Return') ? 'selected' : ''; ?>>Pending Return</option>
                     <option value="Issued" <?php echo ($selected_status == 'Issued') ? 'selected' : ''; ?>>Issued</option>
                 </select>
                 <button class="btn btn-primary" type="submit">Cari</button>
@@ -304,8 +309,10 @@ $conn->close();
                     <th>Tanggal Cair</th>
                     <th>Bank</th>
                     <th>No. Rekening</th>
+                    <th>Keterangan</th>
                     <th>Nominal</th>
                     <th>Action</th>
+                    
                 </tr>
             </thead>
             <tbody>
@@ -333,9 +340,11 @@ $conn->close();
                             <td><?php echo $giro['TglVoid']; ?></td>
                             <td><?php echo $giro['namabank']; ?></td>
                             <td><?php echo $giro['ac_number']; ?></td>
+                            <td><?php echo $giro['Keterangan']; ?></td>
                             <td><?php echo number_format($giro['total_nominal'], 2); ?></td>
                             <td>
-                                <button class="btn btn-sm btn-primary cair-btn" <?php echo $giro['status'] == "Void" ? "disabled" : ""; ?>
+                                <button class="btn btn-sm btn-primary cair-btn" 
+                                    <?php echo ($giro['status'] == "Void" || $giro['status'] == "Pending Issued") ? "hidden" : ""; ?>
                                     data-toggle="tooltip" data-placement="top" title="Post"
                                     data-nogiro="<?php echo htmlspecialchars($giro['nomor']); ?>"
                                     data-type="<?php echo htmlspecialchars($giro['jenis']); ?>"
@@ -343,7 +352,8 @@ $conn->close();
                                     <i class="bi bi-send-check"></i>
                                 </button>
 
-                                <button class="btn btn-sm btn-danger void-btn" <?php echo $giro['status'] == "Void" ? "disabled" : ""; ?>
+                                <button class="btn btn-sm btn-danger void-btn" 
+                                    <?php echo ($giro['status'] == "Void" || $giro['status'] == "Pending Issued") ? "hidden" : ""; ?>
                                     data-toggle="tooltip" data-placement="top" title="Void"
                                     data-nogiro="<?php echo htmlspecialchars($giro['nomor']); ?>"
                                     data-type="<?php echo htmlspecialchars($giro['jenis']); ?>"
@@ -351,7 +361,8 @@ $conn->close();
                                     <i class="bi bi-x-circle"></i>
                                 </button>
 
-                                <button class="btn btn-sm btn-info return-btn" <?php echo $giro['status'] == "Issued" ? "disabled" : ""; ?>
+                                <button class="btn btn-sm btn-info return-btn" 
+                                    <?php echo ($giro['status'] == "Issued" || $giro['status'] == "Pending Issued") ? "hidden" : ""; ?>
                                     data-toggle="tooltip" data-placement="top" title="Return"
                                     data-nogiro="<?php echo htmlspecialchars($giro['nomor']); ?>"
                                     data-type="<?php echo htmlspecialchars($giro['jenis']); ?>"
@@ -360,7 +371,7 @@ $conn->close();
                                 </button>
 
                                 <?php if ($_SESSION['UsrLevel'] == 2): ?>
-                                    <button class="btn btn-sm btn-success aprv-btn" <?php echo $giro['status'] != "Pending" ? "disabled" : ""; ?>
+                                    <button class="btn btn-sm btn-success aprv-btn" <?php echo $giro['status'] != "Pending Issued" ? "hidden" : ""; ?>
                                         data-toggle="tooltip" data-placement="top" title="Approve"
                                         data-nogiro="<?php echo htmlspecialchars($giro['nomor']); ?>"
                                         data-type="<?php echo htmlspecialchars($giro['jenis']); ?>"

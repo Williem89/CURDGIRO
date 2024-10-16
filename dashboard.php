@@ -130,7 +130,7 @@ if ($type === 'All') {
     $due_cheques = fetchDueItems($conn, 'cek', $start_date, $end_date);
 } elseif ($type === 'Loa') {
     $due_loa = fetchDueItems($conn, 'loa', $start_date, $end_date);
-} 
+}
 
 
 // Close connection
@@ -328,6 +328,67 @@ $conn->close();
 </head>
 
 <body>
+    <script>
+        async function getData(id) {
+            const apitoken = '76e66990-0128-4c26-a8bb-6c84c033188c';
+            const collection = 'todo';
+            try {
+                const response = await fetch(`https://knightly-dolphin-6e73.codehooks.io/${collection}/${id}`, {
+                    method: 'GET',
+                    headers: {
+                        'x-apikey': apitoken,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            } catch (error) {
+                console.error('Fetch error:', error);
+                throw error;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', async function() {
+        const changelogButton = document.getElementById('changelog-button');
+        const changelogModal = document.getElementById('changelog-modal');
+        const changelogList = document.getElementById('changelog-list');
+        const closeChangelog = document.getElementById('close-changelog');
+
+        changelogButton.addEventListener('click', async function() {
+            changelogList.innerHTML = ''; // Clear previous data
+            try {
+                const data = await getData('66fdf7bfc20f986ee946ade2');
+                data.timeline.forEach(item => {
+                    const listItem = document.createElement('li');
+                    listItem.innerHTML = `
+                        <strong>Note:</strong> ${item.note}<br>
+                        <strong>Done Time:</strong> ${item.donetime ? new Date(item.donetime).toLocaleString() : 'Not completed'}<br>
+                        <strong>Status:</strong> ${item.status}<br>
+                        ${item.holdreason ? `<strong>Hold Reason:</strong> ${item.holdreason}<br>` : ''}
+                    `;
+                    changelogList.appendChild(listItem);
+                });
+                changelogModal.style.display = 'block';
+            } catch (error) {
+                changelogList.innerHTML = '<li>Error fetching changelog</li>';
+                changelogModal.style.display = 'block';
+            }
+        });
+
+        closeChangelog.addEventListener('click', function() {
+            changelogModal.style.display = 'none';
+        });
+
+        // Close the modal when clicking outside of it
+        window.addEventListener('click', function(event) {
+            if (event.target == changelogModal) {
+                changelogModal.style.display = 'none';
+            }
+        });
+    });
+    </script>
     <div id="toggleNavbar">☰ Menu</div>
     <nav id="navbar">
         <ul>
@@ -363,6 +424,9 @@ $conn->close();
                     </div>
                 </li>-->
             <li><a title="untuk keluar dari software" href="logout.php">Logout</a></li> <!-- Logout link -->
+            <button id="changelog-button" style="position:absolute;bottom:10px; background-color: #007bff; color: #fff; border: none; padding: 10px; border-radius: 5px; cursor: pointer; margin:auto">
+                Show Changelog
+            </button>
         </ul>
     </nav>
 
@@ -371,6 +435,8 @@ $conn->close();
     </header>
 
     <<section>
+        
+        
         <div class="tabs">
             <ul class="nav nav-tabs">
                 <li class="nav-item">
@@ -384,7 +450,7 @@ $conn->close();
                 </li>
                 <li class="nav-item">
                     <a title="Menampilkan data Statistik LOA" class="nav-link" data-bs-toggle="tab" href="#loa">LOA</a>
-                </li>   
+                </li>
             </ul>
         </div>
 
@@ -484,7 +550,7 @@ $conn->close();
                         // Check if there are any combined due items
                         if (!empty($combined_due_items)):
                             // Sort items by due_date
-                            usort($combined_due_items, function($a, $b) {
+                            usort($combined_due_items, function ($a, $b) {
                                 return strtotime($b['due_date']) - strtotime($a['due_date']);
                             });
 
@@ -494,16 +560,16 @@ $conn->close();
                                 $grouped_items[$item['due_date']][] = $item;
                             }
 
-                            foreach ($grouped_items as $due_date => $items): 
+                            foreach ($grouped_items as $due_date => $items):
                                 // Calculate subtotal for each due date
                                 $subtotal = array_sum(array_column($items, 'total_nominal'));
-                                ?>
+                        ?>
                                 <tr>
                                     <td colspan="10" class="text-center bg-light"><strong>Due Date: <?php echo htmlspecialchars($due_date); ?></strong></td>
                                 </tr>
                                 <?php foreach ($items as $item): ?>
                                     <tr>
-                                        
+
                                         <td><?php echo htmlspecialchars($item['type']); ?></td>
                                         <td><?php echo htmlspecialchars($item['namabank']); ?></td>
                                         <td><?php echo htmlspecialchars($item['ac_name']); ?></td>
@@ -693,7 +759,7 @@ $conn->close();
 
 
             <footer>
-                © 2024 Aplikasi Giro. All rights reserved.
+                © 2024 Aplikasi Giro. Powered By IT AVENGER.
             </footer>
 
             <script>
@@ -703,44 +769,51 @@ $conn->close();
 
 
                 document.addEventListener('DOMContentLoaded', function() {
-                const hash = window.location.hash;
+                    const hash = window.location.hash;
 
-                // Deactivate all tabs and hide all content
-                document.querySelectorAll('.nav-link').forEach(link => {
-                    link.classList.remove('active');
-                });
-                document.querySelectorAll('.tab-pane').forEach(tab => {
-                    tab.classList.remove('show', 'active');
-                });
+                    // Deactivate all tabs and hide all content
+                    document.querySelectorAll('.nav-link').forEach(link => {
+                        link.classList.remove('active');
+                    });
+                    document.querySelectorAll('.tab-pane').forEach(tab => {
+                        tab.classList.remove('show', 'active');
+                    });
 
-                if (hash) {
-                    // If there's a hash, activate the corresponding tab
-                    const activeTab = document.querySelector(`.nav-link[href="${hash}"]`);
-                    if (activeTab) {
-                        activeTab.classList.add('active');
+                    if (hash) {
+                        // If there's a hash, activate the corresponding tab
+                        const activeTab = document.querySelector(`.nav-link[href="${hash}"]`);
+                        if (activeTab) {
+                            activeTab.classList.add('active');
 
-                        // Show the corresponding tab content
-                        const tabContent = document.querySelector(hash);
-                        if (tabContent) {
-                            tabContent.classList.add('show', 'active');
+                            // Show the corresponding tab content
+                            const tabContent = document.querySelector(hash);
+                            if (tabContent) {
+                                tabContent.classList.add('show', 'active');
+                            }
+                        }
+                    } else {
+                        // Default to List Giro dan Cek if no hash is present
+                        const defaultTab = document.querySelector('.nav-link[href="#listGiroCek"]');
+                        if (defaultTab) {
+                            defaultTab.classList.add('active');
+
+                            const defaultContent = document.querySelector('#listGiroCek');
+                            if (defaultContent) {
+                                defaultContent.classList.add('show', 'active');
+                            }
                         }
                     }
-                } else {
-                    // Default to List Giro dan Cek if no hash is present
-                    const defaultTab = document.querySelector('.nav-link[href="#listGiroCek"]');
-                    if (defaultTab) {
-                        defaultTab.classList.add('active');
-
-                        const defaultContent = document.querySelector('#listGiroCek');
-                        if (defaultContent) {
-                            defaultContent.classList.add('show', 'active');
-                        }
-                    }
-                }
-            });
-
-
+                });
             </script>
+            <div id="changelog-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5);">
+            <div style="position: relative; top: 50%; left: 50%; transform: translate(-50%, -50%); background-color: #fff; padding: 20px; border-radius: 5px; width: 80%; max-width: 600px;">
+                <h4>Changelog</h4>
+                <ul id="changelog-list"></ul>
+                <button id="close-changelog" style="background-color: #dc3545; color: #fff; border: none; padding: 10px; border-radius: 5px; cursor: pointer;">
+                    Close
+                </button>
+            </div>
+        </div>
 
 </body>
 
