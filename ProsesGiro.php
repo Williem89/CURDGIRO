@@ -186,6 +186,7 @@ $conn->close();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Prosess Giro/Cek/LOA</title>
+    <link rel="icon" type="image/x-icon" href="img/icon.png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
@@ -312,7 +313,7 @@ $conn->close();
                     <th>Keterangan</th>
                     <th>Nominal</th>
                     <th>Action</th>
-                    
+
                 </tr>
             </thead>
             <tbody>
@@ -343,7 +344,7 @@ $conn->close();
                             <td><?php echo $giro['Keterangan']; ?></td>
                             <td><?php echo number_format($giro['total_nominal'], 2); ?></td>
                             <td>
-                                <button class="btn btn-sm btn-primary cair-btn" 
+                                <button class="btn btn-sm btn-primary cair-btn"
                                     <?php echo ($giro['status'] == "Void" || $giro['status'] == "Pending Issued") ? "hidden" : ""; ?>
                                     data-toggle="tooltip" data-placement="top" title="Post"
                                     data-nogiro="<?php echo htmlspecialchars($giro['nomor']); ?>"
@@ -352,7 +353,7 @@ $conn->close();
                                     <i class="bi bi-send-check"></i>
                                 </button>
 
-                                <button class="btn btn-sm btn-danger void-btn" 
+                                <button class="btn btn-sm btn-danger void-btn"
                                     <?php echo ($giro['status'] == "Void" || $giro['status'] == "Pending Issued") ? "hidden" : ""; ?>
                                     data-toggle="tooltip" data-placement="top" title="Void"
                                     data-nogiro="<?php echo htmlspecialchars($giro['nomor']); ?>"
@@ -361,7 +362,7 @@ $conn->close();
                                     <i class="bi bi-x-circle"></i>
                                 </button>
 
-                                <button class="btn btn-sm btn-info return-btn" 
+                                <button class="btn btn-sm btn-info return-btn"
                                     <?php echo ($giro['status'] == "Issued" || $giro['status'] == "Pending Issued") ? "hidden" : ""; ?>
                                     data-toggle="tooltip" data-placement="top" title="Return"
                                     data-nogiro="<?php echo htmlspecialchars($giro['nomor']); ?>"
@@ -396,16 +397,25 @@ $conn->close();
                                     data-entitas="<?php echo htmlspecialchars($giro['nama_entitas']); ?>">
                                     <i class="bi bi-paperclip"></i>
                                 </button>
+
+                                <button class="btn btn-sm btn-secondary add-attachment-btn"
+                                    data-toggle="tooltip" data-placement="top" title="Tambahkan Lampiran"
+                                    data-nogiro="<?php echo htmlspecialchars($giro['nomor']); ?>"
+                                    data-type="<?php echo htmlspecialchars($giro['jenis']); ?>"
+                                    data-image="<?php echo htmlspecialchars($giro['image_giro']); ?>"
+                                    data-entitas="<?php echo htmlspecialchars($giro['nama_entitas']); ?>">
+                                    <i class="bi bi-camera"></i>
+                                </button>
                             </td>
                         </tr>
                     <?php endforeach; ?>
                     <tr class="subtotal">
-                        <td colspan="8" class="text-end">Subtotal</td>
+                        <td colspan="9" class="text-end">Subtotal</td>
                         <td><?php echo number_format($subtotal, 2); ?></td>
                         <td></td>
                     </tr>
                     <tr class="grand-total">
-                        <td colspan="8" class="text-end">Grand Total</td>
+                        <td colspan="9" class="text-end">Grand Total</td>
                         <td><?php echo number_format($grand_total, 2); ?></td>
                         <td></td>
                     </tr>
@@ -481,76 +491,88 @@ $conn->close();
 
                         console.log(nogiro, entitas, jenis);
 
-                        const {
-                            value: formValues
-                        } = await Swal.fire({
-                            title: action === 'cair' ? "Tanggal Cair" : action === 'return' ? "Tanggal Return" : "Tanggal Void",
-                            html: (action !== 'void' ? `<div class="form-group">
+                        const {value: formValues} = await Swal.fire({
+                            title: action === 'cair' ? "Tanggal Cair" : action === 'return' ? "Tanggal Return" : action === 'acc' ? "Tanggal Approve" : action === 'add' ? "Tambah Lampiran" : "Tanggal Void",
+                            html: ((action !== 'void' && action !== 'add') ? `<div class="form-group">
                                 <label for="swal-input1" class="form-label">Tanggal</label>
                                 <input id="swal-input1" class="form-control" type="date" max="<?php echo date('Y-m-d'); ?>">
                                 </div>` : '') +
                                 (action === 'void' ?
                                     '<div class="form-group mt-3">' +
+                                    '<input hidden id="swal-input1" class="form-control" type="text" value="<?php echo date('Y-m-d'); ?>" readonly>' +
+                                    '</div>' +
+                                    '<div class="form-group mt-3">' +
                                     '<label for="swal-input2" class="form-label">Alasan</label>' +
                                     '<textarea id="swal-input2" class="form-control" placeholder="Masukkan alasan Void" rows="3"></textarea>' +
-                                    '</div>' : '')+
-                                (action === 'return' ? `<div class="form-group mt-3">
+                                    '</div>' : '') +
+                                ((action === 'return' || action === 'add') ? `<div class="form-group mt-3">
                                             <label for="swal-input3" class="form-label">File lampiran</label>
                                             <input id="swal-input3" class="form-control" type="file">
                                             </div>` : '')
-                                
                                 ,
                             focusConfirm: false,
                             showCancelButton: true,
                             confirmButtonText: 'Submit',
                             cancelButtonText: 'Cancel',
                             preConfirm: () => {
-                                const date = document.getElementById('swal-input1').value;
-                                if (!date) {
+                                const date = action !== 'add' ? document.getElementById('swal-input1').value : null;
+                                if (action !== 'add' && !date) {
                                     Swal.showValidationMessage('Fields are required');
                                 }
                                 return {
                                     date: date,
                                     reason: action === 'void' ? document.getElementById('swal-input2').value : '',
-                                    file: action === 'return' ? document.getElementById('swal-input3').files[0] : ''
+                                    file: (action === 'return' || action === 'add') ? document.getElementById('swal-input3').files[0] : ''
                                 };
                             }
                         });
 
                         if (formValues) {
+                            const formData = new FormData();
+                            formData.append('nogiro', nogiro);
+                            formData.append('tanggal', tanggal); // Use formatted date
+                            formData.append('alasan', action === 'void' ? formValues.reason : '');
+                            formData.append('statgiro', action === 'cair' ? 'Posted' : action === 'return' ? 'Return' : action === 'void' ? 'Void' : '');
+                            if (action === 'return' || action === 'add') {
+                                formData.append('file', formValues.file);
+                            }
+                            formData.append('action', action);
+                            formData.append('jenis', jenis);
+
                             fetch('update_statgiro.php', {
                                     method: 'POST',
-                                    headers: {
-                                        'Content-Type': 'application/json'
-                                    },
-                                    body: JSON.stringify({
-                                        nogiro: nogiro,
-                                        tanggal: tanggal, // Use formatted date
-                                        alasan: action === 'void' ? formValues.reason : '',
-                                        statgiro: action === 'cair' ? 'Posted' : action === 'return' ? 'Return' : 'Void',
-                                        file: action === 'return' ? formValues.file : '',
-                                        action: action,
-                                        jenis: jenis
-                                    })
+                                    body: formData
                                 })
                                 .then(response => response.json())
                                 .then(data => {
                                     if (data.success) {
-                                        Swal.fire(action === 'cair' ?
-                                            (jenis === 'Giro' ? "Giro Berhasil di Posting" : jenis === 'Cek' ? "Cek Berhasil di Posting" : "Loa Berhasil di Posting") :
-                                            action === 'return' ?
-                                            (jenis === 'Giro' ? "Giro Sudah tercatat kembali ke Bank" : jenis === 'Cek' ? "Cek Sudah tercatat kembali ke Bank" : "Loa Sudah tercatat kembali ke Bank") :
-                                            (jenis === 'Giro' ? "Giro berhasil di void" : jenis === 'Cek' ? "Cek berhasil di void" : "Loa berhasil di void")
-                                        ).then(() => {
-                                            location.reload(); // Refresh the page
+                                        Swal.fire({
+                                            title: action === 'cair' ?
+                                                (jenis === 'Giro' ? "Giro Berhasil di Posting" : jenis === 'Cek' ? "Cek Berhasil di Posting" : "Loa Berhasil di Posting") :
+                                                action === 'return' ?
+                                                (jenis === 'Giro' ? "Giro Sudah tercatat kembali ke Bank" : jenis === 'Cek' ? "Cek Sudah tercatat kembali ke Bank" : "Loa Sudah tercatat kembali ke Bank") :
+                                                action === 'acc' ?
+                                                (jenis === 'Giro' ? "Giro berhasil di approve" : jenis === 'Cek' ? "Cek berhasil di approve" : "Loa berhasil di approve") :
+                                                (jenis === 'Giro' ? "Giro berhasil di void" : jenis === 'Cek' ? "Cek berhasil di void" : "Loa berhasil di void"),
+                                            icon: 'success'
+                                        }).then(() => {
+                                            location.reload();
                                         });
                                     } else {
-                                        Swal.fire("Error", data.message, "error");
+                                        Swal.fire({
+                                            title: "Error",
+                                            text: data.message,
+                                            icon: "error"
+                                        });
                                     }
                                 })
                                 .catch(error => {
                                     console.error('Error:', error);
-                                    Swal.fire("Error", "An error occurred while updating.", "error");
+                                    Swal.fire({
+                                        title: "Error",
+                                        text: "An error occurred while updating.",
+                                        icon: "error"
+                                    });
                                 });
                         }
                     });
@@ -560,6 +582,7 @@ $conn->close();
             handleButtonClick('.cair-btn', 'cair');
             handleButtonClick('.void-btn', 'void');
             handleButtonClick('.return-btn', 'return');
+            handleButtonClick('.add-attachment-btn', 'add');
         </script>
     </div>
 </body>

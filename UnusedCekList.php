@@ -47,6 +47,7 @@ $conn->close();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Laporan Jumlah cek Unused</title>
+    <link rel="icon" type="image/x-icon" href="img/icon.png">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@100..900&family=Roboto+Slab:wght@100..900&display=swap" rel="stylesheet">
 
     <style>

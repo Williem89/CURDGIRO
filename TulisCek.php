@@ -63,8 +63,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Check if a file was upcekded
         if (!empty($_FILES["foto_giro"]["name"])) {
             // Move the upcekded file to the target directory
-            if (!move_upcekded_file($_FILES["foto_giro"]["tmp_name"], $targetFilePath)) {
-                throw new Exception("Error upcekding file.");
+            if (!move_uploaded_file($_FILES["foto_giro"]["tmp_name"], $targetFilePath)) {
+                throw new Exception("Error uploading file.");
             }
         } else {
             $fileName = null; // No file upcekded
@@ -139,6 +139,7 @@ $conn->close();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Issued cek</title>
+    <link rel="icon" type="image/x-icon" href="img/icon.png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <style>

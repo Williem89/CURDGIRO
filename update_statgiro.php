@@ -16,8 +16,9 @@ error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
 // Handle file upload
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['file'])) {
-    $target_dir = "uploads/";
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES["file"])) {
+
+    $target_dir = "imggiro/";
     $target_file = $target_dir . basename($_FILES["file"]["name"]);
     $uploadOk = 1;
     $fileType = strtolower(pathinfo($target_file, PATHINFO_EXTENSION));
@@ -42,18 +43,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['file'])) {
     } else {
         // Try to upload file
         if (move_uploaded_file($_FILES["file"]["tmp_name"], $target_file)) {
-            echo json_encode(['success' => true, 'message' => 'File uploaded successfully']);
+            // echo json_encode(['success' => true, 'message' => 'File uploaded successfully']);
         } else {
             echo json_encode(['success' => false, 'message' => 'Error uploading file']);
         }
     }
 }
 
-// Get the JSON data from the request
-$data = json_decode(file_get_contents('php://input'), true);
-
 // Check if required parameters are set
-if (isset($data['nogiro'], $data['tanggal'], $data['statgiro'], $data["action"], $data["alasan"], $data["jenis"])) {
+if (isset($_POST['nogiro'], $_POST["action"], $_POST["jenis"])) {
+    $data = $_POST;
     $nogiro = $data['nogiro'];
     $tanggal = $data['tanggal'];
     $statgiro = $data['statgiro'];
@@ -69,16 +68,25 @@ if (isset($data['nogiro'], $data['tanggal'], $data['statgiro'], $data["action"],
         case "Giro":
             switch ($action) {
                 case "cair":
-                    $sql = "UPDATE detail_giro SET StatGiro = ?, tanggal_Cair_giro = ?, SeatleBy = ? WHERE nogiro = ?";
+                    $sql = "UPDATE detail_giro SET StatGiro = 'Pending Post', tanggal_Cair_giro = ?, SeatleBy = ? WHERE nogiro = ?";
                     break;
                 case "return":
-                    $sql = "UPDATE detail_giro SET StatGiro = ?, tglkembalikebank = ?, dikembalikanoleh = ?, lampiran = ? WHERE nogiro = ?";
+                    $sql = "UPDATE detail_giro SET StatGiro = 'Pending Return', tglkembalikebank = ?, dikembalikanoleh = ?, lampiran = ? WHERE nogiro = ?";
                     break;
                 case "void":
-                    $sql = "UPDATE detail_giro SET StatGiro = ?, TglVoid = ?, VoidBy = ?, a_void = ? WHERE nogiro = ?";
+                    $sql = "UPDATE detail_giro SET StatGiro = 'Pending Void', TglVoid = ?, VoidBy = ?, a_void = ? WHERE nogiro = ?";
                     break;
                 case "acc":
                     $sql = "UPDATE detail_giro SET StatGiro = 'Issued', ApproveBy = ?, ApproveAt = ? WHERE nogiro = ?";
+                    break;
+                case "apv":
+                    $sql = "UPDATE detail_giro SET StatGiro = 'Void', ApproveBy = ?, ApproveAt = ? WHERE nogiro = ?";
+                    break;
+                case "apr":
+                    $sql = "UPDATE detail_giro SET StatGiro = 'Return', ApproveBy = ?, ApproveAt = ? WHERE nogiro = ?";
+                    break;
+                case "add":
+                    $sql = "UPDATE detail_giro SET image_giro = ? WHERE nogiro = ?";
                     break;
                 default:
                     echo json_encode(['success' => false, 'message' => 'Invalid action']);
@@ -88,16 +96,25 @@ if (isset($data['nogiro'], $data['tanggal'], $data['statgiro'], $data["action"],
         case "Cek":
             switch ($action) {
                 case "cair":
-                    $sql = "UPDATE detail_cek SET StatCek = ?, tanggal_Cair_cek = ?, SeatleBy = ? WHERE nocek = ?";
+                    $sql = "UPDATE detail_cek SET StatCek = 'Pending Post', tanggal_Cair_cek = ?, SeatleBy = ? WHERE nocek = ?";
                     break;
                 case "return":
-                    $sql = "UPDATE detail_cek SET StatCek = ?, tglkembalikebank = ?, dikembalikanoleh = ?, lampiran = ? WHERE nocek = ?";
+                    $sql = "UPDATE detail_cek SET StatCek = 'Pending Return', tglkembalikebank = ?, dikembalikanoleh = ?, lampiran = ? WHERE nocek = ?";
                     break;
                 case "void":
-                    $sql = "UPDATE detail_cek SET StatCek = ?, TglVoid = ?, VoidBy = ?, a_void = ? WHERE nocek = ?";
+                    $sql = "UPDATE detail_cek SET StatCek = 'Pending Void', TglVoid = ?, VoidBy = ?, a_void = ? WHERE nocek = ?";
                     break;
                 case "acc":
-                    $sql = "UPDATE detail_cek SET StatGiro = 'Issued', ApproveBy = ?, ApproveAt = ? WHERE nocek = ?";
+                    $sql = "UPDATE detail_cek SET StatCek = 'Issued', ApproveBy = ?, ApproveAt = ? WHERE nocek = ?";
+                    break;
+                case "apv":
+                    $sql = "UPDATE detail_cek SET StatCek = 'Void', ApproveBy = ?, ApproveAt = ? WHERE nocek = ?";
+                    break;
+                case "apr":
+                    $sql = "UPDATE detail_cek SET StatCek = 'Return', ApproveBy = ?, ApproveAt = ? WHERE nocek = ?";
+                    break;
+                case "add":
+                    $sql = "UPDATE detail_cek SET image_giro = ? WHERE nocek = ?";
                     break;
                 default:
                     echo json_encode(['success' => false, 'message' => 'Invalid action']);
@@ -107,16 +124,25 @@ if (isset($data['nogiro'], $data['tanggal'], $data['statgiro'], $data["action"],
         case 'loa':
             switch ($action) {
                 case "cair":
-                    $sql = "UPDATE detail_loa SET StatLoa = ?, tanggal_Cair_loa = ?, SeatleBy = ? WHERE noloa = ?";
+                    $sql = "UPDATE detail_loa SET StatLoa = 'Pending Post', tanggal_Cair_loa = ?, SeatleBy = ? WHERE noloa = ?";
                     break;
                 case "return":
-                    $sql = "UPDATE detail_loa SET StatLoa = ?, tglkembalikebank = ?, dikembalikanoleh = ?, lampiran = ? WHERE noloa = ?";
+                    $sql = "UPDATE detail_loa SET StatLoa = 'Pending Return', tglkembalikebank = ?, dikembalikanoleh = ?, lampiran = ? WHERE noloa = ?";
                     break;
                 case "void":
-                    $sql = "UPDATE detail_loa SET StatLoa = ?, TglVoid = ?, VoidBy = ?, a_void = ? WHERE noloa = ?";
+                    $sql = "UPDATE detail_loa SET StatLoa = 'Pending Void', TglVoid = ?, VoidBy = ?, a_void = ? WHERE noloa = ?";
                     break;
                 case "acc":
                     $sql = "UPDATE detail_loa SET StatGiro = 'Issued', ApproveBy = ?, ApproveAt = ? WHERE noloa = ?";
+                    break;
+                case "apv":
+                    $sql = "UPDATE detail_loa SET StatGiro = 'Void', ApproveBy = ?, ApproveAt = ? WHERE noloa = ?";
+                    break;
+                case "apr":
+                    $sql = "UPDATE detail_loa SET StatGiro = 'Return', ApproveBy = ?, ApproveAt = ? WHERE noloa = ?";
+                    break;
+                case "add":
+                    $sql = "UPDATE detail_loa SET image_giro = ? WHERE noloa = ?";
                     break;
                 default:
                     echo json_encode(['success' => false, 'message' => 'Invalid action']);
@@ -138,13 +164,19 @@ if (isset($data['nogiro'], $data['tanggal'], $data['statgiro'], $data["action"],
 
     // Bind parameters
     if ($action === "cair") {
-        $stmt->bind_param("ssss", $statgiro, $tanggal, $user_logged_in, $nogiro);
+        $stmt->bind_param("sss", $tanggal, $user_logged_in, $nogiro);
     } else if ($action === "return") {
-        $stmt->bind_param("sssss", $statgiro, $tanggal, $user_logged_in, $filename, $nogiro);
+        $stmt->bind_param("ssss", $tanggal, $user_logged_in, $filename, $nogiro);
     } else if ($action === "void") {
-        $stmt->bind_param("sssss", $statgiro, $tanggal, $user_logged_in, $alasan, $nogiro);
+        $stmt->bind_param("ssss", $tanggal, $user_logged_in, $alasan, $nogiro);
     } else if ($action === "acc") {
         $stmt->bind_param("sss", $user_logged_in, $tanggal, $nogiro);
+    } else if ($action === "apv") {
+        $stmt->bind_param("sss", $user_logged_in, $tanggal, $nogiro);
+    } else if ($action === "apr") {
+        $stmt->bind_param("sss", $user_logged_in, $tanggal, $nogiro);
+    } else if ($action === "add") {
+        $stmt->bind_param("ss", $filename, $nogiro);
     }
 
     // Execute the statement

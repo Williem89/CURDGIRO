@@ -96,7 +96,8 @@ if (isset($_POST['export'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Giro Jatuh Tempo Bulan Ini</title>
+    <title>LAPORAN GIRO OUTSTANDING</title>
+    <link rel="icon" type="image/x-icon" href="img/icon.png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <style>
@@ -186,7 +187,7 @@ if (isset($_POST['export'])) {
                     <i class="bi bi-backspace" style="margin-right: 8px;"></i>
                     Kembali
                 </a>
-                <h1 class="mb-0" style="line-height: 1; margin: 0;">Laporan Jumlah Giro Available</h1>
+                <h1 class="mb-0" style="line-height: 1; margin: 0;">LAPORAN GIRO OUTSTANDING </h1>
             </div>
             <form method="POST" class="mb-4" style="box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); border-radius: 12px;">
                 <div class="row align-items-center" style="margin: 10px; width:2750px; ">
