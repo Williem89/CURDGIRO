@@ -32,7 +32,7 @@ $sql = "
     WHERE 
         (d.nogiro LIKE ? OR dg.nogiro LIKE ? OR e.nama_entitas LIKE ? 
         OR d.namabank LIKE ? OR d.Statusgiro LIKE ?) 
-        AND (d.Statusgiro = 'Unused' OR dg.StatGiro IN ('Issued', 'Void', 'Return', 'Pending Issued', 'Pending Post', 'Pending Void', 'Pending Return')) 
+        AND (d.Statusgiro = 'Unused' OR dg.StatGiro IN ('Issued', 'Void', 'Return', 'Pending Issued', 'Pending Void', 'Pending Return', 'Pending Post')) 
     GROUP BY 
         e.nama_entitas, d.namabank, d.ac_number, d.Statusgiro, dg.StatGiro, 
         d.nogiro, dg.nogiro, dg.tanggal_jatuh_tempo, dg.TglVoid
@@ -65,7 +65,7 @@ $sql = "
     WHERE 
         (d.nocek LIKE ? OR dc.nocek LIKE ? OR e.nama_entitas LIKE ? 
         OR d.namabank LIKE ? OR d.Statuscek LIKE ?) 
-        AND (d.statuscek = 'Unused' OR dc.StatCek IN ('Issued', 'Void', 'Return', 'Pending Issued', 'Pending Post', 'Pending Void', 'Pending Return'))
+        AND (d.statuscek = 'Unused' OR dc.StatCek IN ('Issued', 'Void', 'Return', 'Pending Issued', 'Pending Void', 'Pending Return', 'Pending Post')) 
     GROUP BY 
         e.nama_entitas, d.namabank, d.ac_number, d.statuscek, dc.StatCek, 
         d.nocek, dc.nocek, dc.tanggal_jatuh_tempo, dc.TglVoid
@@ -98,7 +98,8 @@ $sql = "
     WHERE 
         (d.noloa LIKE ? OR dl.noloa LIKE ? OR e.nama_entitas LIKE ? 
         OR d.namabank LIKE ? OR d.Statusloa LIKE ?) 
-        AND (d.statusloa = 'Unused' OR dl.StatLoa IN ('Issued', 'Void', 'Return', 'Pending Issued', 'Pending Post', 'Pending Void', 'Pending Return'))
+        AND (d.statusloa = 'Unused' OR dl.StatLoa IN ('Issued', 'Void', 'Return', 'Pending Issued', 'Pending Void', 'Pending Return', 'Pending Post')) 
+    GROUP BY 
         e.nama_entitas, d.namabank, d.ac_number, d.statusloa, dl.StatLoa, 
         d.noloa, dl.noloa, dl.tanggal_jatuh_tempo, dl.TglVoid
 
