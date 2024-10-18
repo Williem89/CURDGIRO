@@ -5,44 +5,37 @@ session_start();
 // Get the search term from the GET request
 $search_term = isset($_GET['search']) ? trim($_GET['search']) : '';
 
-// Prepare the SQL statement for both Giro and Cek
 $sql = "
     SELECT 
         'Giro' AS jenis, 
         e.nama_entitas, 
         d.namabank, 
-        d.ac_number,
+        d.ac_number, 
         d.Statusgiro AS status, 
         dg.StatGiro AS stat, 
         d.nogiro AS no, 
         dg.nogiro AS no_detail, 
         NULL AS nocek, 
         NULL AS StatCek, 
-        NULL AS noloa,
+        NULL AS noloa, 
         SUM(dg.Nominal) AS total_nominal, 
         dg.tanggal_jatuh_tempo, 
-        dg.TglVoid,
-        NULL AS jenis_cek,
+        dg.TglVoid, 
+        NULL AS jenis_cek, 
         NULL AS jenis_loa
     FROM 
-        detail_giro AS dg
-    INNER JOIN 
-        data_giro AS d ON dg.nogiro = d.nogiro
+        data_giro AS d
+    LEFT JOIN 
+        detail_giro AS dg ON dg.nogiro = d.nogiro
     INNER JOIN 
         list_entitas AS e ON d.id_entitas = e.id_entitas
     WHERE 
-        (d.nogiro LIKE ? OR dg.nogiro LIKE ? OR e.nama_entitas LIKE ? OR d.namabank LIKE ?) 
-        AND (d.Statusgiro = 'Unused' OR dg.StatGiro IN ('Issued', 'Void', 'Return')) 
+        (d.nogiro LIKE ? OR dg.nogiro LIKE ? OR e.nama_entitas LIKE ? 
+        OR d.namabank LIKE ? OR d.Statusgiro LIKE ?) 
+        AND (d.Statusgiro = 'Unused' OR dg.StatGiro IN ('Issued', 'Void', 'Return', 'Pending Issued', 'Pending Post', 'Pending Void', 'Pending Return')) 
     GROUP BY 
-        e.nama_entitas, 
-        d.namabank, 
-        d.ac_number, 
-        d.Statusgiro, 
-        dg.StatGiro, 
-        d.nogiro, 
-        dg.nogiro, 
-        dg.tanggal_jatuh_tempo, 
-        dg.TglVoid
+        e.nama_entitas, d.namabank, d.ac_number, d.Statusgiro, dg.StatGiro, 
+        d.nogiro, dg.nogiro, dg.tanggal_jatuh_tempo, dg.TglVoid
 
     UNION ALL
 
@@ -57,11 +50,11 @@ $sql = "
         NULL AS no_detail, 
         d.nocek AS no, 
         dc.nocek AS no_detail, 
-        NULL AS noloa,
+        NULL AS noloa, 
         SUM(dc.Nominal) AS total_nominal, 
         dc.tanggal_jatuh_tempo, 
-        dc.TglVoid,
-        NULL AS jenis_giro,
+        dc.TglVoid, 
+        NULL AS jenis_giro, 
         NULL AS jenis_loa
     FROM 
         data_cek AS d
@@ -70,60 +63,49 @@ $sql = "
     INNER JOIN 
         list_entitas AS e ON d.id_entitas = e.id_entitas
     WHERE 
-        (dc.nocek LIKE ? OR e.nama_entitas LIKE ? OR d.namabank LIKE ?) 
-        AND (d.statuscek = 'Unused' OR dc.StatCek IN ('Issued', 'Void', 'Return')) 
+        (d.nocek LIKE ? OR dc.nocek LIKE ? OR e.nama_entitas LIKE ? 
+        OR d.namabank LIKE ? OR d.Statuscek LIKE ?) 
+        AND (d.statuscek = 'Unused' OR dc.StatCek IN ('Issued', 'Void', 'Return', 'Pending Issued', 'Pending Post', 'Pending Void', 'Pending Return'))
     GROUP BY 
-		e.nama_entitas,
-		d.namabank,
-		d.ac_number,
-		d.statuscek,
-		dc.StatCek,
-		d.nocek,
-		dc.nocek,
-		dc.tanggal_jatuh_tempo,
-		dc.TglVoid
+        e.nama_entitas, d.namabank, d.ac_number, d.statuscek, dc.StatCek, 
+        d.nocek, dc.nocek, dc.tanggal_jatuh_tempo, dc.TglVoid
 
     UNION ALL
 
-    SELECT
-		'Loa' AS jenis,
-		e.nama_entitas,
-		d.namabank,
-		d.ac_number,
-		d.statusloa AS status,
-		dl.StatLoa AS stat,
-		NULL AS nogiro,
-		NULL AS no_detail,
-		NULL AS nocek,
-		NULL AS StatCek,
-		dl.noloa AS no,
-		SUM(dl.Nominal) AS total_nominal,
-		dl.tanggal_jatuh_tempo,
-		dl.TglVoid,
-		NULL AS jenis_giro,
-		NULL AS jenis_cek
-	FROM
-		detail_loa AS dl
-	INNER JOIN
-		data_loa AS d ON dl.noloa = d.noloa
-	INNER JOIN
-		list_entitas AS e ON d.id_entitas = e.id_entitas
-	WHERE
-		(dl.noloa LIKE ? OR e.nama_entitas LIKE ? OR d.namabank LIKE ?)
-	AND (d.statusloa = 'Unused' OR dl.StatLoa IN ('Issued', 'Void', 'Return'))
-	GROUP BY
-		e.nama_entitas,
-		d.namabank,
-		d.ac_number,
-		d.statusloa,
-		dl.StatLoa,
-		dl.noloa,
-		dl.tanggal_jatuh_tempo,
-		dl.TglVoid
+    SELECT 
+        'Loa' AS jenis, 
+        e.nama_entitas, 
+        d.namabank, 
+        d.ac_number, 
+        d.statusloa AS status, 
+        dl.StatLoa AS stat, 
+        NULL AS nogiro, 
+        NULL AS no_detail, 
+        NULL AS nocek, 
+        NULL AS StatCek, 
+        d.noloa AS noloa, 
+        SUM(dl.Nominal) AS total_nominal, 
+        dl.tanggal_jatuh_tempo, 
+        dl.TglVoid, 
+        NULL AS jenis_giro, 
+        NULL AS jenis_cek
+    FROM 
+        data_loa AS d
+    LEFT JOIN 
+        detail_loa AS dl ON dl.noloa = d.noloa
+    INNER JOIN 
+        list_entitas AS e ON d.id_entitas = e.id_entitas
+    WHERE 
+        (d.noloa LIKE ? OR dl.noloa LIKE ? OR e.nama_entitas LIKE ? 
+        OR d.namabank LIKE ? OR d.Statusloa LIKE ?) 
+        AND (d.statusloa = 'Unused' OR dl.StatLoa IN ('Issued', 'Void', 'Return', 'Pending Issued', 'Pending Post', 'Pending Void', 'Pending Return'))
+        e.nama_entitas, d.namabank, d.ac_number, d.statusloa, dl.StatLoa, 
+        d.noloa, dl.noloa, dl.tanggal_jatuh_tempo, dl.TglVoid
 
-    ORDER BY
-	tanggal_jatuh_tempo ASC;
+    ORDER BY 
+        tanggal_jatuh_tempo ASC;
 ";
+
 $stmt = $conn->prepare($sql);
 
 // Check if preparation was successful
@@ -131,21 +113,29 @@ if ($stmt === false) {
     die("Preparation failed: " . $conn->error);
 }
 
-// Bind parameters for Giro
+// Prepare the search term for LIKE queries
 $search_like = '%' . $search_term . '%';
+
+// Bind parameters for Giro, Cek, and Loa
 $stmt->bind_param(
-    "ssssssssss",
-    $search_like,
-    $search_like,
-    $search_like,
-    $search_like,
-    $search_like,
-    $search_like,
-    $search_like,
-    $search_like,
-    $search_like,
-    $search_like
+    "sssssssssssssss",
+    $search_like, // For Giro: d.nogiro
+    $search_like, // For Giro: dg.nogiro
+    $search_like, // For Giro: e.nama_entitas
+    $search_like, // For Giro: d.namabank
+    $search_like, // For Giro: d.Statusgiro
+    $search_like, // For Cek: dc.nocek
+    $search_like, // For Cek: e.nama_entitas
+    $search_like, // For Cek: d.namabank
+    $search_like, // For Loa: dl.noloa
+    $search_like, // For Loa: e.nama_entitas
+    $search_like, // For Loa: d.namabank
+    $search_like, // For Loa: d.namabank
+    $search_like, // For Loa: d.namabank
+    $search_like, // For Loa: d.namabank
+    $search_like, // For Loa: d.namabank
 );
+
 
 // Execute the statement
 $stmt->execute();
@@ -253,7 +243,7 @@ $conn->close();
                 <tr>
                     <td><?php echo htmlspecialchars($record['nama_entitas']); ?></td>
                     <td><?php echo htmlspecialchars($record['jenis'] ?? ''); ?></td>
-                    <td><?php echo htmlspecialchars($record['no'] ?: $record['nocek'] ?: $record['noloa']?:""); ?></td> <!-- Use 'no' directly -->
+                    <td><?php echo htmlspecialchars($record['no'] ?: $record['nocek'] ?: $record['noloa']?:$record['no_detail']?:""); ?></td> <!-- Use 'no' directly -->
                     <td><?php echo htmlspecialchars($record['status'] === 'Unused' ? 'Available' : ($record['stat'] ?: $record['status'] ?: '')); ?></td>
                     <td><?php echo htmlspecialchars($record['tanggal_jatuh_tempo']); ?></td>
                     <td><?php echo htmlspecialchars($record['TglVoid']); ?></td>

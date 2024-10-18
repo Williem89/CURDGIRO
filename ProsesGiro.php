@@ -266,6 +266,11 @@ $conn->close();
             margin-right: 5px;
             /* Memberikan jarak antar tombol */
         }
+
+        .mfp-iframe-holder .mfp-content
+        {
+            max-width: 1400px !important;
+        }
     </style>
 
 </head>
@@ -477,7 +482,7 @@ $conn->close();
                         items: {
                             src: "imggiro/" + imageGiro,
                         },
-                        type: 'image'
+                        type: 'iframe'
                     }).magnificPopup('open');
                 });
             });
@@ -547,13 +552,20 @@ $conn->close();
                                 .then(data => {
                                     if (data.success) {
                                         Swal.fire({
-                                            title: action === 'cair' ?
-                                                (jenis === 'Giro' ? "Giro Berhasil di Posting" : jenis === 'Cek' ? "Cek Berhasil di Posting" : "Loa Berhasil di Posting") :
-                                                action === 'return' ?
-                                                (jenis === 'Giro' ? "Giro Sudah tercatat kembali ke Bank" : jenis === 'Cek' ? "Cek Sudah tercatat kembali ke Bank" : "Loa Sudah tercatat kembali ke Bank") :
-                                                action === 'acc' ?
-                                                (jenis === 'Giro' ? "Giro berhasil di approve" : jenis === 'Cek' ? "Cek berhasil di approve" : "Loa berhasil di approve") :
-                                                (jenis === 'Giro' ? "Giro berhasil di void" : jenis === 'Cek' ? "Cek berhasil di void" : "Loa berhasil di void"),
+                                            title: 
+                                            action === 'cair' ?
+                                                (jenis === 'Giro' ? "Giro Berhasil di Posting" : 
+                                                jenis === 'Cek' ? "Cek Berhasil di Posting" : "Loa Berhasil di Posting") :
+                                            action === 'return' ?
+                                                (jenis === 'Giro' ? "Giro Sudah tercatat kembali ke Bank" : 
+                                                jenis === 'Cek' ? "Cek Sudah tercatat kembali ke Bank" : "Loa Sudah tercatat kembali ke Bank") :
+                                            action === 'acc' ?
+                                                (jenis === 'Giro' ? "Giro berhasil di approve" : 
+                                                jenis === 'Cek' ? "Cek berhasil di approve" : "Loa berhasil di approve") :
+                                            action === 'add' ? 
+                                                "Lampiran Berhasil diupload!" :
+                                                (jenis === 'Giro' ? "Giro berhasil di void" : 
+                                                jenis === 'Cek' ? "Cek berhasil di void" : "Loa berhasil di void"),
                                             icon: 'success'
                                         }).then(() => {
                                             location.reload();
