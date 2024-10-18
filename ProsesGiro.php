@@ -497,8 +497,8 @@ $conn->close();
                         console.log(nogiro, entitas, jenis);
 
                         const {value: formValues} = await Swal.fire({
-                            title: action === 'cair' ? "Tanggal Cair" : action === 'return' ? "Tanggal Return" : action === 'acc' ? "Tanggal Approve" : action === 'add' ? "Tambah Lampiran" : "Tanggal Void",
-                            html: ((action !== 'void' && action !== 'add') ? `<div class="form-group">
+                            title: action === 'cair' ? "Tanggal Cair" : action === 'return' ? "Tanggal Return" : action === 'acc' ? "Konfirmasi Approve" : action === 'add' ? "Tambah Lampiran" : "Tanggal Void",
+                            html: ((action !== 'void' && action !== 'add' && action !== 'acc') ? `<div class="form-group">
                                 <label for="swal-input1" class="form-label">Tanggal</label>
                                 <input id="swal-input1" class="form-control" type="date" max="<?php echo date('Y-m-d'); ?>">
                                 </div>` : '') +
@@ -517,11 +517,11 @@ $conn->close();
                                 ,
                             focusConfirm: false,
                             showCancelButton: true,
-                            confirmButtonText: 'Submit',
-                            cancelButtonText: 'Cancel',
+                            confirmButtonText: 'Yes',
+                            cancelButtonText: 'No',
                             preConfirm: () => {
-                                const date = action !== 'add' ? document.getElementById('swal-input1').value : null;
-                                if (action !== 'add' && !date) {
+                                const date = action !== 'add' && action !== 'acc' ? document.getElementById('swal-input1').value : '<?php echo date('Y-m-d'); ?>';
+                                if (action !== 'add' && action !== 'acc' && !date) {
                                     Swal.showValidationMessage('Fields are required');
                                 }
                                 return {
