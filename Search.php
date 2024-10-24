@@ -18,9 +18,14 @@ $sql = "
         NULL AS nocek, 
         NULL AS StatCek, 
         NULL AS noloa, 
-        SUM(dg.Nominal) AS total_nominal, 
+        dg.Nominal, 
         dg.tanggal_jatuh_tempo, 
         dg.TglVoid, 
+        dg.ac_penerima, 
+        dg.nama_penerima, 
+        dg.bank_penerima, 
+        dg.PVRNo, 
+        dg.keterangan, 
         NULL AS jenis_cek, 
         NULL AS jenis_loa
     FROM 
@@ -32,10 +37,11 @@ $sql = "
     WHERE 
         (d.nogiro LIKE ? OR dg.nogiro LIKE ? OR e.nama_entitas LIKE ? 
         OR d.namabank LIKE ? OR d.Statusgiro LIKE ?) 
-        AND (d.Statusgiro = 'Unused' OR dg.StatGiro IN ('Issued', 'Void', 'Return', 'Pending Issued', 'Pending Void', 'Pending Return', 'Pending Post')) 
+        AND (d.Statusgiro = 'Unused' OR dg.StatGiro IN ('Issued', 'Posted', 'Void', 'Return', 'Pending Issued', 'Pending Void', 'Pending Return', 'Pending Post')) 
     GROUP BY 
         e.nama_entitas, d.namabank, d.ac_number, d.Statusgiro, dg.StatGiro, 
-        d.nogiro, dg.nogiro, dg.tanggal_jatuh_tempo, dg.TglVoid
+        d.nogiro, dg.nogiro, dg.tanggal_jatuh_tempo, dg.TglVoid, 
+        dg.ac_penerima, dg.nama_penerima, dg.bank_penerima, dg.PVRNo, dg.keterangan, dg.Nominal
 
     UNION ALL
 
@@ -51,11 +57,16 @@ $sql = "
         d.nocek AS no, 
         dc.nocek AS no_detail, 
         NULL AS noloa, 
-        SUM(dc.Nominal) AS total_nominal, 
+        dc.Nominal, 
         dc.tanggal_jatuh_tempo, 
         dc.TglVoid, 
         NULL AS jenis_giro, 
-        NULL AS jenis_loa
+        NULL AS jenis_loa, 
+        NULL AS ac_penerima, 
+        NULL AS nama_penerima, 
+        NULL AS bank_penerima, 
+        NULL AS PVRNo, 
+        NULL AS keterangan
     FROM 
         data_cek AS d
     LEFT JOIN 
@@ -65,7 +76,7 @@ $sql = "
     WHERE 
         (d.nocek LIKE ? OR dc.nocek LIKE ? OR e.nama_entitas LIKE ? 
         OR d.namabank LIKE ? OR d.Statuscek LIKE ?) 
-        AND (d.statuscek = 'Unused' OR dc.StatCek IN ('Issued', 'Void', 'Return', 'Pending Issued', 'Pending Void', 'Pending Return', 'Pending Post')) 
+        AND (d.statuscek = 'Unused' OR dc.StatCek IN ('Issued', 'Posted', 'Void', 'Return', 'Pending Issued', 'Pending Void', 'Pending Return', 'Pending Post')) 
     GROUP BY 
         e.nama_entitas, d.namabank, d.ac_number, d.statuscek, dc.StatCek, 
         d.nocek, dc.nocek, dc.tanggal_jatuh_tempo, dc.TglVoid
@@ -84,11 +95,16 @@ $sql = "
         NULL AS nocek, 
         NULL AS StatCek, 
         d.noloa AS noloa, 
-        SUM(dl.Nominal) AS total_nominal, 
+        dl.Nominal, 
         dl.tanggal_jatuh_tempo, 
         dl.TglVoid, 
         NULL AS jenis_giro, 
-        NULL AS jenis_cek
+        NULL AS jenis_cek, 
+        NULL AS ac_penerima, 
+        NULL AS nama_penerima, 
+        NULL AS bank_penerima, 
+        NULL AS PVRNo, 
+        NULL AS keterangan
     FROM 
         data_loa AS d
     LEFT JOIN 
@@ -97,63 +113,66 @@ $sql = "
         list_entitas AS e ON d.id_entitas = e.id_entitas
     WHERE 
         (d.noloa LIKE ? OR dl.noloa LIKE ? OR e.nama_entitas LIKE ? 
-        OR d.namabank LIKE ? OR d.Statusloa LIKE ?) 
-        AND (d.statusloa = 'Unused' OR dl.StatLoa IN ('Issued', 'Void', 'Return', 'Pending Issued', 'Pending Void', 'Pending Return', 'Pending Post')) 
+        OR d.namabank LIKE ? OR d.statusloa LIKE ?) 
+        AND (d.statusloa = 'Unused' OR dl.StatLoa IN ('Issued', 'Posted', 'Void', 'Return', 'Pending Issued', 'Pending Void', 'Pending Return', 'Pending Post')) 
     GROUP BY 
         e.nama_entitas, d.namabank, d.ac_number, d.statusloa, dl.StatLoa, 
         d.noloa, dl.noloa, dl.tanggal_jatuh_tempo, dl.TglVoid
-
-    ORDER BY 
-        tanggal_jatuh_tempo ASC;
 ";
+if (!empty($search_term)) {
+    $stmt = $conn->prepare($sql);
 
-$stmt = $conn->prepare($sql);
+    // Check if preparation was successful
+    if ($stmt === false) {
+        die("Preparation failed: " . $conn->error);
+    }
 
-// Check if preparation was successful
-if ($stmt === false) {
-    die("Preparation failed: " . $conn->error);
+    // Prepare the search term for LIKE queries
+    $search_like = '%' . $search_term . '%';
+
+    // Bind parameters for Giro, Cek, and Loa
+    $stmt->bind_param(
+        "sssssssssssssss",
+        $search_like, // For Giro: d.nogiro
+        $search_like, // For Giro: dg.nogiro
+        $search_like, // For Giro: e.nama_entitas
+        $search_like, // For Giro: d.namabank
+        $search_like, // For Giro: d.Statusgiro
+        $search_like, // For Cek: dc.nocek
+        $search_like, // For Cek: e.nama_entitas
+        $search_like, // For Cek: d.namabank
+        $search_like, // For Loa: dl.noloa
+        $search_like, // For Loa: e.nama_entitas
+        $search_like, // For Loa: d.namabank
+        $search_like, // For Loa: d.namabank
+        $search_like, // For Loa: d.namabank
+        $search_like, // For Loa: d.namabank
+        $search_like, // For Loa: d.namabank
+    );
+
+
+    // Execute the statement
+    $stmt->execute();
+
+    // Get the result
+    $result = $stmt->get_result();
+
+    // Initialize an array to hold records
+    $records = [];
+    while ($row = $result->fetch_assoc()) {
+        $records[] = $row;
+    }
+
+    // Close the statement and connection
+    $stmt->close();
+    $conn->close();
 }
 
-// Prepare the search term for LIKE queries
-$search_like = '%' . $search_term . '%';
-
-// Bind parameters for Giro, Cek, and Loa
-$stmt->bind_param(
-    "sssssssssssssss",
-    $search_like, // For Giro: d.nogiro
-    $search_like, // For Giro: dg.nogiro
-    $search_like, // For Giro: e.nama_entitas
-    $search_like, // For Giro: d.namabank
-    $search_like, // For Giro: d.Statusgiro
-    $search_like, // For Cek: dc.nocek
-    $search_like, // For Cek: e.nama_entitas
-    $search_like, // For Cek: d.namabank
-    $search_like, // For Loa: dl.noloa
-    $search_like, // For Loa: e.nama_entitas
-    $search_like, // For Loa: d.namabank
-    $search_like, // For Loa: d.namabank
-    $search_like, // For Loa: d.namabank
-    $search_like, // For Loa: d.namabank
-    $search_like, // For Loa: d.namabank
-);
-
-
-// Execute the statement
-$stmt->execute();
-
-// Get the result
-$result = $stmt->get_result();
-
-// Initialize an array to hold records
-$records = [];
-while ($row = $result->fetch_assoc()) {
-    $records[] = $row;
-}
-
-// Close the statement and connection
-$stmt->close();
-$conn->close();
 ?>
+
+<!-- <pre>
+<?php print_r($records); ?>
+</pre> -->
 
 <!DOCTYPE html>
 <html lang="en">
@@ -161,7 +180,7 @@ $conn->close();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Daftar Giro dan Cek</title>
+    <title>Search Giro dan Cek</title>
     <link rel="icon" type="image/x-icon" href="img/icon.png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
@@ -179,6 +198,9 @@ $conn->close();
         }
 
         .table thead th {
+            position: sticky;
+            top: 0;
+            z-index: 10;
             background-color: #80deea;
             color: #004d40;
         }
@@ -214,48 +236,59 @@ $conn->close();
             <a href="dashboard.php" class="btn btn-secondary">Kembali</a>
         </div>
 
+        <!-- Records Table -->
+         
+
         <table class="table table-bordered table-striped">
-    <thead>
-        <tr>
-            <th>Entitas</th>
-            <th>Jenis</th>
-            <th>No Giro/Cek</th>
-            <th>Status</th>
-            <th>Tanggal Jatuh Tempo</th>
-            <th>Tanggal Giro/Cek Cair</th>
-            <th>Bank</th>
-            <th>No. Rekening</th>
-            <th>Nominal</th>
-        </tr>
-    </thead>
-    <tbody>
-        <?php if (empty($records)): 
-            ?>
-            <tr>
-                <td colspan="9" class="text-center">Tidak ada data.</td>
-            </tr>
-        <?php else: 
-            // echo '<pre>';
-            // print_r($records);
-            // echo '</pre>';
-            ?>
-            <?php foreach ($records as $record): 
-                ?>
+            <thead>
                 <tr>
-                    <td><?php echo htmlspecialchars($record['nama_entitas']); ?></td>
-                    <td><?php echo htmlspecialchars($record['jenis'] ?? ''); ?></td>
-                    <td><?php echo htmlspecialchars($record['no'] ?: $record['nocek'] ?: $record['noloa']?:$record['no_detail']?:""); ?></td> <!-- Use 'no' directly -->
-                    <td><?php echo htmlspecialchars($record['status'] === 'Unused' ? 'Available' : ($record['stat'] ?: $record['status'] ?: '')); ?></td>
-                    <td><?php echo htmlspecialchars($record['tanggal_jatuh_tempo']); ?></td>
-                    <td><?php echo htmlspecialchars($record['TglVoid']); ?></td>
-                    <td><?php echo htmlspecialchars($record['namabank']); ?></td>
-                    <td><?php echo htmlspecialchars($record['ac_number']); ?></td>
-                    <td><?php echo number_format($record['total_nominal'], 2, ',', '.'); ?></td>
+                    <th style="width:5px; text-align:center;">No</th>
+                    <th style="width:90px;text-align:center;">Tanggal</th>
+                    <th style="width:90px; text-align:center;">No</th>
+                    <th style="width:90px; text-align:center;">Status</th>
+                    <th style="width:110px;text-align:center;">No Rek Asal</th>
+                    <th style="width:150px;text-align:center;">Bank Asal</th>
+                    <th style="width:170px;text-align:center;">Rekening Tujuan</th>
+                    <th style="width:260px;text-align:center;">Atas Nama</th>
+                    <th style="width:150px;text-align:center;">Bank Tujuan</th>
+                    <th style="width:150px;text-align:center;">No PVR</th>
+                    <th style="width:150px;text-align:center;">Keterangan</th>
+                    <th style="width:150px;text-align:center;">Nominal</th>
                 </tr>
-            <?php endforeach; ?>
-        <?php endif; ?>
-    </tbody>
-</table>
+            </thead>
+            <tbody>
+                <?php if (empty($records)):
+                ?>
+                    <tr>
+                        <td colspan="12" class="text-center">Tidak ada data.</td>
+                    </tr>
+                <?php else:
+                    // echo '<pre>';
+                    // print_r($records);
+                    // echo '</pre>';
+                ?>
+                    <?php foreach ($records as $record):
+                    $no = 1;
+                    ?>
+                        <tr>
+                            <td><?php echo $no++; ?></td>
+                            <td><?php echo date('d-M-Y', strtotime($record['tanggal_jatuh_tempo'])); ?></td>
+                            <td><?php echo htmlspecialchars($record['no'] ?? $record['nocek'] ?? $record['noloa'] ?? $record['no_detail'] ?? ""); ?></td>
+                            <td><?php echo htmlspecialchars($record['status'] === 'Unused' ? 'Available' : ($record['stat'] ?? $record['status'] ?? '')); ?></td>
+                            <td><?php echo htmlspecialchars($record['ac_number']); ?></td>
+                            <td><?php echo htmlspecialchars($record['namabank']); ?></td>
+                            <td><?php echo htmlspecialchars($record['ac_penerima']); ?></td>
+                            <td><?php echo htmlspecialchars($record['nama_penerima']); ?></td>
+                            <td><?php echo htmlspecialchars($record['bank_penerima']); ?></td>
+                            <td><?php echo htmlspecialchars($record['PVRNo']); ?></td>
+                            <td><?php echo htmlspecialchars($record['keterangan']); ?></td>
+                            <td><?php echo 'Rp. ' . number_format($record['Nominal'], 2, ',', '.'); ?></td>
+
+                        </tr>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+            </tbody>
+        </table>
     </div>
 </body>
 

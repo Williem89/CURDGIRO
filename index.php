@@ -17,44 +17,45 @@ if (isset($_SESSION['username'])) {
         <title>Welcome</title>
         <style>
             body {
-                font-family: Arial, sans-serif;
-                background-color: #f4f4f4;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                height: 100vh;
-                margin: 0;
-                text-align: center;
+            font-family: Arial, sans-serif;
+            background: url('https://media.tampang.com/tm_images/article/dkkp-37jpgvm0cpkwzq5xjc7s40l.jpg') no-repeat center center fixed;
+            background-size: cover;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            text-align: center;
             }
 
             .container {
-                background-color: white;
-                padding: 40px;
-                border-radius: 8px;
-                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            background-color: rgba(29, 29, 29, 0.8);
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(135, 206, 235, 0.7), 0 0 20px rgba(135, 206, 235, 0.7);
             }
 
             h1 {
-                margin-bottom: 20px;
-                color: #333;
+            margin-bottom: 20px;
+            color: #333;
             }
 
             p {
-                margin-bottom: 30px;
-                color: #666;
+            margin-bottom: 30px;
+            color: #666;
             }
 
             a {
-                display: inline-block;
-                padding: 10px 20px;
-                background-color: #5cb85c;
-                color: white;
-                border-radius: 5px;
-                text-decoration: none;
+            display: inline-block;
+            padding: 10px 20px;
+            background: linear-gradient(to right, #87CEEB, #00BFFF);
+            color: white;
+            border-radius: 5px;
+            text-decoration: none;
             }
 
             a:hover {
-                background-color: #4cae4c;
+            background: linear-gradient(to right, #00BFFF, #87CEEB);
             }
         </style>
     </head>
@@ -90,44 +91,45 @@ if (isset($_SESSION['username'])) {
         <title>Welcome</title>
         <style>
             body {
-                font-family: Arial, sans-serif;
-                background-color: #f4f4f4;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                height: 100vh;
-                margin: 0;
-                text-align: center;
+            font-family: Arial, sans-serif;
+            background-color: #d1D1D1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            text-align: center;
             }
 
             .container {
-                background-color: white;
-                padding: 40px;
-                border-radius: 8px;
-                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            background-color: white;
+            background-opacity: 0.01;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(135, 206, 235, 0.7), 0 0 20px rgba(135, 206, 235, 0.7);
             }
 
             h1 {
-                margin-bottom: 20px;
-                color: #333;
+            margin-bottom: 20px;
+            color: #333;
             }
 
             p {
-                margin-bottom: 30px;
-                color: #666;
+            margin-bottom: 30px;
+            color: #666;
             }
 
             a {
-                display: inline-block;
-                padding: 10px 20px;
-                background-color: #5cb85c;
-                color: white;
-                border-radius: 5px;
-                text-decoration: none;
+            display: inline-block;
+            padding: 10px 20px;
+            background: linear-gradient(to right, #87CEEB, #00BFFF);
+            color: white;
+            border-radius: 5px;
+            text-decoration: none;
             }
 
             a:hover {
-                background-color: #4cae4c;
+            background: linear-gradient(to right, #00BFFF, #87CEEB);
             }
         </style>
     </head>

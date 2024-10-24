@@ -133,6 +133,7 @@ $no = $offset + 1;
 <body>
     <div class="container" style="width: 100%; max-width:2000px">
         <h1 class="text-center">Daftar loa Issued</h1>
+        <button class="btn btn-success mx-2 ms-2" onclick="generatePDF()">Download PDF</button>
         <table class="table table-bordered table-striped">
             <thead>
                 <tr>
@@ -161,7 +162,7 @@ $no = $offset + 1;
                         if ($current_entity !== $loa['nama_entitas']) {
                             // Output subtotal for the previous entity
                             if ($current_entity !== '') {
-                                echo '<tr class="subtotal"><td colspan="10">Subtotal</td><td>' . 'Rp. ' . number_format($subtotal, 2, ',', '.') . '</td></tr>';
+                                echo '<tr class="subtotal"><td colspan="10">Subtotal</td><td>' . '$ ' . number_format($subtotal, 2, ',', '.') . '</td></tr>';
                             }
 
                             // Reset subtotal for new entity
@@ -186,7 +187,7 @@ $no = $offset + 1;
                             <td><?php echo htmlspecialchars($loa['bank_penerima']); ?></td>
                             <td><?php echo htmlspecialchars($loa['PVRNo']); ?></td>
                             <td><?php echo htmlspecialchars($loa['keterangan']); ?></td>
-                            <td><?php echo 'Rp. ' . number_format($loa['Nominal'], 2, ',', '.'); ?></td>
+                            <td><?php echo '$ ' . number_format($loa['Nominal'], 2, ',', '.'); ?></td>
                         </tr>
                     <?php endforeach; ?>
 
@@ -194,14 +195,14 @@ $no = $offset + 1;
                     <?php if ($current_entity !== ''): ?>
                         <tr class="subtotal">
                             <td colspan="10">Subtotal</td>
-                            <td><?php echo 'Rp. ' . number_format($subtotals[$current_entity], 2, ',', '.'); ?></td>
+                            <td><?php echo '$ ' . number_format($subtotals[$current_entity], 2, ',', '.'); ?></td>
                         </tr>
                     <?php endif; ?>
 
                     <!-- Output grand total -->
                     <tr class="grand-total">
                         <td colspan="10">Grand Total</td>
-                        <td><?php echo 'Rp. ' . number_format($grand_total, 2, ',', '.'); ?></td>
+                        <td><?php echo '$ ' . number_format($grand_total, 2, ',', '.'); ?></td>
                     </tr>
                 <?php endif; ?>
             </tbody>
@@ -246,6 +247,86 @@ $no = $offset + 1;
             <a title="isi" href="index.php" class="btn btn-primary">Kembali ke Halaman Utama</a>
         </div>
     </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.13/jspdf.plugin.autotable.min.js"></script>
+    <script>
+        const {
+            jsPDF
+        } = window.jspdf;
+        var reportData = <?php echo json_encode($issued_loa_records); ?>;
+        let entity = {};
+
+        reportData.forEach(function(data) {
+            if (!entity[data.nama_entitas]) {
+                entity[data.nama_entitas] = {
+                    data: [],
+                    subtotal: 0
+                };
+            }
+            entity[data.nama_entitas].data.push(data);
+            entity[data.nama_entitas].subtotal += data.Nominal;
+        });
+        
+
+        function generatePDF() {
+            const {
+                jsPDF
+            } = window.jspdf;
+            const doc = new jsPDF('landscape');
+
+            let startY = 10;
+
+            // Iterate over each entity in the reportData
+            // Iterate over each entity in the reportData
+            Object.keys(entity).forEach(entityName => {
+                doc.setFontSize(12);
+                doc.text(`Entity: ${entityName}`, 10, startY);
+                startY += 10;
+
+                const entries = entity[entityName].data.map(loa => [
+                    new Date(loa.tanggal_jatuh_tempo).toLocaleDateString(), // Tanggal Jatuh Tempo
+                    loa.noloa, // No loa
+                    loa.ac_number, // No Rek Asal
+                    loa.nama_penerima, // Atas Nama
+                    loa.ac_penerima, // Rekening Tujuan
+                    loa.namabank, // Bank Asal
+                    loa.bank_penerima, // Bank Tujuan
+                    loa.PVRNo, // No PVR
+                    loa.keterangan, // Keterangan
+                    (loa.total_nominal !== null ? Number(loa.total_nominal).toLocaleString('id-ID', {
+                        style: 'currency',
+                        currency: 'IDR'
+                    }) : 'Rp0') // Total Nominal
+                ]);
+
+                // Create a table for the entries
+                doc.autoTable({
+                    head: [
+                        ['Tanggal loa', 'No loa', 'No Rek Asal', 'Atas Nama', 'Rekening Tujuan', 'Bank Asal', 'Bank Tujuan', 'No PVR', 'Keterangan', 'Nominal']
+                    ],
+                    body: entries,
+                    startY: startY,
+                    margin: { top: 10, bottom: 10, left: 2, right: 2 },
+                    columnStyles: {
+                        9: {cellWidth: 37} // Nominal
+                    }
+                });
+
+                startY = doc.lastAutoTable.finalY + 10;
+
+                // Add subtotal for the entity
+                doc.setFontSize(10);
+                doc.text(`Subtotal untuk ${entityName}: ${Number(entity[entityName].subtotal).toLocaleString('id-ID', { style: 'currency', currency: 'IDR' })}`, 10, startY);
+                startY += 20;
+
+            });
+
+            // Save the PDF
+            const today = new Date();
+            const formattedDate = `${today.getDate().toString().padStart(2, '0')}-${(today.getMonth() + 1).toString().padStart(2, '0')}-${today.getFullYear()}`; // Format date as DD-MM-YYYY
+            doc.save(`Daftar LOA Issued - ${formattedDate}.pdf`);
+        }
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 

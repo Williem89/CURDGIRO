@@ -112,25 +112,35 @@ if (isset($_POST['export'])) {
             align-items: center;
             padding: 20px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            text-transform: uppercase; /* Menjadikan semua teks uppercase */
+            text-transform: uppercase;
+            /* Menjadikan semua teks uppercase */
             font-family: "Roboto Slab", serif;
             border-radius: 8px;
         }
 
 
         .header a.btn {
-            margin: 20px; /* Jarak antara tombol dan judul */
-            padding: 10px 15px; /* Padding tombol */
-            transition: background-color 0.3s; /* Transisi pada hover */
-            border-radius: 50px; /* Sudut membulat */
-            width: 130px; /* Lebar tombol */
+            margin: 20px;
+            /* Jarak antara tombol dan judul */
+            padding: 10px 15px;
+            /* Padding tombol */
+            transition: background-color 0.3s;
+            /* Transisi pada hover */
+            border-radius: 50px;
+            /* Sudut membulat */
+            width: 130px;
+            /* Lebar tombol */
         }
 
         .header h1 {
-            flex: 0.9; /* Mengambil ruang yang tersedia */
-            text-align: center; /* Memusatkan teks */
-            margin: 0; /* Menghapus margin default */
-            line-height: 1.6; /* Mengatur jarak antar baris */
+            flex: 0.9;
+            /* Mengambil ruang yang tersedia */
+            text-align: center;
+            /* Memusatkan teks */
+            margin: 0;
+            /* Menghapus margin default */
+            line-height: 1.6;
+            /* Mengatur jarak antar baris */
         }
 
 
@@ -182,51 +192,55 @@ if (isset($_POST['export'])) {
 </head>
 
 <body>
-        <div class="header d-flex align-items-center" style="padding-top: 10px;">
-                <a class="btn btn-primary d-flex align-items-center" href="/CurdGiro/dashboard.php#cek" style="margin-right: 20px; transition: background-color 0.3s; border-radius: 50px; width: 130px;">
-                    <i class="bi bi-backspace" style="margin-right: 8px;"></i>
-                    Kembali
-                </a>
-                <h1 class="mb-0" style="line-height: 1; margin: 0;">LAPORAN GIRO OUTSTANDING </h1>
+    <div class="header d-flex align-items-center" style="padding-top: 10px;">
+        <a class="btn btn-primary d-flex align-items-center" href="/CurdGiro/dashboard.php#cek" style="margin-right: 20px; transition: background-color 0.3s; border-radius: 50px; width: 130px;">
+            <i class="bi bi-backspace" style="margin-right: 8px;"></i>
+            Kembali
+        </a>
+        <h1 class="mb-0" style="line-height: 1; margin: 0;">LAPORAN GIRO OUTSTANDING </h1>
+    </div>
+    <form method="POST" class="mb-4" style="box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); border-radius: 12px;">
+        <div class="row align-items-center" style="margin: 10px; width:2750px; ">
+            <div class="col-md-1">
+                <select name="month" class="form-select">
+                    <?php
+                    $current_month = date('n');
+                    for ($m = 1; $m <= 12; $m++) {
+                        echo '<option value="' . $m . '"' . ($current_month == $m ? ' selected' : '') . '>' . date('F', mktime(0, 0, 0, $m, 1)) . '</option>';
+                    }
+                    ?>
+                </select>
             </div>
-            <form method="POST" class="mb-4" style="box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); border-radius: 12px;">
-                <div class="row align-items-center" style="margin: 10px; width:2750px; ">
-                    <div class="col-md-5">
-                        <select name="month" class="form-select">
-                            <?php
-                            $current_month = date('n');
-                            for ($m = 1; $m <= 12; $m++) {
-                                echo '<option value="' . $m . '"' . ($current_month == $m ? ' selected' : '') . '>' . date('F', mktime(0, 0, 0, $m, 1)) . '</option>';
-                            }
-                            ?>
-                        </select>
-                    </div>
-                    <div class="col-md-5">
-                        <select name="year" class="form-select">
-                            <?php
-                            $current_year = date('Y');
-                            for ($y = $current_year - 5; $y <= $current_year + 5; $y++) {
-                                echo '<option value="' . $y . '"' . ($current_year == $y ? ' selected' : '') . '>' . $y . '</option>';
-                            }
-                            ?>
-                        </select>
-                    </div>
-                    <div class="col-md-2">
-                        <button type="submit" class="btn btn-primary mt-2" style="margin:10px; width:150px; margin-left:10px;"><i class="bi bi-collection"></i> Tampilkan</button>
-                    </div>
-                </div>
-            </form>
-
-\
+            <div class="col-md-1">
+                <select name="year" class="form-select">
+                    <?php
+                    $current_year = date('Y');
+                    for ($y = $current_year - 5; $y <= $current_year + 5; $y++) {
+                        echo '<option value="' . $y . '"' . ($current_year == $y ? ' selected' : '') . '>' . $y . '</option>';
+                    }
+                    ?>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary mt-2" style="margin:10px; width:150px; margin-left:10px;"><i class="bi bi-collection"></i> Tampilkan</button>
+            </div>
+        </div>
+    </form>
 
     <div class="container table-container mt-4" id="contentExport" style="width: 100%; max-width:3000px">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2>Daftar Giro yang Jatuh Tempo</h2>
-    <div>
-        <button type="submit" name="export" class="btn btn-success mx-2"><i class="bi bi-file-earmark-spreadsheet-fill"></i> Ekspor ke Excel</button>
-        <button id="pdfexport" class="btn btn-success mx-2 ms-2"><i class="bi bi-filetype-pdf"></i> Ekspor ke PDF</button>
-    </div>
-</div>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Daftar Giro yang Jatuh Tempo</h2>
+            <div>
+                <form id="exportForm" method="POST" style="display: inline;">
+                    <input type="hidden" name="export" value="1">
+                    <button type="button" onclick="document.getElementById('exportForm').submit();" class="btn btn-success mx-2">
+                        <i class="bi bi-file-earmark-spreadsheet-fill"></i> Ekspor ke Excel
+                    </button>
+                </form>
+                </button>
+                <button id="pdfexport" class="btn btn-success mx-2 ms-2"><i class="bi bi-filetype-pdf"></i> Ekspor ke PDF</button>
+            </div>
+        </div>
 
         <div class="table-responsive">
             <table class="table table-bordered">
@@ -347,7 +361,7 @@ if (isset($_POST['export'])) {
             const {
                 jsPDF
             } = window.jspdf;
-            const doc = new jsPDF();
+            const doc = new jsPDF('landscape');
             const bankData = organizeCheques(dueCheques);
 
             let startY = 10;
@@ -358,6 +372,7 @@ if (isset($_POST['export'])) {
                 startY += 5;
 
                 Object.keys(bankData[date]).forEach(bankName => {
+                    doc.setFontSize(10);
                     doc.text(`Bank Name: ${bankName}`, 10, startY);
                     startY += 5;
 
@@ -370,7 +385,10 @@ if (isset($_POST['export'])) {
                         cheque.namabank,
                         cheque.PVRNo,
                         cheque.keterangan,
-                        (cheque.total_nominal !== null ? Number(cheque.total_nominal).toLocaleString('id-ID', { style: 'currency', currency: 'IDR' }) : 'Rp0')
+                        (cheque.total_nominal !== null ? Number(cheque.total_nominal).toLocaleString('id-ID', {
+                            style: 'currency',
+                            currency: 'IDR'
+                        }) : 'Rp0')
                     ]);
 
                     doc.autoTable({

@@ -77,8 +77,8 @@ $no = $offset + 1;
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Daftar cek Issued</title>
     <link rel="icon" type="image/x-icon" href="img/icon.png">
+    <title>Daftar cek Issued</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
@@ -133,6 +133,7 @@ $no = $offset + 1;
 <body>
     <div class="container" style="width: 100%; max-width:2000px">
         <h1 class="text-center">Daftar cek Issued</h1>
+        <button class="btn btn-success mx-2 ms-2" onclick="generatePDF()">Download PDF</button>
         <table class="table table-bordered table-striped">
             <thead>
                 <tr>
@@ -210,35 +211,35 @@ $no = $offset + 1;
         <!-- Pagination Controls -->
         <nav aria-label="Page navigation">
             <div class="d-flex justify-content-center">
-            <ul class="pagination">
-                <?php if ($current_page > 1): ?>
-                <li class="page-item"><a class="page-link" href="?page=1">First</a></li>
-                <li class="page-item"><a class="page-link" href="?page=<?php echo $current_page - 1; ?>">Previous</a></li>
-                <?php endif; ?>
+                <ul class="pagination">
+                    <?php if ($current_page > 1): ?>
+                        <li class="page-item"><a class="page-link" href="?page=1">First</a></li>
+                        <li class="page-item"><a class="page-link" href="?page=<?php echo $current_page - 1; ?>">Previous</a></li>
+                    <?php endif; ?>
 
-                <?php
-                $start_page = max(1, $current_page - 4);
-                $end_page = min($total_pages, $start_page + 9);
+                    <?php
+                    $start_page = max(1, $current_page - 4);
+                    $end_page = min($total_pages, $start_page + 9);
 
-                if ($current_page <= 5) {
-                $end_page = min(10, $total_pages);
-                }
+                    if ($current_page <= 5) {
+                        $end_page = min(10, $total_pages);
+                    }
 
-                if ($current_page > $total_pages - 5) {
-                $start_page = max(1, $total_pages - 9);
-                }
+                    if ($current_page > $total_pages - 5) {
+                        $start_page = max(1, $total_pages - 9);
+                    }
 
-                for ($i = $start_page; $i <= $end_page; $i++): ?>
-                <li class="page-item <?php echo ($i == $current_page) ? 'active' : ''; ?>">
-                    <a class="page-link" href="?page=<?php echo $i; ?>"><?php echo $i; ?></a>
-                </li>
-                <?php endfor; ?>
+                    for ($i = $start_page; $i <= $end_page; $i++): ?>
+                        <li class="page-item <?php echo ($i == $current_page) ? 'active' : ''; ?>">
+                            <a class="page-link" href="?page=<?php echo $i; ?>"><?php echo $i; ?></a>
+                        </li>
+                    <?php endfor; ?>
 
-                <?php if ($current_page < $total_pages): ?>
-                <li class="page-item"><a class="page-link" href="?page=<?php echo $current_page + 1; ?>">Next</a></li>
-                <li class="page-item"><a class="page-link" href="?page=<?php echo $total_pages; ?>">Last</a></li>
-                <?php endif; ?>
-            </ul>
+                    <?php if ($current_page < $total_pages): ?>
+                        <li class="page-item"><a class="page-link" href="?page=<?php echo $current_page + 1; ?>">Next</a></li>
+                        <li class="page-item"><a class="page-link" href="?page=<?php echo $total_pages; ?>">Last</a></li>
+                    <?php endif; ?>
+                </ul>
             </div>
         </nav>
 
@@ -246,6 +247,85 @@ $no = $offset + 1;
             <a title="isi" href="index.php" class="btn btn-primary">Kembali ke Halaman Utama</a>
         </div>
     </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.13/jspdf.plugin.autotable.min.js"></script>
+    <script>
+        const {
+            jsPDF
+        } = window.jspdf;
+        var reportData = <?php echo json_encode($issued_cek_records); ?>;
+        let entity = {};
+
+        reportData.forEach(function(data) {
+            if (!entity[data.nama_entitas]) {
+                entity[data.nama_entitas] = {
+                    data: [],
+                    subtotal: 0
+                };
+            }
+            entity[data.nama_entitas].data.push(data);
+            entity[data.nama_entitas].subtotal += data.Nominal;
+        });
+        
+
+        function generatePDF() {
+            const {
+                jsPDF
+            } = window.jspdf;
+            const doc = new jsPDF('landscape');
+
+            let startY = 10;
+
+            // Iterate over each entity in the reportData
+            Object.keys(entity).forEach(entityName => {
+                doc.setFontSize(12);
+                doc.text(`Entity: ${entityName}`, 10, startY);
+                startY += 10;
+
+                const entries = entity[entityName].data.map(cek => [
+                    new Date(cek.tanggal_jatuh_tempo).toLocaleDateString(), // Tanggal Jatuh Tempo
+                    cek.nocek, // No cek
+                    cek.ac_number, // No Rek Asal
+                    cek.nama_penerima, // Atas Nama
+                    cek.ac_penerima, // Rekening Tujuan
+                    cek.namabank, // Bank Asal
+                    cek.bank_penerima, // Bank Tujuan
+                    cek.PVRNo, // No PVR
+                    cek.keterangan, // Keterangan
+                    (cek.total_nominal !== null ? Number(cek.total_nominal).toLocaleString('id-ID', {
+                        style: 'currency',
+                        currency: 'IDR'
+                    }) : 'Rp0') // Total Nominal
+                ]);
+
+                // Create a table for the entries
+                doc.autoTable({
+                    head: [
+                        ['Tanggal cek', 'No cek', 'No Rek Asal', 'Atas Nama', 'Rekening Tujuan', 'Bank Asal', 'Bank Tujuan', 'No PVR', 'Keterangan', 'Nominal']
+                    ],
+                    body: entries,
+                    startY: startY,
+                    margin: { top: 10, bottom: 10, left: 2, right: 2 },
+                    columnStyles: {
+                        9: {cellWidth: 37} // Nominal
+                    }
+                });
+
+                startY = doc.lastAutoTable.finalY + 10;
+
+                // Add subtotal for the entity
+                doc.setFontSize(10);
+                doc.text(`Subtotal untuk ${entityName}: ${Number(entity[entityName].subtotal).toLocaleString('id-ID', { style: 'currency', currency: 'IDR' })}`, 10, startY);
+                startY += 20;
+
+            });
+
+            // Save the PDF
+            const today = new Date();
+            const formattedDate = `${today.getDate().toString().padStart(2, '0')}-${(today.getMonth() + 1).toString().padStart(2, '0')}-${today.getFullYear()}`; // Format date as DD-MM-YYYY
+            doc.save(`Daftar cek Issued - ${formattedDate}.pdf`);
+        }
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 

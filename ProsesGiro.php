@@ -29,7 +29,8 @@ $sql = "
         dg.tanggal_jatuh_tempo,
         dg.TglVoid,
         dg.image_giro,
-        dg.Keterangan
+        dg.Keterangan,
+        dg.a_void
     FROM 
         detail_giro AS dg
     INNER JOIN 
@@ -57,7 +58,8 @@ $sql = "
         dc.tanggal_jatuh_tempo,
         dc.TglVoid,
         dc.image_giro,
-        dc.Keterangan
+        dc.Keterangan,
+        dc.a_void
     FROM 
         detail_cek AS dc
     INNER JOIN 
@@ -85,7 +87,8 @@ $sql = "
         dl.tanggal_jatuh_tempo,
         dl.TglVoid,
         dl.image_giro,
-        dl.Keterangan
+        dl.Keterangan,
+        dl.a_void
     FROM 
         detail_loa AS dl
     INNER JOIN 
@@ -267,8 +270,7 @@ $conn->close();
             /* Memberikan jarak antar tombol */
         }
 
-        .mfp-iframe-holder .mfp-content
-        {
+        .mfp-iframe-holder .mfp-content {
             max-width: 1400px !important;
         }
     </style>
@@ -293,6 +295,7 @@ $conn->close();
                     <option value="">Pilih Status</option>
                     <option value="Void" <?php echo ($selected_status == 'Void') ? 'selected' : ''; ?>>Void</option>
                     <option value="Pending Issued" <?php echo ($selected_status == 'Pending Issued') ? 'selected' : ''; ?>>Pending Issued</option>
+                    <option value="Pending Post" <?php echo ($selected_status == 'Pending Post') ? 'selected' : ''; ?>>Pending Post</option>
                     <option value="Pending Void" <?php echo ($selected_status == 'Pending Void') ? 'selected' : ''; ?>>Pending Void</option>
                     <option value="Pending Return" <?php echo ($selected_status == 'Pending Return') ? 'selected' : ''; ?>>Pending Return</option>
                     <option value="Issued" <?php echo ($selected_status == 'Issued') ? 'selected' : ''; ?>>Issued</option>
@@ -350,7 +353,7 @@ $conn->close();
                             <td><?php echo number_format($giro['total_nominal'], 2); ?></td>
                             <td>
                                 <button class="btn btn-sm btn-primary cair-btn"
-                                    <?php echo ($giro['status'] == "Void" || $giro['status'] == "Pending Issued") ? "hidden" : ""; ?>
+                                    <?php echo ($giro['status'] == "Void" || $giro['status'] == "Pending Issued" || $giro['status'] == "Pending Post" || $giro['status'] == "Pending Void" || $giro['status'] == "Pending Return") ? "hidden" : ""; ?>
                                     data-toggle="tooltip" data-placement="top" title="Post"
                                     data-nogiro="<?php echo htmlspecialchars($giro['nomor']); ?>"
                                     data-type="<?php echo htmlspecialchars($giro['jenis']); ?>"
@@ -359,7 +362,7 @@ $conn->close();
                                 </button>
 
                                 <button class="btn btn-sm btn-danger void-btn"
-                                    <?php echo ($giro['status'] == "Void" || $giro['status'] == "Pending Issued") ? "hidden" : ""; ?>
+                                    <?php echo ($giro['status'] == "Void" || $giro['status'] == "Pending Issued" || $giro['status'] == "Pending Post" || $giro['status'] == "Pending Void" || $giro['status'] == "Pending Return") ? "hidden" : ""; ?>
                                     data-toggle="tooltip" data-placement="top" title="Void"
                                     data-nogiro="<?php echo htmlspecialchars($giro['nomor']); ?>"
                                     data-type="<?php echo htmlspecialchars($giro['jenis']); ?>"
@@ -368,7 +371,7 @@ $conn->close();
                                 </button>
 
                                 <button class="btn btn-sm btn-info return-btn"
-                                    <?php echo ($giro['status'] == "Issued" || $giro['status'] == "Pending Issued") ? "hidden" : ""; ?>
+                                    <?php echo ($giro['status'] == "Issued" || $giro['status'] == "Pending Issued" || $giro['status'] == "Pending Post" || $giro['status'] == "Pending Void" || $giro['status'] == "Pending Return") ? "hidden" : ""; ?>
                                     data-toggle="tooltip" data-placement="top" title="Return"
                                     data-nogiro="<?php echo htmlspecialchars($giro['nomor']); ?>"
                                     data-type="<?php echo htmlspecialchars($giro['jenis']); ?>"
@@ -377,8 +380,43 @@ $conn->close();
                                 </button>
 
                                 <?php if ($_SESSION['UsrLevel'] == 2): ?>
-                                    <button class="btn btn-sm btn-success aprv-btn" <?php echo $giro['status'] != "Pending Issued" ? "hidden" : ""; ?>
-                                        data-toggle="tooltip" data-placement="top" title="Approve"
+                                    <button class="btn btn-sm btn-success aprv-btn-issued" <?php echo $giro['status'] != "Pending Issued" ? "hidden" : ""; ?>
+                                        data-action="accIssued"
+                                        data-toggle="tooltip" data-placement="top" title="Approve Issued"
+                                        data-nogiro="<?php echo htmlspecialchars($giro['nomor']); ?>"
+                                        data-type="<?php echo htmlspecialchars($giro['jenis']); ?>"
+                                        data-entitas="<?php echo htmlspecialchars($giro['nama_entitas']); ?>">
+                                        <i class="bi bi-check-circle"></i>
+                                    </button>
+                                <?php endif; ?>
+
+                                <?php if ($_SESSION['UsrLevel'] == 2): ?>
+                                    <button class="btn btn-sm btn-success aprv-btn-void" <?php echo $giro['status'] != "Pending Void" ? "hidden" : ""; ?>
+                                        data-alasan="<?php echo htmlspecialchars($giro['a_void']); ?>"
+                                        data-action="accVoid"
+                                        data-toggle="tooltip" data-placement="top" title="Approve Void"
+                                        data-nogiro="<?php echo htmlspecialchars($giro['nomor']); ?>"
+                                        data-type="<?php echo htmlspecialchars($giro['jenis']); ?>"
+                                        data-entitas="<?php echo htmlspecialchars($giro['nama_entitas']); ?>">
+                                        <i class="bi bi-check-circle"></i>
+                                    </button>
+                                <?php endif; ?>
+
+                                <?php if ($_SESSION['UsrLevel'] == 2): ?>
+                                    <button class="btn btn-sm btn-success aprv-btn-return" <?php echo $giro['status'] != "Pending Return" ? "hidden" : ""; ?>
+                                        data-action="accReturn"
+                                        data-toggle="tooltip" data-placement="top" title="Approve Return"
+                                        data-nogiro="<?php echo htmlspecialchars($giro['nomor']); ?>"
+                                        data-type="<?php echo htmlspecialchars($giro['jenis']); ?>"
+                                        data-entitas="<?php echo htmlspecialchars($giro['nama_entitas']); ?>">
+                                        <i class="bi bi-check-circle"></i>
+                                    </button>
+                                <?php endif; ?>
+
+                                <?php if ($_SESSION['UsrLevel'] == 2): ?>
+                                    <button class="btn btn-sm btn-success aprv-btn-post" <?php echo $giro['status'] != "Pending Post" ? "hidden" : ""; ?>
+                                        data-action="accPost"
+                                        data-toggle="tooltip" data-placement="top" title="Approve Post"
                                         data-nogiro="<?php echo htmlspecialchars($giro['nomor']); ?>"
                                         data-type="<?php echo htmlspecialchars($giro['jenis']); ?>"
                                         data-entitas="<?php echo htmlspecialchars($giro['nama_entitas']); ?>">
@@ -493,12 +531,17 @@ $conn->close();
                         const nogiro = button.getAttribute('data-nogiro');
                         const entitas = button.getAttribute('data-entitas');
                         const jenis = button.getAttribute('data-type');
+                        // const aprvAction = button.getAttribute('data-action');
+                        const alasanVoid = button.getAttribute('data-alasan');
 
                         console.log(nogiro, entitas, jenis);
+                        console.log(action);
 
-                        const {value: formValues} = await Swal.fire({
-                            title: action === 'cair' ? "Tanggal Cair" : action === 'return' ? "Tanggal Return" : action === 'acc' ? "Konfirmasi Approve" : action === 'add' ? "Tambah Lampiran" : "Tanggal Void",
-                            html: ((action !== 'void' && action !== 'add' && action !== 'acc') ? `<div class="form-group">
+                        const {
+                            value: formValues
+                        } = await Swal.fire({
+                            title: action === 'cair' ? "Tanggal Cair" : action === 'return' ? "Tanggal Return" : action === 'acc' ? "Konfirmasi Approve" : action === 'add' ? "Tambah Lampiran" : action === 'void' ? "Tanggal Void" : "Are You Sure?",
+                            html: ((action == "cair") ? `<div class="form-group">
                                 <label for="swal-input1" class="form-label">Tanggal</label>
                                 <input id="swal-input1" class="form-control" type="date" max="<?php echo date('Y-m-d'); ?>">
                                 </div>` : '') +
@@ -513,22 +556,29 @@ $conn->close();
                                 ((action === 'return' || action === 'add') ? `<div class="form-group mt-3">
                                             <label for="swal-input3" class="form-label">File lampiran</label>
                                             <input id="swal-input3" class="form-control" type="file">
-                                            </div>` : '')
-                                ,
+                                            </div>` : '') +
+                                (action === 'apv' ? `Apakah Anda yakin ingin approve ${jenis} ${nogiro} dari ${entitas}?
+                                            <br><br>
+                                            Alasan : ${alasanVoid}
+                                            ` : ''),
                             focusConfirm: false,
                             showCancelButton: true,
                             confirmButtonText: 'Yes',
                             cancelButtonText: 'No',
                             preConfirm: () => {
-                                const date = action !== 'add' && action !== 'acc' ? document.getElementById('swal-input1').value : '<?php echo date('Y-m-d'); ?>';
-                                if (action !== 'add' && action !== 'acc' && !date) {
+                                const date = action == 'cair' ? document.getElementById('swal-input1').value : '<?php echo date('Y-m-d'); ?>';
+
+                                // Check if fields are required based on the action
+                                if (action !== 'cair' && !date) {
                                     Swal.showValidationMessage('Fields are required');
                                 }
+
                                 return {
                                     date: date,
-                                    reason: action === 'void' ? document.getElementById('swal-input2').value : '',
+                                    reason: (action === 'void') ? document.getElementById('swal-input2').value : '',
                                     file: (action === 'return' || action === 'add') ? document.getElementById('swal-input3').files[0] : ''
                                 };
+
                             }
                         });
 
@@ -552,20 +602,7 @@ $conn->close();
                                 .then(data => {
                                     if (data.success) {
                                         Swal.fire({
-                                            title: 
-                                            action === 'cair' ?
-                                                (jenis === 'Giro' ? "Giro Berhasil di Posting" : 
-                                                jenis === 'Cek' ? "Cek Berhasil di Posting" : "Loa Berhasil di Posting") :
-                                            action === 'return' ?
-                                                (jenis === 'Giro' ? "Giro Sudah tercatat kembali ke Bank" : 
-                                                jenis === 'Cek' ? "Cek Sudah tercatat kembali ke Bank" : "Loa Sudah tercatat kembali ke Bank") :
-                                            action === 'acc' ?
-                                                (jenis === 'Giro' ? "Giro berhasil di approve" : 
-                                                jenis === 'Cek' ? "Cek berhasil di approve" : "Loa berhasil di approve") :
-                                            action === 'add' ? 
-                                                "Lampiran Berhasil diupload!" :
-                                                (jenis === 'Giro' ? "Giro berhasil di void" : 
-                                                jenis === 'Cek' ? "Cek berhasil di void" : "Loa berhasil di void"),
+                                            title: "Data berhasil diproses",
                                             icon: 'success'
                                         }).then(() => {
                                             location.reload();
@@ -590,11 +627,19 @@ $conn->close();
                     });
                 });
             }
-            handleButtonClick('.aprv-btn', 'acc');
+            handleButtonClick('.aprv-btn-issued', 'acc');
+            // handleButtonClick('.aprv-btn-post', 'app');
+            handleButtonClick('.aprv-btn-void', 'apv');
+            // handleButtonClick('.aprv-btn-return', 'apr');
             handleButtonClick('.cair-btn', 'cair');
             handleButtonClick('.void-btn', 'void');
             handleButtonClick('.return-btn', 'return');
             handleButtonClick('.add-attachment-btn', 'add');
+         
+
+
+
+
         </script>
     </div>
 </body>

@@ -9,18 +9,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $password = password_hash(filter_input(INPUT_POST, 'password', FILTER_SANITIZE_STRING), PASSWORD_BCRYPT);
     $full_name = filter_input(INPUT_POST, 'full_name', FILTER_SANITIZE_STRING);
     $UsrLevel = filter_input(INPUT_POST, 'UsrLevel', FILTER_SANITIZE_STRING) ?? 1; // Default to 1 if not provided
-    $status = filter_input(INPUT_POST, 'status', FILTER_SANITIZE_STRING);
+    $status='inactive';
 
     // Prepare statement to insert into the users table
     $stmt = $conn->prepare("INSERT INTO users (username, password, full_name, UsrLevel, status) VALUES (?, ?, ?, ?, ?)");
     
     if ($stmt) {
         // Bind parameters
-        $stmt->bind_param("sssss", $username, $password, $full_name, $UsrLevel, $status);
-        
+        $stmt->bind_param("sssis", $username, $password, $full_name, $UsrLevel, $status);
         // Execute statement
         if ($stmt->execute()) {
-            echo "<script>alert('User registered successfully!'); window.location.href='register.html';</script>";
+            echo "<script>alert('User registered successfully!'); window.location.href='login.html';</script>";
         } else {
             echo "<script>alert('Error: " . $stmt->error . "');</script>";
         }
