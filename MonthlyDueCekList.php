@@ -193,7 +193,7 @@ if (isset($_POST['export'])) {
 
 <body>
     <div class="header d-flex align-items-center" style="padding-top: 10px;">
-        <a class="btn btn-primary d-flex align-items-center" href="/Curdcek/dashboard.php" style="margin-right: 20px; transition: background-color 0.3s; border-radius: 50px; width: 130px;">
+        <a class="btn btn-primary d-flex align-items-center" href="/CurdGiro/dashboard.php#cek" style="margin-right: 20px; transition: background-color 0.3s; border-radius: 50px; width: 130px;">
             <i class="bi bi-backspace" style="margin-right: 8px;"></i>
             Kembali
         </a>
@@ -317,7 +317,7 @@ if (isset($_POST['export'])) {
         </div>
 
     </div>
-    <a href="dashboard.php" class="btn-back">Kembali</a>
+   
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"

@@ -62,6 +62,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // Check if a file was uploaded
         if (!empty($_FILES["foto_giro"]["name"])) {
+            // Validate file type
+            $fileType = strtolower(pathinfo($targetFilePath, PATHINFO_EXTENSION));
+            $allowedTypes = ['jpg', 'jpeg', 'png', 'gif', 'pdf'];
+            if (!in_array($fileType, $allowedTypes)) {
+                throw new Exception("Error: Only images and PDF files are allowed.");
+            }
+
             // Move the uploaded file to the target directory
             if (!move_uploaded_file($_FILES["foto_giro"]["tmp_name"], $targetFilePath)) {
                 throw new Exception("Error uploading file.");
@@ -69,8 +76,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             $fileName = null; // No file uploaded
         }
-
-    } else {
+    }
         try {
             // Prepare statement to insert into the detail_loa table
             $stmt = $conn->prepare("INSERT INTO detail_loa (noloa, tanggal_loa, tanggal_jatuh_tempo, nominal, 
@@ -125,7 +131,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (isset($update_stmt))
                 $update_stmt->close();
         }
-    }
 }
 
 // Close the connection
@@ -340,8 +345,8 @@ $conn->close();
         <label for="Keterangan">Keterangan:</label>
         <input type="text" id="Keterangan" name="Keterangan"><br><br>
 
-        <label for="Keterangan">Foto Giro:</label>
-        <input type="file" id="Keterangan" name="foto_giro"><br><br>
+        <label for="Keterangan">Foto Loa:</label>
+        <input type="file" id="Keterangan" name="foto_giro" accept=".jpg,.jpeg,.png,.gif,.pdf"><br><br>
 
         <input type="submit" value="Submit">
         <a href="dashboard.php" class="back-button">Kembali</a>

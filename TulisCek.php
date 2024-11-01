@@ -60,71 +60,76 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             mkdir($targetDir, 0777, true);
         }
 
-        // Check if a file was upcekded
+        // Check if a file was uploaded
         if (!empty($_FILES["foto_giro"]["name"])) {
-            // Move the upcekded file to the target directory
+            // Validate file type
+            $fileType = strtolower(pathinfo($targetFilePath, PATHINFO_EXTENSION));
+            $allowedTypes = ['jpg', 'jpeg', 'png', 'gif', 'pdf'];
+            if (!in_array($fileType, $allowedTypes)) {
+                throw new Exception("Error: Only images and PDF files are allowed.");
+            }
+
+            // Move the uploaded file to the target directory
             if (!move_uploaded_file($_FILES["foto_giro"]["tmp_name"], $targetFilePath)) {
                 throw new Exception("Error uploading file.");
             }
         } else {
-            $fileName = null; // No file upcekded
+            $fileName = null; // No file uploaded
         }
-
-    } else {
-        try {
-            // Prepare statement to insert into the detail_cek table
-            $stmt = $conn->prepare("INSERT INTO detail_cek (nocek, tanggal_cek, tanggal_jatuh_tempo, nominal, 
+    }
+    try {
+        // Prepare statement to insert into the detail_cek table
+        $stmt = $conn->prepare("INSERT INTO detail_cek (nocek, tanggal_cek, tanggal_jatuh_tempo, nominal, 
                 nama_penerima, ac_penerima, bank_penerima, Keterangan, PVRNo, Statcek, image_giro, created_by, created_at) 
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
 
-            // Check if statement preparation was successful
-            if (!$stmt) {
-                throw new Exception("Error preparing statement: " . $conn->error);
-            }
-
-            // Bind parameters
-            $statcek = 'Pending';  // Set Statcek to 'Issued'
-
-            $stmt->bind_param(
-                "ssssssssssss",
-                $selected_cek_number,
-                $tanggal_cek,
-                $tanggal_jatuh_tempo,
-                $nominal,
-                $nama_penerima,
-                $ac_penerima,
-                $bank_penerima,
-                $Keterangan,
-                $PVRNo,
-                $statcek,
-                $fileName,
-                $createdBy
-            );
-
-            // Execute the statement
-            if (!$stmt->execute()) {
-                throw new Exception("Error executing statement: " . $stmt->error);
-            }
-
-            // Update status of the selected cek number to 'Used'
-            $update_stmt = $conn->prepare("UPDATE data_cek SET statuscek = 'Used' WHERE nocek = ?");
-            $update_stmt->bind_param("s", $selected_cek_number);
-            $update_stmt->execute();
-
-            // Commit transaction
-            $conn->commit();
-            $message = 'New record created successfully and status updated to Used.';
-        } catch (Exception $e) {
-            $conn->rollback();
-            error_log("Transaction failed: " . $e->getMessage());
-            $message = 'An error occurred. Please try again.';
-        } finally {
-            // Close the statements
-            if (isset($stmt))
-                $stmt->close();
-            if (isset($update_stmt))
-                $update_stmt->close();
+        // Check if statement preparation was successful
+        if (!$stmt) {
+            throw new Exception("Error preparing statement: " . $conn->error);
         }
+
+        // Bind parameters
+        $statcek = 'Pending';  // Set Statcek to 'Issued'
+
+        $stmt->bind_param(
+            "ssssssssssss",
+            $selected_cek_number,
+            $tanggal_cek,
+            $tanggal_jatuh_tempo,
+            $nominal,
+            $nama_penerima,
+            $ac_penerima,
+            $bank_penerima,
+            $Keterangan,
+            $PVRNo,
+            $statcek,
+            $fileName,
+            $createdBy
+        );
+
+        // Execute the statement
+        if (!$stmt->execute()) {
+            throw new Exception("Error executing statement: " . $stmt->error);
+        }
+
+        // Update status of the selected cek number to 'Used'
+        $update_stmt = $conn->prepare("UPDATE data_cek SET statuscek = 'Used' WHERE nocek = ?");
+        $update_stmt->bind_param("s", $selected_cek_number);
+        $update_stmt->execute();
+
+        // Commit transaction
+        $conn->commit();
+        $message = 'New record created successfully and status updated to Used.';
+    } catch (Exception $e) {
+        $conn->rollback();
+        error_log("Transaction failed: " . $e->getMessage());
+        $message = 'An error occurred. Please try again.';
+    } finally {
+        // Close the statements
+        if (isset($stmt))
+            $stmt->close();
+        if (isset($update_stmt))
+            $update_stmt->close();
     }
 }
 
@@ -340,8 +345,8 @@ $conn->close();
         <label for="Keterangan">Keterangan:</label>
         <input type="text" id="Keterangan" name="Keterangan"><br><br>
 
-        <label for="Keterangan">Foto Giro:</label>
-        <input type="file" id="Keterangan" name="foto_giro"><br><br>
+        <label for="Keterangan">Foto Cek:</label>
+        <input type="file" id="Keterangan" name="foto_giro" accept=".jpg,.jpeg,.png,.gif,.pdf"><br><br>
 
         <input type="submit" value="Submit">
         <a href="dashboard.php" class="back-button">Kembali</a>

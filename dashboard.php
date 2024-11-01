@@ -453,7 +453,6 @@
                 <div id="listGiroCek" class="tab-pane fade">
                     <!-- Combined Table for Giro and Cek -->
                     <h2 class="mt-5">Outstanding Vs Saldo</h2>
-                    <p>Per tanggal : <?php echo date('d-m-Y'); ?></p>
                     <form method="post" class="mb-4">    <?php 
                     include 'outstanding.php';
                     ?>

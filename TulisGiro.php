@@ -23,7 +23,7 @@ while ($fetch_stmt->fetch()) {
 $fetch_stmt->close();
 
 // Fetch all customers from the database
-$customer_stmt = $conn->prepare("SELECT no_cust, ac_cust, bank_cust, nama_cust FROM list_customer");
+$customer_stmt = $conn->prepare("SELECT no_cust, ac_cust, bank_cust, nama_cust FROM list_customer ORDER BY nama_cust");
 $customer_stmt->execute();
 $customer_stmt->bind_result($no_cust, $ac_cust, $bank_cust, $nama_cust);
 
@@ -45,8 +45,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $PVRNo = filter_input(INPUT_POST, 'PVRNo', FILTER_SANITIZE_STRING);
 
     // Validate inputs
-    if (empty($selected_giro_number) || empty($no_cust) || empty($tanggal_giro) || empty($tanggal_jatuh_tempo) || 
-        empty($nominal) || empty($customer_data[$no_cust]['nama_cust'])) {
+    if (
+        empty($selected_giro_number) || empty($no_cust) || empty($tanggal_giro) || empty($tanggal_jatuh_tempo) ||
+        empty($nominal) || empty($customer_data[$no_cust]['nama_cust'])
+    ) {
         $message = 'Error: All fields are required.';
     } else if ($nominal <= 0) {
         $message = 'Error: Nominal must be greater than zero.';
@@ -56,7 +58,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Define the target directory and file name
         $targetDir = "imggiro/";
         $fileName = basename($_FILES["foto_giro"]["name"]);
-        
+
         // Generate a random string to append to the filename
         $randomString = bin2hex(random_bytes(8));
         $fileName = $randomString . "_" . $fileName;
@@ -70,6 +72,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // Check if a file was uploaded
         if (!empty($_FILES["foto_giro"]["name"])) {
+            // Validate file type
+            $fileType = strtolower(pathinfo($targetFilePath, PATHINFO_EXTENSION));
+            $allowedTypes = ['jpg', 'jpeg', 'png', 'gif', 'pdf'];
+            if (!in_array($fileType, $allowedTypes)) {
+                throw new Exception("Error: Only images and PDF files are allowed.");
+            }
+
             // Move the uploaded file to the target directory
             if (!move_uploaded_file($_FILES["foto_giro"]["tmp_name"], $targetFilePath)) {
                 throw new Exception("Error uploading file.");
@@ -77,64 +86,63 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             $fileName = null; // No file uploaded
         }
-
-    } else {
-        try {
-            // Prepare statement to insert into the detail_giro table
-            $stmt = $conn->prepare("INSERT INTO detail_giro (nogiro, tanggal_giro, tanggal_jatuh_tempo, nominal, 
+    }
+    try {
+        // Prepare statement to insert into the detail_giro table
+        $stmt = $conn->prepare("INSERT INTO detail_giro (nogiro, tanggal_giro, tanggal_jatuh_tempo, nominal, 
                 nama_penerima, ac_penerima, bank_penerima, Keterangan, PVRNo, StatGiro, image_giro, created_by, created_at) 
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
 
-            // Check if statement preparation was successful
-            if (!$stmt) {
-                throw new Exception("Error preparing statement: " . $conn->error);
-            }
-
-            // Get customer details
-            $ac_penerima = $customer_data[$no_cust]['ac_number'];
-            $bank_penerima = $customer_data[$no_cust]['bank_cust'];
-            $nama_penerima = $customer_data[$no_cust]['nama_cust'];
-
-            // Bind parameters
-            $statGiro = 'Pending Issued';  // Set StatGiro to 'Issued'
-
-            $stmt->bind_param("ssssssssssss", 
-                $selected_giro_number, 
-                $tanggal_giro, 
-                $tanggal_jatuh_tempo, 
-                $nominal, 
-                $nama_penerima, 
-                $ac_penerima, 
-                $bank_penerima, 
-                $Keterangan,
-                $PVRNo, 
-                $statGiro,
-                $fileName,
-                $createdBy
-            );
-
-            // Execute the statement
-            if (!$stmt->execute()) {
-                throw new Exception("Error executing statement: " . $stmt->error);
-            }
-
-            // Update status of the selected giro number to 'Used'
-            $update_stmt = $conn->prepare("UPDATE data_giro SET statusgiro = 'Used' WHERE nogiro = ?");
-            $update_stmt->bind_param("s", $selected_giro_number);
-            $update_stmt->execute();
-
-            // Commit transaction
-            $conn->commit();
-            $message = 'New record created successfully and status updated to Used.';
-        } catch (Exception $e) {
-            $conn->rollback();
-            error_log("Transaction failed: " . $e->getMessage());
-            $message = 'An error occurred. Please try again.';
-        } finally {
-            // Close the statements
-            if (isset($stmt)) $stmt->close();
-            if (isset($update_stmt)) $update_stmt->close();
+        // Check if statement preparation was successful
+        if (!$stmt) {
+            throw new Exception("Error preparing statement: " . $conn->error);
         }
+
+        // Get customer details
+        $ac_penerima = $customer_data[$no_cust]['ac_number'];
+        $bank_penerima = $customer_data[$no_cust]['bank_cust'];
+        $nama_penerima = $customer_data[$no_cust]['nama_cust'];
+
+        // Bind parameters
+        $statGiro = 'Pending Issued';  // Set StatGiro to 'Issued'
+
+        $stmt->bind_param(
+            "ssssssssssss",
+            $selected_giro_number,
+            $tanggal_giro,
+            $tanggal_jatuh_tempo,
+            $nominal,
+            $nama_penerima,
+            $ac_penerima,
+            $bank_penerima,
+            $Keterangan,
+            $PVRNo,
+            $statGiro,
+            $fileName,
+            $createdBy
+        );
+
+        // Execute the statement
+        if (!$stmt->execute()) {
+            throw new Exception("Error executing statement: " . $stmt->error);
+        }
+
+        // Update status of the selected giro number to 'Used'
+        $update_stmt = $conn->prepare("UPDATE data_giro SET statusgiro = 'Used' WHERE nogiro = ?");
+        $update_stmt->bind_param("s", $selected_giro_number);
+        $update_stmt->execute();
+
+        // Commit transaction
+        $conn->commit();
+        $message = 'New record created successfully and status updated to Used.';
+    } catch (Exception $e) {
+        $conn->rollback();
+        error_log("Transaction failed: " . $e->getMessage());
+        $message = 'An error occurred. Please try again.';
+    } finally {
+        // Close the statements
+        if (isset($stmt)) $stmt->close();
+        if (isset($update_stmt)) $update_stmt->close();
     }
 }
 
@@ -144,6 +152,7 @@ $conn->close();
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -158,10 +167,12 @@ $conn->close();
             margin: 0;
             padding: 20px;
         }
+
         h1 {
             text-align: center;
             color: #343a40;
         }
+
         form {
             background: white;
             border-radius: 8px;
@@ -170,18 +181,25 @@ $conn->close();
             max-width: 500px;
             margin: auto;
         }
+
         label {
             display: block;
             margin: 10px 0 5px;
             color: #495057;
         }
-        input[type="text"], input[type="date"], input[type="number"], select {
+
+        input[type="text"],
+        input[type="date"],
+        input[type="number"],
+        select {
             width: calc(100% - 20px);
             padding: 10px;
             border: 1px solid #ced4da;
             border-radius: 4px;
         }
-        input[type="submit"], .back-button {
+
+        input[type="submit"],
+        .back-button {
             background-color: #007bff;
             color: white;
             padding: 10px;
@@ -193,20 +211,27 @@ $conn->close();
             text-align: center;
             width: calc(100% - 20px);
         }
-        input[type="submit"]:hover, .back-button:hover {
+
+        input[type="submit"]:hover,
+        .back-button:hover {
             background-color: #0056b3;
         }
+
         .back-button {
             background-color: #6c757d;
             margin-top: 20px;
         }
+
         .message {
             text-align: center;
             margin: 10px 0;
-            color: red; /* Error message color */
+            color: red;
+            /* Error message color */
         }
+
         .success-message {
-            color: green; /* Success message color */
+            color: green;
+            /* Success message color */
         }
     </style>
     <script>
@@ -265,7 +290,7 @@ $conn->close();
                 const optionText = options[i].textContent.toLowerCase();
                 const isVisible = optionText.includes(input);
                 options[i].style.display = isVisible ? 'block' : 'none';
-                
+
                 if (isVisible) {
                     hasOptions = true;
                 }
@@ -281,6 +306,7 @@ $conn->close();
         }
     </script>
 </head>
+
 <body>
     <h1>Issued Giro</h1>
     <?php if ($message): ?>
@@ -357,11 +383,12 @@ $conn->close();
         <label for="Keterangan">Keterangan:</label>
         <input type="text" id="Keterangan" name="Keterangan"><br><br>
 
-        <label for="Keterangan">Foto Giro:</label>
-        <input type="file" id="Keterangan" name="foto_giro"><br><br>
+        <label for="foto_giro">Foto Giro:</label>
+        <input type="file" id="foto_giro" name="foto_giro" accept=".jpg,.jpeg,.png,.gif,.pdf"><br><br>
 
         <input type="submit" value="Submit">
         <a href="dashboard.php" class="back-button">Kembali</a>
     </form>
 </body>
+
 </html>

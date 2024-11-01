@@ -48,7 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES["file"])) {
             echo json_encode(['success' => false, 'message' => 'Error uploading file']);
         }
     }
-}   
+}
 
 // Check if required parameters are set
 
@@ -57,10 +57,13 @@ error_log("POST data: " . htmlspecialchars(json_encode($_POST), ENT_QUOTES, 'UTF
 if (isset($_POST['nogiro'], $_POST["action"], $_POST["jenis"])) {
     $data = $_POST;
     $nogiro = $data['nogiro'];
-    $tanggal = $data['tanggal'];
-    $statgiro = $data['statgiro'];
+    $grno = isset($data['grNo']) ? $data['grNo'] : null;
+    $keterangan = isset($data['keterangan']) ? $data['keterangan'] : null;
+    $tanggal = isset($data['tanggal']) ? $data['tanggal'] : null;
+    $statgiro = isset($data['statgiro']) ? $data['statgiro'] : null;
     $action = $data['action'];
-   // $alasan = $data['alasan'];
+    
+    // $alasan = $data['alasan'];
     $jenis = $data['jenis'];
 
     // // Log the 'jenis' data
@@ -82,17 +85,20 @@ if (isset($_POST['nogiro'], $_POST["action"], $_POST["jenis"])) {
                 case "acc":
                     $sql = "UPDATE detail_giro SET StatGiro = 'Issued', ApproveBy = ?, ApproveAt = NOW() WHERE nogiro = ?";
                     break;
-                // case "app":
-                //     $sql = "UPDATE detail_giro SET StatGiro = 'Posted', ApprovePostBy = ?, ApprovePostAt = NOW() WHERE nogiro = ?";
-                //     break;
+                    // case "app":
+                    //     $sql = "UPDATE detail_giro SET StatGiro = 'Posted', ApprovePostBy = ?, ApprovePostAt = NOW() WHERE nogiro = ?";
+                    //     break;
                 case "apv":
                     $sql = "UPDATE detail_giro SET StatGiro = 'Void', ApproveVoidBy = ?, ApproveVoidAt = NOW() WHERE nogiro = ?";
                     break;
-                // case "apr":
-                //     $sql = "UPDATE detail_giro SET StatGiro = 'Return', ApproveReturnBy = ?, ApproveReturnAt = NOW() WHERE nogiro = ?";
-                //     break;
+                    // case "apr":
+                    //     $sql = "UPDATE detail_giro SET StatGiro = 'Return', ApproveReturnBy = ?, ApproveReturnAt = NOW() WHERE nogiro = ?";
+                    //     break;
                 case "add":
                     $sql = "UPDATE detail_giro SET image_giro = ? WHERE nogiro = ?";
+                    break;
+                case "edit":
+                    $sql = "UPDATE detail_giro SET PVRNo = ? , Keterangan = ? where nogiro = ?";
                     break;
                 default:
                     echo json_encode(['success' => false, 'message' => 'Invalid action']);
@@ -113,17 +119,19 @@ if (isset($_POST['nogiro'], $_POST["action"], $_POST["jenis"])) {
                 case "acc":
                     $sql = "UPDATE detail_cek SET StatCek = 'Issued', ApproveBy = ?, ApproveAt = NOW() WHERE nocek = ?";
                     break;
-                // case "app":
-                //     $sql = "UPDATE detail_cek SET StatCek = 'Posted', ApprovePostBy = ?, ApprovePostAt = NOW() WHERE nocek = ?";
-                //     break;
+                    // case "app":
+                    //     $sql = "UPDATE detail_cek SET StatCek = 'Posted', ApprovePostBy = ?, ApprovePostAt = NOW() WHERE nocek = ?";
+                    //     break;
                 case "apv":
                     $sql = "UPDATE detail_cek SET StatCek = 'Void', ApproveVoidBy = ?, ApproveVoidAt = NOW() WHERE nocek = ?";
                     break;
-                // case "apr":
-                //     $sql = "UPDATE detail_cek SET StatCek = 'Return', ApproveReturnBy = ?, ApproveReturnAt = NOW() WHERE nocek = ?";
-                //     break;
+                    // case "apr":
+                    //     $sql = "UPDATE detail_cek SET StatCek = 'Return', ApproveReturnBy = ?, ApproveReturnAt = NOW() WHERE nocek = ?";
+                    //     break;
                 case "add":
                     $sql = "UPDATE detail_cek SET image_giro = ? WHERE nocek = ?";
+                case "edit":
+                    $sql = "UPDATE cek SET PVRNo = ? , Keterangan = ? where nogiro = ?";
                     break;
                 default:
                     echo json_encode(['success' => false, 'message' => 'Invalid action']);
@@ -144,17 +152,19 @@ if (isset($_POST['nogiro'], $_POST["action"], $_POST["jenis"])) {
                 case "acc":
                     $sql = "UPDATE detail_loa SET Statloa = 'Issued', ApproveBy = ?, ApproveAt =NOW() WHERE noloa    = ?";
                     break;
-                // case "app":
-                //     $sql = "UPDATE detail_loa SET Statloa = 'Posted', ApprovePostBy = ?, ApprovePostAt = NOW() WHERE noloa   = ?";
-                //     break;
+                    // case "app":
+                    //     $sql = "UPDATE detail_loa SET Statloa = 'Posted', ApprovePostBy = ?, ApprovePostAt = NOW() WHERE noloa   = ?";
+                    //     break;
                 case "apv":
                     $sql = "UPDATE detail_loa SET Statloa = 'Void', ApproveVoidBy = ?, ApproveVoidAt = NOW() WHERE noloa = ?";
                     break;
-                // case "apr":
-                //     $sql = "UPDATE detail_loa SET Statloa = 'Return', ApproveReturnBy = ?, ApproveReturnAt = NOW() WHERE noloa   = ?";
-                //     break;
+                    // case "apr":
+                    //     $sql = "UPDATE detail_loa SET Statloa = 'Return', ApproveReturnBy = ?, ApproveReturnAt = NOW() WHERE noloa   = ?";
+                    //     break;
                 case "add":
                     $sql = "UPDATE detail_loa SET image_giro = ? WHERE noloa     = ?";
+                case "edit":
+                    $sql = "UPDATE detail_loa SET PVRNo = ? , Keterangan = ? where nogiro = ?";
                     break;
                 default:
                     echo json_encode(['success' => false, 'message' => 'Invalid action']);
@@ -185,12 +195,14 @@ if (isset($_POST['nogiro'], $_POST["action"], $_POST["jenis"])) {
         $stmt->bind_param("ss", $user_logged_in, $nogiro);
     } else if ($action === "apv") {
         $stmt->bind_param("ss", $user_logged_in, $nogiro);
-    // } else if ($action === "apr") {
-    //     $stmt->bind_param("ss", $user_logged_in, $nogiro);
+        // } else if ($action === "apr") {
+        //     $stmt->bind_param("ss", $user_logged_in, $nogiro);
     } else if ($action === "add") {
         $stmt->bind_param("ss", $filename, $nogiro);
-    // } else if ($action === "app") {
-    //     $stmt->bind_param("ss", $user_logged_ine, $nogiro);
+        // } else if ($action === "app") {
+        //     $stmt->bind_param("ss", $user_logged_ine, $nogiro);
+    } else if ($action === "edit") {
+        $stmt->bind_param("sss", $grno, $keterangan, $nogiro);
     }
 
     // Execute the statement

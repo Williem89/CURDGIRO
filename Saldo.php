@@ -49,7 +49,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
 
         // Update saldo in the database
-        $stmt = $conn->prepare("UPDATE list_rekening SET saldo = ?, updtgl = CURDATE() WHERE no_akun = ?");
+        $stmt = $conn->prepare("UPDATE list_rekening SET saldo = ?, updtgl = NOW() WHERE no_akun = ?");
         $stmt->bind_param("ds", $nominal, $no_akun);
 
         if ($stmt->execute()) {
@@ -73,59 +73,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Daftar Rekening</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            margin: 0;
-            padding: 20px;
-        }
-        h2 {
-            text-align: center;
-            color: #333;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            background-color: #fff;
-        }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 12px;
-            text-align: left;
-        }
-        th {
-            background-color: #007BFF;
-            color: white;
-        }
-        tr:nth-child(even) {
-            background-color: #f9f9f9;
-        }
-        tr:hover {
-            background-color: #f1f1f1;
-        }
-        input[type="text"] {
-            width: calc(100% - 20px);
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-        }
-        input[type="submit"], .btn-back {
-            background-color: #28a745;
-            color: white;
-            border: none;
-            padding: 10px 15px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-            margin-top: 10px;
-        }
-        input[type="submit"]:hover, .btn-back:hover {
-            background-color: #218838;
-        }
-    </style>
+    <link rel="stylesheet" type="text/css" href="saldo.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
     <script>
         function formatRupiah(element) {
             let value = element.value.replace(/[^,\d]/g, '').toString();
@@ -146,6 +95,46 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             let nominalInput = document.getElementById('nominal_' + element.dataset.id);
             nominalInput.value = value.replace(/\./g, '');
         }
+
+        function exportToExcel() {
+            // Get the table element
+            var table = document.querySelector("table");
+            
+            // Create a new workbook
+            var wb = XLSX.utils.book_new();
+            var wsData = [];
+
+            // Define the headers you want to export
+            var headers = ["No", "Nomor Akun", "Nama Bank", "Nama Akun", "Saldo", "Terakhir Update"];
+            wsData.push(headers);
+
+            // Get the data rows
+            var dataRows = table.querySelectorAll("tr");
+            dataRows.forEach((row, rowIndex) => {
+                if (rowIndex === 0) return; // Skip header row
+                var rowData = [];
+                var cells = row.querySelectorAll("td");
+                rowData.push(rowIndex); // Add the serial number
+                rowData.push(cells[1].innerText); // Nomor Akun
+                rowData.push(cells[2].innerText); // Nama Bank
+                rowData.push(cells[3].innerText); // Nama Akun
+                rowData.push(cells[4].innerText.replace('Rp ', '').replace('.', '').replace(',', '.')); // Saldo
+                rowData.push(cells[5].innerText); // Terakhir Update
+                wsData.push(rowData);
+            });
+
+            // Create a new worksheet from the data
+            var ws = XLSX.utils.aoa_to_sheet(wsData);
+            XLSX.utils.book_append_sheet(wb, ws, "Data");
+
+            // Get the current date and time in GMT+7
+            var now = new Date();
+            now.setHours(now.getHours() + 7);
+            var formattedDate = now.toISOString().slice(0, 19).replace(/:/g, '-');
+
+            // Export the workbook to an .xlsx file with the formatted date and time
+            XLSX.writeFile(wb, "saldo_" + formattedDate + ".xlsx");
+        }
     </script>
 </head>
 <body>
@@ -165,7 +154,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <?php
             if ($result->num_rows > 0) {
                 $counter = 1; // Initialize counter for serial number
-                // Output data for each row
                 while ($row = $result->fetch_assoc()) {
                     echo "<tr>";
                     echo "<td>" . $counter++ . "</td>"; // Display the serial number
@@ -173,11 +161,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     echo "<td>" . htmlspecialchars($row["nama_bank"]) . "</td>";
                     echo "<td>" . htmlspecialchars($row["nama_akun"]) . "</td>";
                     echo "<td>" . formatRupiah($row["saldo"]) . "</td>";
-                    // Format date to dd-mm-yyyy
-                    $formattedDate = date("d-m-Y", strtotime($row["updtgl"]));
+                    $formattedDate = date("d-m-Y H:i:s", strtotime($row["updtgl"]));
                     echo "<td>" . htmlspecialchars($formattedDate) . "</td>";
-                   echo '<td><input type="text" data-id="' . htmlspecialchars($row["no_akun"]) . '" onkeyup="formatRupiah(this)" value="' . formatRupiah($row["saldo"]) . '" placeholder="Masukkan saldo baru"></td>';
-echo '<input type="hidden" id="nominal_' . htmlspecialchars($row["no_akun"]) . '" name="nominal_update[' . htmlspecialchars($row["no_akun"]) . ']" value="' . $row["saldo"] . '">';
+                    echo '<td><input type="text" data-id="' . htmlspecialchars($row["no_akun"]) . '" onkeyup="formatRupiah(this)" value="' . formatRupiah($row["saldo"]) . '" placeholder="Masukkan saldo baru"></td>';
+                    echo '<input type="hidden" id="nominal_' . htmlspecialchars($row["no_akun"]) . '" name="nominal_update[' . htmlspecialchars($row["no_akun"]) . ']" value="' . $row["saldo"] . '">';
                     echo "</tr>";
                 }
             } else {
@@ -187,6 +174,7 @@ echo '<input type="hidden" id="nominal_' . htmlspecialchars($row["no_akun"]) . '
         </table>
         <br>
         <input type="submit" value="Perbarui Saldo">
+        <input type="button" value="Ekspor ke Excel" onclick="exportToExcel()">
     </form>
     <form action="dashboard.php" method="get" style="display: inline;">
         <button type="submit" class="btn-back">Kembali</button>

@@ -29,8 +29,12 @@ $sql = "
         dg.tanggal_jatuh_tempo,
         dg.TglVoid,
         dg.image_giro,
+        dg.PVRNo,
         dg.Keterangan,
-        dg.a_void
+        dg.a_void,
+        dg.nama_penerima,
+        dg.ac_penerima,
+        dg.bank_penerima
     FROM 
         detail_giro AS dg
     INNER JOIN 
@@ -58,8 +62,12 @@ $sql = "
         dc.tanggal_jatuh_tempo,
         dc.TglVoid,
         dc.image_giro,
+        dc.PVRNo,
         dc.Keterangan,
-        dc.a_void
+        dc.a_void,
+        dc.nama_penerima,
+        dc.ac_penerima,
+        dc.bank_penerima
     FROM 
         detail_cek AS dc
     INNER JOIN 
@@ -87,8 +95,12 @@ $sql = "
         dl.tanggal_jatuh_tempo,
         dl.TglVoid,
         dl.image_giro,
+        dl.PVRNo,
         dl.Keterangan,
-        dl.a_void
+        dl.a_void,
+        dl.nama_penerima,
+        dl.ac_penerima,
+        dl.bank_penerima
     FROM 
         detail_loa AS dl
     INNER JOIN 
@@ -114,6 +126,7 @@ $sqlParams[] = '%' . $search_term . '%'; // for nogiro
 $sqlParams[] = '%' . $search_term . '%'; // for nama_entitas
 $sqlParams[] = '%' . $search_term . '%'; // for namabank
 
+
 if ($selected_type) {
     $sqlParams[] = $selected_type; // Parameter for type
 }
@@ -136,6 +149,7 @@ if ($selected_status) {
 $sqlParams[] = '%' . $search_term . '%'; // for noloa
 $sqlParams[] = '%' . $search_term . '%'; // for nama_entitas
 $sqlParams[] = '%' . $search_term . '%'; // for namabank
+
 
 if ($selected_type) {
     $sqlParams[] = $selected_type; // Parameter for type
@@ -384,6 +398,15 @@ $conn->close();
                                         data-action="accIssued"
                                         data-toggle="tooltip" data-placement="top" title="Approve Issued"
                                         data-nogiro="<?php echo htmlspecialchars($giro['nomor']); ?>"
+                                        data-namabank="<?php echo htmlspecialchars($giro['namabank']); ?>"
+                                        data-acnumber="<?php echo htmlspecialchars($giro['ac_number']); ?>"
+                                        data-tanggalgiro="<?php echo htmlspecialchars($giro['tanggal_jatuh_tempo']); ?>"
+                                        data-nominal="<?php echo htmlspecialchars($giro['total_nominal']); ?>"
+                                        data-namapenerima="<?php echo htmlspecialchars($giro['nama_penerima']); ?>"
+                                        data-acpenerima="<?php echo htmlspecialchars($giro['ac_penerima']); ?>"
+                                        data-bankpenerima="<?php echo htmlspecialchars($giro['bank_penerima']); ?>"
+                                        data-grno="<?php echo htmlspecialchars($giro['PVRNo']); ?>"
+                                        data-keterangan="<?php echo htmlspecialchars($giro['Keterangan']); ?>"
                                         data-type="<?php echo htmlspecialchars($giro['jenis']); ?>"
                                         data-entitas="<?php echo htmlspecialchars($giro['nama_entitas']); ?>">
                                         <i class="bi bi-check-circle"></i>
@@ -424,9 +447,11 @@ $conn->close();
                                     </button>
                                 <?php endif; ?>
 
-                                <button class="btn btn-sm btn-warning edit-btn"
+                                <button class="btn btn-sm btn-warning edit-btn" <?php echo $giro['status'] != "Pending Issued" ? "hidden" : ""; ?>
                                     data-toggle="tooltip" data-placement="top" title="Edit Data"
                                     data-nogiro="<?php echo htmlspecialchars($giro['nomor']); ?>"
+                                    data-grno="<?php echo htmlspecialchars($giro['PVRNo']); ?>"
+                                    data-keterangan="<?php echo htmlspecialchars($giro['Keterangan']); ?>"
                                     data-type="<?php echo htmlspecialchars($giro['jenis']); ?>"
                                     data-entitas="<?php echo htmlspecialchars($giro['nama_entitas']); ?>">
                                     <i class="bi bi-pencil-square"></i>
@@ -487,17 +512,25 @@ $conn->close();
             })
             document.querySelectorAll('.edit-btn').forEach(button => {
                 button.addEventListener('click', async () => {
+                    const nogiro = button.getAttribute('data-nogiro');
+                    const entitas = button.getAttribute('data-entitas');
+                    const jenis = button.getAttribute('data-type');
+                    // const aprvAction = button.getAttribute('data-action');
+                    const alasanVoid = button.getAttribute('data-alasan');
+                    const grno = button.getAttribute('data-grno');
+                    const keterangan = button.getAttribute('data-keterangan');
+
                     const {
                         value: formValues
                     } = await Swal.fire({
                         title: 'Edit Data',
                         html: '<div class="form-group">' +
-                            '<label for="swal-input1" class="form-label">PVR No.</label>' +
-                            '<input id="swal-input1" class="form-control" rows="3"></input>' +
+                            '<label for="swal-input1" class="form-label">GR No.</label>' +
+                            `<input id="swal-input1" class="form-control" rows="3" value="${grno}"></input>` +
                             '</div>' +
                             '<div class="form-group mt-3">' +
                             '<label for="swal-input2" class="form-label">Keterangan</label>' +
-                            '<input id="swal-input2" class="form-control" rows="3"></input>' +
+                            `<input id="swal-input2" class="form-control" rows="3" value="${keterangan}"></input>` +
                             '</div>',
                         focusConfirm: false,
                         showCancelButton: true,
@@ -506,7 +539,44 @@ $conn->close();
                     });
 
                     if (formValues) {
-                        Swal.fire('Submitted', formValues, 'success');
+                        const grNo = document.getElementById('swal-input1').value;
+                        const keterangan = document.getElementById('swal-input2').value;
+
+                        const formData = new FormData();
+                        formData.append('nogiro', nogiro);
+                        formData.append('grNo', grNo);
+                        formData.append('keterangan', keterangan);
+                        formData.append('action', "edit");
+                        formData.append('jenis', jenis);
+                        fetch('update_statgiro.php', {
+                                method: 'POST',
+                                body: formData
+                            })
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.success) {
+                                    Swal.fire({
+                                        title: "Data berhasil diproses",
+                                        icon: 'success'
+                                    }).then(() => {
+                                        location.reload();
+                                    });
+                                } else {
+                                    Swal.fire({
+                                        title: "Error",
+                                        text: data.message,
+                                        icon: "error"
+                                    });
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Error:', error);
+                                Swal.fire({
+                                    title: "Error",
+                                    text: "An error occurred while updating.",
+                                    icon: "error"
+                                });
+                            });
                     }
                 });
             });
@@ -533,6 +603,15 @@ $conn->close();
                         const jenis = button.getAttribute('data-type');
                         // const aprvAction = button.getAttribute('data-action');
                         const alasanVoid = button.getAttribute('data-alasan');
+                        const namabank = button.getAttribute('data-namabank');
+                        const acnumber = button.getAttribute('data-acnumber');
+                        const tanggalgiro = button.getAttribute('data-tanggalgiro');
+                        const nominal = button.getAttribute('data-nominal');
+                        const namapenerima = button.getAttribute('data-namapenerima');
+                        const acpenerima = button.getAttribute('data-acpenerima');
+                        const bankpenerima = button.getAttribute('data-bankpenerima');
+                        const grno = button.getAttribute('data-grno');
+                        const keterangan = button.getAttribute('data-keterangan');
 
                         console.log(nogiro, entitas, jenis);
                         console.log(action);
@@ -557,9 +636,44 @@ $conn->close();
                                             <label for="swal-input3" class="form-label">File lampiran</label>
                                             <input id="swal-input3" class="form-control" type="file">
                                             </div>` : '') +
-                                (action === 'apv' ? `Apakah Anda yakin ingin approve ${jenis} ${nogiro} dari ${entitas}?
-                                            <br><br>
-                                            Alasan : ${alasanVoid}
+                                (action === 'acc' ? `Apakah Anda yakin ingin approve ${jenis} dengan nomor <b>${nogiro}</b> dari <b>${entitas}</b>?
+                                            <div class="form-group mt-3 d-flex justify-content-between">
+                                                <strong class="form-label">Nama Bank :</strong>
+                                                <p>${namabank}</p>
+                                            </div>
+                                            <div class="form-group mt-3 d-flex justify-content-between">
+                                                <strong class="form-label">No. Rekening :</strong>
+                                                <p>${acnumber}</p>
+                                            </div>
+                                            <div class="form-group mt-3 d-flex justify-content-between">
+                                                <strong class="form-label">Tanggal Giro :</strong>
+                                                <p>${tanggalgiro}</p>
+                                            </div>
+                                            <div class="form-group mt-3 d-flex justify-content-between">
+                                                <strong class="form-label">Nominal :</strong>
+                                                <p>${parseFloat(nominal).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                                            </div>
+                                            <div class="form-group mt-3 d-flex justify-content-between">
+                                                <strong class="form-label">Nama Penerima :</strong>
+                                                <p>${namapenerima}</p>
+                                            </div>
+                                            <div class="form-group mt-3 d-flex justify-content-between">
+                                                <strong class="form-label">No. Rekening Penerima :</strong>
+                                                <p>${acpenerima}</p>
+                                            </div>
+                                            <div class="form-group mt-3 d-flex justify-content-between">
+                                                <strong class="form-label">Bank Penerima :</strong>
+                                                <p>${bankpenerima}</p>
+                                            </div>
+                                            <div class="form-group mt-3 d-flex justify-content-between">
+                                                <strong class="form-label">PVR No. :</strong>
+                                                <p>${grno}</p>
+                                            </div>
+                                            <div class="form-group mt-3 d-flex justify-content-between">
+                                                <strong class="form-label">Keterangan :</strong>
+                                                <p>${keterangan}</p>
+                                            </div>
+                                            
                                             ` : ''),
                             focusConfirm: false,
                             showCancelButton: true,
@@ -635,11 +749,6 @@ $conn->close();
             handleButtonClick('.void-btn', 'void');
             handleButtonClick('.return-btn', 'return');
             handleButtonClick('.add-attachment-btn', 'add');
-         
-
-
-
-
         </script>
     </div>
 </body>
