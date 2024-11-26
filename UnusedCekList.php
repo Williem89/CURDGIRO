@@ -172,7 +172,7 @@ $conn->close();
 </head>
 <body>
     <div class="header d-flex align-items-center">
-        <a class="btn btn-primary d-flex align-items-center" href="/CurdGiro/dashboard.php#cek">
+        <a class="btn btn-primary d-flex align-items-center" href="dashboard.php">
             <i class="bi bi-backspace" style="margin-right: 8px;"></i>
             Kembali
         </a>

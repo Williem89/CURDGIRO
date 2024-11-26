@@ -115,8 +115,42 @@ $sql = "
     GROUP BY 
         e.nama_entitas, l.namabank, l.ac_number, dl.noloa, dl.tanggal_jatuh_tempo, dl.TglVoid, dl.image_giro
 
+    UNION ALL
+
+    SELECT 
+        'AutoDebit' AS jenis,
+        e.nama_entitas,
+        a.namabank,
+        a.ac_number,
+        ad.Statautodebit AS status,
+        ad.noautodebit AS nomor,
+        SUM(ad.nominal) AS total_nominal,
+        ad.tanggal_jatuh_tempo,
+        ad.TglVoid,
+        ad.image_autodebit,
+        ad.PVRNo,
+        ad.Keterangan,
+        ad.a_void,
+        ad.nama_penerima,
+        ad.ac_penerima,
+        ad.bank_penerima
+    FROM 
+        detail_autodebit AS ad
+    INNER JOIN 
+        data_autodebit AS a ON ad.noautodebit = a.noautodebit
+    INNER JOIN 
+        list_entitas AS e ON a.id_entitas = e.id_entitas
+    WHERE 
+        ad.Statautodebit != 'Posted'
+        AND (ad.noautodebit LIKE ? OR e.nama_entitas LIKE ? OR a.namabank LIKE ?)
+        " . ($selected_type ? "AND a.jenis_autodebit = ?" : "") . "
+        " . ($selected_status ? "AND ad.Statautodebit = ?" : "") . "
+    GROUP BY 
+        e.nama_entitas, a.namabank, a.ac_number, ad.noautodebit, ad.tanggal_jatuh_tempo, ad.TglVoid, ad.image_autodebit
+
     ORDER BY 
-        tanggal_jatuh_tempo ASC;
+        tanggal_jatuh_tempo ASC
+
 ";
 
 
@@ -147,6 +181,17 @@ if ($selected_status) {
 }
 
 $sqlParams[] = '%' . $search_term . '%'; // for noloa
+$sqlParams[] = '%' . $search_term . '%'; // for nama_entitas
+$sqlParams[] = '%' . $search_term . '%'; // for namabank
+
+if ($selected_type) {
+    $sqlParams[] = $selected_type; // Parameter for type
+}
+if ($selected_status) {
+    $sqlParams[] = $selected_status; // Parameter for status
+}
+
+$sqlParams[] = '%' . $search_term . '%'; // for noautodebit
 $sqlParams[] = '%' . $search_term . '%'; // for nama_entitas
 $sqlParams[] = '%' . $search_term . '%'; // for namabank
 
@@ -304,6 +349,7 @@ $conn->close();
                     <option value="Giro" <?php echo ($selected_type == 'Giro') ? 'selected' : ''; ?>>Giro</option>
                     <option value="Cek" <?php echo ($selected_type == 'Cek') ? 'selected' : ''; ?>>Cek</option>
                     <option value="loa" <?php echo ($selected_type == 'loa') ? 'selected' : ''; ?>>Loa</option>
+                    <option value="AutoDebit" <?php echo ($selected_type == 'AutoDebit') ? 'selected' : ''; ?>>AutoDebit</option>
                 </select>
                 <select name="status" class="form-select">
                     <option value="">Pilih Status</option>

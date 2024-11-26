@@ -171,6 +171,39 @@ if (isset($_POST['nogiro'], $_POST["action"], $_POST["jenis"])) {
                     exit;
             }
             break;
+            case 'AutoDebit':
+                switch ($action) {
+                    case "cair":
+                        $sql = "UPDATE detail_autodebit SET Statautodebit = 'Posted', tanggal_Cair_autodebit = ?, SeatleBy = ? WHERE noautodebit = ?";
+                        break;
+                    case "return":
+                        $sql = "UPDATE detail_autodebit SET Statautodebit = 'Return', tglkembalikebank = NOW(), dikembalikanoleh = ?, lampiran = ? WHERE noautodebit   = ?";
+                        break;
+                    case "void":
+                        $sql = "UPDATE detail_autodebit SET Statautodebit = 'Pending Void', TglVoid = NOW(), VoidBy = ?, a_void = ? WHERE noautodebit  = ?";
+                        break;
+                    case "acc":
+                        $sql = "UPDATE detail_autodebit SET Statautodebit = 'Issued', ApproveBy = ?, ApproveAt =NOW() WHERE noautodebit    = ?";
+                        break;
+                        // case "app":
+                        //     $sql = "UPDATE detail_autodebit SET Statautodebit = 'Posted', ApprovePostBy = ?, ApprovePostAt = NOW() WHERE noautodebit   = ?";
+                        //     break;
+                    case "apv":
+                        $sql = "UPDATE detail_autodebit SET Statautodebit = 'Void', ApproveVoidBy = ?, ApproveVoidAt = NOW() WHERE noautodebit = ?";
+                        break;
+                        // case "apr":
+                        //     $sql = "UPDATE detail_autodebit SET Statautodebit = 'Return', ApproveReturnBy = ?, ApproveReturnAt = NOW() WHERE noautodebit   = ?";
+                        //     break;
+                    case "add":
+                        $sql = "UPDATE detail_autodebit SET image_giro = ? WHERE noautodebit     = ?";
+                    case "edit":
+                        $sql = "UPDATE detail_autodebit SET PVRNo = ? , Keterangan = ? where nogiro = ?";
+                        break;
+                    default:
+                        echo json_encode(['success' => false, 'message' => 'Invalid action']);
+                        exit;
+                }
+                break;
         default:
             echo json_encode(['success' => false, 'message' => 'Invalid jenis']);
             exit;

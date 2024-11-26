@@ -244,7 +244,7 @@ $no = $offset + 1;
         </nav>
 
         <div class="text-center mt-4">
-            <a title="isi" href="/CurdGiro/dashboard.php#giro" class="btn btn-primary">Kembali ke Halaman Utama</a>
+            <a title="isi" href="dashboard.php" class="btn btn-primary">Kembali ke Halaman Utama</a>
         </div>
     </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>

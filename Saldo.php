@@ -47,10 +47,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             echo "Saldo tidak valid untuk Nomor Akun: $no_akun<br>";
             continue; // Skip invalid entries
         }
-
+        $verified = '0';
         // Update saldo in the database
-        $stmt = $conn->prepare("UPDATE list_rekening SET saldo = ?, updtgl = NOW() WHERE no_akun = ?");
-        $stmt->bind_param("ds", $nominal, $no_akun);
+        $stmt = $conn->prepare("UPDATE list_rekening SET saldo = ?, Verified = ?, updtgl = NOW() WHERE no_akun = ?");
+        $stmt->bind_param("dss", $nominal, $verified, $no_akun);
 
         if ($stmt->execute()) {
             echo "Saldo berhasil diperbarui untuk Nomor Akun: $no_akun<br>";

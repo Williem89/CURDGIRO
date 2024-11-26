@@ -6,6 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sign In</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link rel='stylesheet' href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css'>
+    <link rel='stylesheet' href='https://fonts.googleapis.com/css2?family=Poppins&amp;display=swap'>
+    <link rel="stylesheet" href="./style.css">
     <style>
         body {
             display: flex;
@@ -15,12 +18,19 @@
             margin: 0;
             font-family: Arial, sans-serif;
             background-color: #1d1d1d;
+            background-image: url("bg-login.jpeg");
+            background-position: center;
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
         }
 
         .container {
             display: flex;
             width: 800px;
             height: 400px;
+            background-color: rgba(244, 244, 244, 0.5);
+            /* Increased transparency */
             box-shadow: 0 0 20px rgba(135, 206, 235, 0.7), 0 0 20px rgba(135, 206, 235, 0.7);
             border-radius: 20px;
             overflow: hidden;
@@ -28,7 +38,9 @@
 
         .left,
         .right,
+
         .left-panel,
+
         .right-panel {
             flex: 1;
             display: flex;
@@ -36,12 +48,15 @@
             justify-content: center;
             align-items: center;
             padding: 20px;
+            background: transparent;
+            backdrop-filter: blur(25px);
         }
 
         .left {
             background-color: #fff;
             border-top-left-radius: 20px;
             border-bottom-left-radius: 20px;
+            background: transparent;
         }
 
         .right {
@@ -49,6 +64,7 @@
             color: #fff;
             border-top-right-radius: 20px;
             border-bottom-right-radius: 20px;
+
         }
 
         .left h2,
@@ -124,6 +140,7 @@
             border-radius: 5px;
             cursor: pointer;
             font-size: 16px;
+
         }
 
         .left-panel button:hover {
@@ -135,6 +152,190 @@
             background-color: #fff;
             border-top-right-radius: 20px;
             border-bottom-right-radius: 20px;
+            background: transparent;
+        }
+
+
+        .wrapper {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+
+        }
+
+        .input-field {
+            width: 250px;
+            height: 40px;
+            font-size: 16px;
+            background: transparent;
+            color: black;
+            padding-inline: 20px 50px;
+            border: 2px solid white;
+            border-radius: 30px;
+            outline: none;
+        }
+
+
+        #user {
+            margin-bottom: 10px;
+        }
+
+        .label {
+            position: absolute;
+            top: 15px;
+            left: 20px;
+            transition: 0.2s;
+        }
+
+        .input-field:focus ~ .label,
+        .input-field:not(:placeholder-shown) ~ .label {
+            position: absolute;
+            top: -10px;
+            left: 20px;
+            font-size: 14px;
+            background-color: white;
+            border-radius: 30px;
+            color: black;
+            padding: 0 10px;
+        }
+
+
+        .input_box {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            margin: 20px 0;
+        }
+
+        .icon {
+            position: absolute;
+            top: 13px;
+            right: 25px;
+            font-size: 20px;
+        }
+
+        .input-submit {
+            width: 100%;
+            height: 50px;
+            background: #ececec;
+            font-size: 16px;
+            font-weight: 500;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .input-submit:hover {
+            background: white;
+        }
+
+        .register {
+            text-align: center;
+        }
+
+        .register a {
+            font-weight: 500;
+        }
+
+        @media only screen and (max-width: 564px) {
+            .wrapper {
+                padding: 20px;
+            }
+        }
+
+
+
+        .login-header {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #2196F3, #21CBF3);
+            width: 140px;
+            height: 70px;
+            border-radius: 0 0 20px 20px;
+        }
+
+        .login-header span {
+            font-size: 30px;
+            color: black;
+            text-align: center;
+        }
+
+        .login-header::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: -30px;
+            width: 30px;
+            height: 30px;
+            border-top-right-radius: 50%;
+            background: transparent;
+            box-shadow: 15px 0 0 0 #2198f3;
+        }
+
+        .login-header::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            right: -30px;
+            width: 30px;
+            height: 30px;
+            border-top-left-radius: 50%;
+            background: transparent;
+            box-shadow: -15px 0 0 0 #21b9f3;
+            /* Removed space before --primary-color */
+        }
+
+        .register-header {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #2196F3, #21CBF3);
+            width: 200px;
+            height: 70px;
+            border-radius: 0 0 20px 20px;
+        }
+
+        .register-header span {
+            font-size: 30px;
+            color: black;
+            text-align: center;
+        }
+
+        .register-header::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: -30px;
+            width: 30px;
+            height: 30px;
+            border-top-right-radius: 50%;
+            background: transparent;
+            box-shadow: 15px 0 0 0 #2198f3;
+        }
+
+        .register-header::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            right: -30px;
+            width: 30px;
+            height: 30px;
+            border-top-left-radius: 50%;
+            background: transparent;
+            box-shadow: -15px 0 0 0 #21b9f3;
+            /* Removed space before --primary-color */
         }
     </style>
 </head>
@@ -142,15 +343,33 @@
 <body>
     <div class="container">
         <div class="left">
-            <h2>Sign In</h2>
             <form action="login.php" method="POST">
-                <div class="form-group">
-                    <input type="text" name="username" placeholder="Username" required>
+
+                <div class="wrapper">
+                    <div class="login_box">
+                        <div class="login-header">
+                            <span>Login</span>
+                        </div>
+                        <br><br>
+
+                        <div class="input_box">
+                            <input type="text" id="user" class="input-field" name="username" required placeholder="">
+                            <label for="user" class="label">Username</label>
+                            <i class="bx bx-user icon"></i>
+                        </div>
+
+                        <div class="input_box">
+                            <input type="password" id="pass" class="input-field" name="password" required placeholder="">
+                            <label for="pass" class="label">Password</label>
+                            <i class="bx bx-lock-alt icon"></i>
+                        </div>
+                        
+                        <div class="input_box">
+                            <input type="submit" class="input-submit" value="Login">
+                        </div>
+
+                    </div>
                 </div>
-                <div class="form-group">
-                    <input type="password" name="password" placeholder="Password" required>
-                </div>
-                <button type="submit" class="btn">SIGN IN</button>
             </form>
         </div>
         <div class="right">
@@ -162,7 +381,7 @@
 
     <script>
         function loadSignUpPage() {
-    document.body.innerHTML = `
+            document.body.innerHTML = `
         <div class="container">
             <div class="left-panel">
                 <h2>Hello! Old Friends</h2>
@@ -170,27 +389,43 @@
                 <button onclick="loadSignInPage()">Login</button>
             </div>
             <div class="right-panel">
-                <h2>Create Account</h2>
+                        <div class="register-header">
+                            <span>Create Account</span>
+                        </div>
                 <form action="register_user.php" method="POST" onsubmit="registerUser(event)">
-                    <div class="form-group">
-                        <input type="text" name="full_name" placeholder="Full Name" required>
-                    </div>
-                    <div class="form-group">
-                        <input type="text" name="username" placeholder="Username" required>
-                    </div>
-                    <div class="form-group">
-                        <input type="password" name="password" placeholder="Password" required>
-                    </div>
-                    <button type="submit" class="btn">Register</button>
+                        <br><br>
+                        <div class="input_box">
+                            <input type="text" id="user" class="input-field" name="full_name" required placeholder="">
+                            <label for="user" class="label">Full Name</label>
+                            <i class="bx bx-user icon"></i>
+                        </div>
+
+                        <div class="input_box">
+                            <input type="text" id="user" class="input-field" name="username" required placeholder="">
+                            <label for="user" class="label">Username</label>
+                            <i class="bx bx-user icon"></i>
+                        </div>
+
+                        <div class="input_box">
+                            <input type="password" id="pass" class="input-field" name="password" required placeholder="">
+                            <label for="pass" class="label">Password</label>
+                            <i class="bx bx-lock-alt icon"></i>
+                        </div>
+                        
+                        <div class="input_box">
+                            <input type="submit" class="input-submit" value="Register">
+                        </div>
+
+
                 </form>
             </div>
         </div>
     `;
-}
-        
+        }
 
 
-       
+
+
         function loadSignInPage() {
             location.reload();
         }

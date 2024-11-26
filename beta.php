@@ -204,7 +204,7 @@
 <body>
 
     <div class="header d-flex align-items-center" style="padding-top: 10px;">
-        <a class="btn btn-primary d-flex align-items-center" href="/CurdGiro/dashboard.php#cek" style="margin-right: 20px; transition: background-color 0.3s;width: 120px;">
+        <a class="btn btn-primary d-flex align-items-center" href="dashboard.php" style="margin-right: 20px; transition: background-color 0.3s;width: 120px;">
             <i class="bi bi-backspace" style="margin-right: 8px;"></i>
             Kembali
         </a>

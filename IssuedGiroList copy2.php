@@ -212,7 +212,7 @@ $saldo_stmt->close();
 
 <body>
     <div class="header">
-        <a class="btn btn-primary" href="/CurdGiro/dashboard.php#cek">Kembali</a>
+        <a class="btn btn-primary" href="dashboard.php">Kembali</a>
         <h1>GIRO Available</h1>
     </div>
 

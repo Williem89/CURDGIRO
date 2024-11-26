@@ -193,7 +193,7 @@ if (isset($_POST['export'])) {
 
 <body>
     <div class="header d-flex align-items-center" style="padding-top: 10px;">
-        <a class="btn btn-primary d-flex align-items-center" href="/CurdGiro/dashboard.php#giro" style="margin-right: 20px; transition: background-color 0.3s; border-radius: 50px; width: 130px;">
+        <a class="btn btn-primary d-flex align-items-center" href="dashboard.php" style="margin-right: 20px; transition: background-color 0.3s; border-radius: 50px; width: 130px;">
             <i class="bi bi-backspace" style="margin-right: 8px;"></i>
             Kembali
         </a>
