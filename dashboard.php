@@ -149,7 +149,7 @@
     $lastupd_bnl_stmt->execute();
     $lastupd_bnl_result = $lastupd_bnl_stmt->get_result();
     $lastupd_bnl_row = $lastupd_bnl_result->fetch_assoc();
-    
+
     // for fetch data last update data at Prepost
     $lastupd_pfb = "SELECT MAX(updtgl) as updtgl FROM pfb";
     $lastupd_pfb_stmt = $conn->prepare($lastupd_pfb);
@@ -472,33 +472,29 @@
                 </li>
                 <li><a title="Untuk Approve Issued /Mencairkan / Void / Return /Edit NoPVR& Keterangan /Preview Scan Giro yang di Attach" href="ProsesGiro.php">Proses GIRO/CEK/LOA</a></li>
                 <li><a title="Untuk Mencari GIRO/Cek/LOA " href="Search.php">Search</a></li>
-                <!--<li><a href="#">Laporan</a>
-                        <div class="dropdown">
-                            <a href="ReportStockGiro.php">Laporan Stock Giro Belum Terpakai</a>
-                            <a href="ReportIssuedGiro.php">Laporan Giro yang sudah terbit</a>
-                        </div>
-                    </li>-->
+                <li><a href="#">Laporan</a>
+                    <div class="dropdown">
+                        <a href="summaryall.php">Statistik GIRO CEK LOA</a>
+
+                    </div>
+                </li>
                 <li><a title="untuk keluar dari software" href="logout.php">Logout</a></li> <!-- Logout link -->
                 <button id="changelog-button" style="position:absolute;bottom:10px; background-color: #007bff; color: #fff; border: none; padding: 10px; border-radius: 5px; cursor: pointer; margin:auto">
                     Show Changelog
                 </button>
             </ul>
         </nav>
-
         <header>
             <h2>Aplikasi Giro</h2>
         </header>
-
         <section>
-
-
             <div class="tabs">
                 <ul class="nav nav-tabs">
                     <li class="nav-item">
                         <a title="Menampilkan data GIRO/CEK/LOA yang sudah belum dicairkan" class="nav-link active" data-bs-toggle="tab" href="#listGiroCek">Outstanding Vs Saldo</a>
                     </li>
                     <li class="nav-item">
-                        <a title="Menampilkan data Statistik PRE / POST" class="nav-link" data-bs-toggle="tab" href="#ki">KI</a>
+                        <a title="Menampilkan data Statistik PRE / POST" class="nav-link" data-bs-toggle="tab" href="#ki">Saldo & Sisa Plafond</a>
                     </li>
                     <li class="nav-item">
                         <a title="Menampilkan data Statistik PRE / POST" class="nav-link" data-bs-toggle="tab" href="#prepost">PRE / POST</a>
@@ -514,7 +510,6 @@
                     </li>
                 </ul>
             </div>
-
             <div class="tab-content">
                 <div id="listGiroCek" class="tab-pane fade">
                     <!-- Combined Table for Giro and Cek -->
@@ -522,118 +517,13 @@
                     <br>
                     <button class="btn btn-danger" title="export to pdf" onclick="generatePDF()" style="font-size: 28px;"><i class="bi bi-file-pdf"></i></button>
                     <a onclick="exportToWhatsapp()" class="btn btn-success" style="margin-left:10px;font-size:28px;"><i class="bi bi-whatsapp"></i> </a>
-                    <?php if ($_SESSION['username'] == 'financeview'): ?>
-                        <a id="verifiedButton" onclick="updateVerifiedStatus()" class="btn btn-success" style="margin-left:10px;font-size:28px;">
-                            <i class="bi bi-patch-check"></i>
-                        </a>
-                    <?php endif; ?>
-
-                    <script>
-                        function updateVerifiedStatus() {
-                            const xhr = new XMLHttpRequest();
-                            xhr.open("POST", "", true);
-                            xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-                            xhr.onreadystatechange = function() {
-                                if (xhr.readyState === 4 && xhr.status === 200) {
-                                    alert("Verified status updated successfully!");
-                                    location.reload(); // Reload the page to reflect changes
-                                }
-                            };
-                            xhr.send("update_verified_status=1");
-                        }
-                    </script>
-
                     <h2 class="mt-5">Outstanding Vs Saldo</h2>
-                    <!-- <?php
-                    if ($verifiedResult === false) {
-                        echo "<span style='color: red; font-weight: bold;'>Error executing query: " . $conn->error . "</span>";
-                    } else if ($verifiedResult->num_rows > 0) {
-                        // Fetch the result as an associative array
-                        $row = $verifiedResult->fetch_assoc();
-                        $verified = $row['Verified'];  // Get the value of 'Verified'
-
-                        // Check the value of 'Verified' and display accordingly
-                        if ($verified == 1) {
-                            echo "<br><span style='color: green; font-weight: bold;'>Verified At: " . date('d-M-Y H:i:s', strtotime($row['verified_at'])) . "</span>";
-                        } else if ($verified == 0) {
-                            echo "<span style='color: red; font-weight: bold;'>Unverified</span>";
-                        } else {
-                            echo "<span style='color: gray; font-weight: bold;'>Unknown Status</span>";
-                        }
-                    } else {
-                        // Handle the case where no rows were returned
-                        echo "<span style='color: gray; font-weight: bold;'>No data found</span>";
-                    }
-                    ?> -->
-
-                    <div>
-                        <P>Last Update Saldo At :
-                            <?php
-                            echo date('d-M-Y H:i:s', strtotime($lastupd_row['updtgl']));
-                            ?>
-                        </p>
-                    </div>
-
                     <form method="post" class="mb-4">
                         <?php include 'outstanding.php'; ?>
                 </div>
                 <div id="ki" class="tab-pane fade">
-                    <button class="btn btn-danger" title="export to pdf" onclick="generatePDFKI()" style="font-size: 28px;"><i class="bi bi-file-pdf"></i></button>
-                    <?php if ($_SESSION['username'] == 'financeview'): ?>
-                        <a id="verifiedButton" onclick="updateVerifiedStatus_bnl()" class="btn btn-success" style="margin-left:10px;font-size:28px;">
-                            <i class="bi bi-patch-check"></i>
-                        </a>
-                    <?php endif; ?>
-                    <script>
-                        function updateVerifiedStatus_bnl() {
-                            const xhr = new XMLHttpRequest();
-                            xhr.open("POST", "", true);
-                            xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-                            xhr.onreadystatechange = function() {
-                                if (xhr.readyState === 4 && xhr.status === 200) {
-                                    alert("Verified status updated successfully!");
-                                    location.reload(); // Reload the page to reflect changes
-                                }
-                            };
-                            xhr.send("update_verified_status_bnl=1");
-                        }
-                    </script>
-                    <div>
-                    <p></p>
-                    <!-- <?php
-                    if ($verifiedResult_bnl === false) {
-                        echo "<span style='color: red; font-weight: bold;'>Error executing query: " . $conn->error . "</span>";
-                    } else if ($verifiedResult_bnl->num_rows > 0) {
-                        // Fetch the result as an associative array
-                        $row = $verifiedResult_bnl->fetch_assoc();
-                        $verified = $row['Verified'];  // Get the value of 'Verified'
-
-                        // Check the value of 'Verified' and display accordingly
-                        if ($verified == 1) {
-
-                            echo "<br><span style='color: green; font-weight: bold;'>Verified At: " . date('d-M-Y H:i:s', strtotime($row['verified_at'])) . "</span>";
-                        } else if ($verified == 0) {
-                            echo "<span style='color: red; font-weight: bold;'>Unverified</span>";
-                        } else {
-                            echo "<span style='color: gray; font-weight: bold;'>Unknown Status</span>";
-                        }
-                    } else {
-                        // Handle the case where no rows were returned
-                        echo "<span style='color: gray; font-weight: bold;'>No data found</span>";
-                    }
-                    ?> -->
-
-                        <P>Last Update Saldo At :
-                            <?php
-                            echo date('d-M-Y H:i:s', strtotime($lastupd_bnl_row['updtgl']));
-                            ?>
-                        </p>
-                    </div>
-                    <br>
-                    <br>
-
-                    <form method="post" class="mb-4">
-                        <?php include 'ki_show.php'; ?>
+                    <?php include 'ki_show.php'; ?>
+                </div>
                 </div>
                 <div id="prepost" class="tab-pane fade">
                     <button class="btn btn-danger" title="export to pdf" onclick="generatePDFPrePost()" style="font-size: 28px;"><i class="bi bi-file-pdf"></i></button>
@@ -659,27 +549,25 @@
                     <div>
                         <p></p>
                         <!-- <?php
-                    if ($verifiedResult_pfb === false) {
-                        echo "<span style='color: red; font-weight: bold;'>Error executing query: " . $conn->error . "</span>";
-                    } else if ($verifiedResult_pfb->num_rows > 0) {
-                        // Fetch the result as an associative array
-                        $row = $verifiedResult_pfb->fetch_assoc();
-                        $verified = $row['Verified'];  // Get the value of 'Verified'
-
-                        // Check the value of 'Verified' and display accordingly
-                        if ($verified == 1) {
-
-                            echo "<br><span style='color: green; font-weight: bold;'>Verified At: " . date('d-M-Y H:i:s', strtotime($row['verified_at'])) . "</span>";
-                        } else if ($verified == 0) {
-                            echo "<span style='color: red; font-weight: bold;'>Unverified</span>";
-                        } else {
-                            echo "<span style='color: gray; font-weight: bold;'>Unknown Status</span>";
-                        }
-                    } else {
-                        // Handle the case where no rows were returned
-                        echo "<span style='color: gray; font-weight: bold;'>No data found</span>";
-                    }
-                    ?> -->
+                                if ($verifiedResult_pfb === false) {
+                                    echo "<span style='color: red; font-weight: bold;'>Error executing query: " . $conn->error . "</span>";
+                                } else if ($verifiedResult_pfb->num_rows > 0) {
+                                    // Fetch the result as an associative array
+                                    $row = $verifiedResult_pfb->fetch_assoc();
+                                    $verified = $row['Verified'];  // Get the value of 'Verified'
+                                    // Check the value of 'Verified' and display accordingly
+                                    if ($verified == 1) {
+                                        echo "<br><span style='color: green; font-weight: bold;'>Verified At: " . date('d-M-Y H:i:s', strtotime($row['verified_at'])) . "</span>";
+                                    } else if ($verified == 0) {
+                                        echo "<span style='color: red; font-weight: bold;'>Unverified</span>";
+                                    } else {
+                                        echo "<span style='color: gray; font-weight: bold;'>Unknown Status</span>";
+                                    }
+                                } else {
+                                    // Handle the case where no rows were returned
+                                    echo "<span style='color: gray; font-weight: bold;'>No data found</span>";
+                                }
+                                ?> -->
                         <P>Last Update Saldo At :
                             <?php
                             echo date('d-M-Y H:i:s', strtotime($lastupd_pfb_row['updtgl']));
@@ -688,17 +576,11 @@
                     </div>
                     <br>
                     <br>
-
-
                     <form method="post" class="mb-4">
                         <?php
                         include 'prepost_show.php';
-
                         ?>
                 </div>
-
-
-
                 <div id="giro" class="tab-pane fade">
                     <div class="stats-card">
                         <div class="card">

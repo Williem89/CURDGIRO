@@ -41,6 +41,10 @@ $sql_post_op = $conn->prepare("SELECT * FROM post WHERE post='0' AND (jenis_post
 $sql_post_op->bind_param("s", $jenis_post);
 $sql_post_op->execute();
 $result_post_op = $sql_post_op->get_result();
+
+$sql_post_um = $conn->prepare("SELECT * FROM um WHERE post='0'");
+$sql_post_um->execute();
+$result_post_um = $sql_post_um->get_result();
 ?>
 
 <!DOCTYPE html>
@@ -50,14 +54,10 @@ $result_post_op = $sql_post_op->get_result();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Data Pre-Financing</title>
-    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
-    <!-- Poppins Font -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-
     <style>
         body {
             font-family: 'Poppins', sans-serif;
@@ -70,6 +70,9 @@ $result_post_op = $sql_post_op->get_result();
             </li>
             <li class="nav-item">
                 <a title="" class="nav-link" data-bs-toggle="tab" href="#post_financing">Post - Financing</a>
+            </li>
+            <li class="nav-item">
+                <a title="" class="nav-link" data-bs-toggle="tab" href="#uang_masuk">Uang Masuk</a>
             </li>
         </ul>
     </div>
@@ -84,12 +87,11 @@ $result_post_op = $sql_post_op->get_result();
                     <select class="form-control" id="jenis_prepost" name="jenis_prepost">
                         <option value="" style="font-style:italic;">-- Pilih jenis Prefinancing --</option>
                         <option value="BNI - Prefinancing" <?php if ($jenis_prepost == 'BNI - Prefinancing') echo 'selected'; ?>>BNI - Prefinancing</option>
-                        <option value="BRI - KMK WA" <?php if ($jenis_prepost == 'BRI - KMK WA') echo 'selected'; ?>>BRI - KMK WA</option>
-                        <option value="BRI - KMK CO TETAP" <?php if ($jenis_prepost == 'BRI - KMK CO TETAP') echo 'selected'; ?>>BRI - KMK CO TETAP</option>
+                        <!-- <option value="BRI - KMK WA" <?php if ($jenis_prepost == 'BRI - KMK WA') echo 'selected'; ?>>BRI - KMK WA</option>
+                        <option value="BRI - KMK CO TETAP" <?php if ($jenis_prepost == 'BRI - KMK CO TETAP') echo 'selected'; ?>>BRI - KMK CO TETAP</option> -->
                         <option value="BCA - Time Loan Revolving 1" <?php if ($jenis_prepost == 'BCA - Time Loan Revolving 1') echo 'selected'; ?>>BCA - Time Loan Revolving 1</option>
                     </select>
                 </div>
-
                 <br>
                 <script>
                     document.getElementById('jenis_prepost').addEventListener('change', function() {
@@ -158,7 +160,6 @@ $result_post_op = $sql_post_op->get_result();
                         }
                         ?>
                     </tbody>
-
                     <table class="table table-bordered table-striped table-hover">
                         <p><strong>Pre-Financing On Prosses</strong></p>
                         <thead class="table-dark">
@@ -214,11 +215,8 @@ $result_post_op = $sql_post_op->get_result();
                         </tbody>
                     </table>
             </div>
-
-
         </div>
-    </div>
-    <div class="tab-content">
+
         <div id="post_financing" class="tab-pane fade show active">
             <div class="container mt-5">
                 <h1 class="text-Left mb-4">Post-Financing</h1>
@@ -226,9 +224,9 @@ $result_post_op = $sql_post_op->get_result();
                     <select class="form-control" id="jenis_post" name="jenis_post">
                         <option value="" style="font-style:italic;">-- Pilih jenis Post Financing --</option>
                         <option value="BNI - Post Invoice Sinarmas" <?php if ($jenis_post == 'BNI - Post Invoice Sinarmas') echo 'selected'; ?>>BNI - Post Invoice Sinarmas</option>
-                        <option value="BNI - SCF Post PLN" <?php if ($jenis_post == 'BNI - SCF Post PLN') echo 'selected'; ?>>BNI - SCF Post PLN</option>
+                        <!-- <option value="BNI - SCF Post PLN" <?php if ($jenis_post == 'BNI - SCF Post PLN') echo 'selected'; ?>>BNI - SCF Post PLN</option> -->
                         <option value="BCA - Time Loan Revolving 2" <?php if ($jenis_post == 'BCA - Time Loan Revolving 2') echo 'selected'; ?>>BCA - Time Loan Revolving 2</option>
-                        <option value="BCA - Kredit Lokal" <?php if ($jenis_post == 'BCA - Kredit Lokal') echo 'selected'; ?>>BCA - Kredit Lokal</option>
+                        <!-- <option value="BCA - Kredit Lokal" <?php if ($jenis_post == 'BCA - Kredit Lokal') echo 'selected'; ?>>BCA - Kredit Lokal</option> -->
                     </select>
                 </div>
 
@@ -356,6 +354,9 @@ $result_post_op = $sql_post_op->get_result();
                         </tbody>
                     </table>
             </div>
+        </div>
+        <div id="uang_masuk" class="tab-pane fade show active">
+
         </div>
     </div>
     </div>

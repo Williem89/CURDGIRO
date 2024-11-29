@@ -28,6 +28,7 @@ td {
 th {
     background-color: #007BFF;
     color: white;
+    border: 1px solid #030303;
 }
 
 tr:nth-child(even) {
