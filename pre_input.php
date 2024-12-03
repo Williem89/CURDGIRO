@@ -79,17 +79,7 @@ mysqli_close($conn);
                     
                     <option value="" style="font-style:italic;">-- Pilih jenis Prefinancing --</option>
                     <option value="BNI - Prefinancing">BNI - Prefinancing</option>
-                    <!-- <option value="BNI - Post Invoice Sinarmas">BNI - Post Invoice Sinarmas</option>
-                    <option value="BNI - SCF Post PLN">BNI - SCF Post PLN</option> -->
-                    <option value="BRI - KMK WA">BRI - KMK WA</option>
-                    <option value="BRI - KMK CO TETAP">BRI - KMK CO TETAP</option>
-                    <!-- <option value="BRI -  SCF QIN IKPP">BRI -  SCF QIN IKPP</option> -->
-                    <!-- <option value="Pre Mandiri GEL - PLN">Pre Mandiri GEL - PLN"</option> -->
-                    <!-- <option value="-">-</option> -->
-                    <!-- <option value="Mandiri - SCF KKS - IKPP">Mandiri - SCF KKS - IKPP</option> -->
                     <option value="BCA - Time Loan Revolving 1">BCA - Time Loan Revolving 1</option>
-                    <!-- <option value="BCA - Time Loan Revolving 2">BCA - Time Loan Revolving 2</option> -->
-                    <!-- <option value="BCA - Kredit Lokal">BCA - Kredit Lokal</option> -->
                 </select>
             </div>
             <div class="form-group">
@@ -135,7 +125,7 @@ mysqli_close($conn);
             <br>
             <button type="submit" class="btn btn-info" id="submitBtn"><i class="bi bi-floppy"></i></button>
             <span>&nbsp;</span>
-            <a class="btn btn-danger" href="prepost.php"><i class="bi bi-backspace"></i></a>
+            <a class="btn btn-danger" href="prepost.php#pre_financing"><i class="bi bi-backspace"></i></a>
            
             <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
             <script>

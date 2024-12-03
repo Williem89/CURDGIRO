@@ -4,6 +4,7 @@ include 'koneksi.php';
 // Filter berdasarkan pilihan dropdown jenis_prepost
 $jenis_prepost = isset($_GET['jenis_prepost']) ? $_GET['jenis_prepost'] : ''; // Ambil nilai dari parameter GET
 $jenis_post = isset($_GET['jenis_post']) ? $_GET['jenis_post'] : ''; // Ambil nilai dari parameter GET
+$sumber_dana = isset($_GET['sumber_dana']) ? $_GET['sumber_dana'] : ''; // Ambil nilai dari parameter GET
 
 // Query untuk Pre-Financing Aktif (post='1')
 $sql_pfb = $conn->prepare("SELECT plafond FROM pfb WHERE ket = ? OR ket = ?");
@@ -42,9 +43,11 @@ $sql_post_op->bind_param("s", $jenis_post);
 $sql_post_op->execute();
 $result_post_op = $sql_post_op->get_result();
 
-$sql_post_um = $conn->prepare("SELECT * FROM um WHERE post='0'");
-$sql_post_um->execute();
-$result_post_um = $sql_post_um->get_result();
+$sql_um = $conn->prepare("SELECT * FROM um WHERE post='0' AND (sumber_dana = ? )");
+$sql_um->bind_param("s", $sumber_dana);
+$sql_um->execute();
+$result_um = $sql_um->get_result();
+
 ?>
 
 <!DOCTYPE html>
@@ -216,7 +219,6 @@ $result_post_um = $sql_post_um->get_result();
                     </table>
             </div>
         </div>
-
         <div id="post_financing" class="tab-pane fade show active">
             <div class="container mt-5">
                 <h1 class="text-Left mb-4">Post-Financing</h1>
@@ -229,7 +231,6 @@ $result_post_um = $sql_post_um->get_result();
                         <!-- <option value="BCA - Kredit Lokal" <?php if ($jenis_post == 'BCA - Kredit Lokal') echo 'selected'; ?>>BCA - Kredit Lokal</option> -->
                     </select>
                 </div>
-
                 <br>
                 <script>
                     document.getElementById('jenis_post').addEventListener('change', function() {
@@ -298,7 +299,6 @@ $result_post_um = $sql_post_um->get_result();
                         }
                         ?>
                     </tbody>
-
                     <table class="table table-bordered table-striped table-hover">
                         <p><strong>Post-Financing On Prosses</strong></p>
                         <thead class="table-dark">
@@ -326,7 +326,6 @@ $result_post_um = $sql_post_um->get_result();
                                     echo "<td>" . number_format($row['os'], 2, ',', '.') . "</td>";
                                     echo "<td>" . number_format(($row['released'] - $row['os']), 2, ',', '.') . "</td>";
                                     echo "<td class='text-center'><a class='btn btn-warning' href='post_proses.php?id=" . htmlspecialchars($row['id']) . "' onclick=\"return confirm('Are you sure to update this record?');\"><i class=\"bi bi-send-check\"></i></a></td>";
-
                                     $subtotal_total += $row['released'];
                                     $subtotal_os += $row['os'];
                                     $subtotal_difference += ($row['released'] - $row['os']);
@@ -356,9 +355,83 @@ $result_post_um = $sql_post_um->get_result();
             </div>
         </div>
         <div id="uang_masuk" class="tab-pane fade show active">
+            <div class="container mt-5">
+                
+                <h1 class="text-Left mb-4">Uang Masuk</h1>
+                <div class="form-group">
+                    <select class="form-control" id="sumber_dana" name="sumber_dana">
+                        <option value="" style="font-style:italic;">-- Pilih sumber dana --</option>
+                        <option value="PLN" <?php if ($sumber_dana == 'PLN') echo 'selected'; ?>>PLN</option>
+                        <option value="Sinarmas" <?php if ($sumber_dana == 'Sinarmas') echo 'selected'; ?>>Sinarmas</option>
+                    </select>
+                </div>
+                <br>
+                <script>
+                    document.getElementById('sumber_dana').addEventListener('change', function() {
+                        const sumber_dana = this.value;
+                        const currentHash = '#uang_masuk'; // Tetapkan hash untuk tab Uang Masuk
+                        const currentURL = new URL(window.location.href);
+                        currentURL.searchParams.set('sumber_dana', sumber_dana); // Tambahkan atau perbarui parameter sumber_dana
+                        currentURL.hash = currentHash; // Pastikan hash tetap
+                        window.location.href = currentURL.toString(); // Redirect ke URL baru
+                    });
+                </script>
+                 <a class="btn btn-info" href="pre_input.php"><i class="bi bi-plus-circle"></i></a>
+                <span>&nbsp;</span>
+                <a class="btn btn-danger" href="dashboard.php"><i class="bi bi-backspace"></i></a>
+                <br><br>
+                <table class="table table-bordered table-striped table-hover">
+                    <thead class="table-dark">
+                        <tr class="text-center">
+                            <th>TANGGAL</th>
+                            <th>SUMBER DANA</th>
+                            <th>NOMINAL TERIMA</th>
+                            <th>KETERANGAN</th>
 
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php
+                        if ($result_um->num_rows > 0) {
+                            while ($row = $result_um->fetch_assoc()) {
+                                echo "<tr>";
+                                echo "<td>" . $row['tgl'] . "</td>";
+                                echo "<td>" . $row['sumber_dana'] . "</td>";
+                                echo "<td>" . number_format($row['nominal_terima'], 2, ',', '.') . "</td>";
+                                echo "<td>" . $row['ket'] . "</td>";
+          
+                                echo "<td>" . $row['tanggal_jatuh_tempo'] . "</td>";
+
+                                echo "<td class='text-center'><a class='btn btn-success' onclick=\"showPostRowInfo(" . htmlspecialchars($row['id']) . ")\"><i class=\"bi bi-info\"></i></a></td>";
+                                $subtotal_total += $row['nominal_terima'];
+                                $subtotal_os += $row['os'];
+                                $subtotal_difference += ($row['nominal_terima'] - $row['os']);
+                                $plafond += $row['plafond'];
+                            }
+                            echo "<tr class='table-secondary'>";
+                            echo "<td colspan='4' class='text-end'><strong>Subtotal</strong></td>";
+                            echo "<td>" . number_format($subtotal_total, 2, ',', '.') . "</td>";
+                            echo "<td>" . number_format($subtotal_os, 2, ',', '.') . "</td>";
+                            echo "<td colspan='2'>" . number_format($subtotal_difference, 2, ',', '.') . "</td>";
+                            echo "</tr>";
+                            echo "<tr class='table-secondary'>";
+                            echo "<td colspan='4' class='text-end'><strong>Plafond Full</strong></td>";
+                            echo "<td colspan='2' class='text-end'><strong></strong></td>";
+                            echo "<td colspan='2'>" . number_format($plafond, 2, ',', '.') . "</td>";
+                            echo "<tr class='table-secondary'>";
+                            echo "<td colspan='4' class='text-end'><strong>Remaining Plafond</strong></td>";
+                            echo "<td colspan='2' class='text-end'><strong></strong></td>";
+                            echo "<td colspan='2'>" . number_format(($plafond - $subtotal_difference), 2, ',', '.') . "</td>";
+                            echo "</tr>";
+                            echo "</tr>";
+                        } else {
+                            echo "<tr><td colspan='7' class='text-center'>Tidak ada data</td></tr>";
+                        }
+                        ?>
+                    </tbody>
+            </div>
         </div>
-    </div>
     </div>
 </body>
 
@@ -374,6 +447,7 @@ $result_post_um = $sql_post_um->get_result();
                 if (data.success) {
                     Swal.fire({
                         title: 'Pre-Financing Information',
+                        width: '80%',
                         html: `
                             <p style="text-align: justify; font-size: 0.9em;"><strong>Hutang:</strong> ${data.row.jenis_prepost}</p>
                             <p style="text-align: justify; font-size: 0.9em;"><strong>Tanggal Cair:</strong> ${data.row.tanggal_prepost}</p>
@@ -383,9 +457,30 @@ $result_post_um = $sql_post_um->get_result();
                             <p style="text-align: justify; font-size: 0.9em;"><strong>Penutupan:</strong> ${parseFloat(data.row.os).toLocaleString()}</p>
                             <p style="text-align: justify; font-size: 0.9em;"><strong>Sisa OS:</strong> ${(parseFloat(data.row.total) - parseFloat(data.row.os)).toLocaleString()}</p>
                             <p style="text-align: justify; font-size: 0.9em;"><strong>Keterangan:</strong> ${data.row.ket}</p>
+
+                            <p style="text-align: justify; font-size: 0.9em;"><strong>Penutupan:</strong></p>
+                            <table class="table table-bordered table-striped table-hover" style="font-size: 0.8em;">
+                                <thead class="table-dark">
+                                    <tr class="text-center">
+                                        <th>Post</th>
+                                        <th>Tahapan Post</th>
+                                        <th>Nominal</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${data.rowtutuppre.map(row => `
+                                        <tr>
+                                            <td>${row.jenis_post}</td>
+                                            <td>${row.tahapan_post}</td>
+                                            <td>${parseFloat(row.nominal).toLocaleString()}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
                         `,
                         icon: 'info'
                     });
+                    
                 } else {
                     Swal.fire({
                         title: 'Error',

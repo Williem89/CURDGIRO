@@ -51,24 +51,19 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 
     $total_nominal = 0;
-foreach ($entries as $entry) {
-    $total_nominal += (float) $entry['nominal']; // Hitung total nominal
-}
+    foreach ($entries as $entry) {
+        $total_nominal += (float) $entry['nominal']; // Hitung total nominal
+    }
 
-if ($total_nominal != (float) $released) {
-    echo "<p style='color:red;'>Total nominal (Rp. " . number_format($total_nominal, 2, ',', '.') . ") tidak sesuai dengan nilai released (Rp. " . number_format($released, 2, ',', '.') . ").</p>";
-    exit;
-}
+    if ($total_nominal != (float) $released) {
+        echo "<p style='color:red;'>Total nominal (Rp. " . number_format($total_nominal, 2, ',', '.') . ") tidak sesuai dengan nilai released (Rp. " . number_format($released, 2, ',', '.') . ").</p>";
+        exit;
+    }
 
-if ((float)$released <= 0) {
-    echo "<p style='color:red;'>Released harus diisi dan lebih besar dari 0.</p>";
-    exit;
-}
-
-
-
-    // // Convert entries to JSON
-    // $entries_json = json_encode($entries);
+    if ((float)$released <= 0) {
+        echo "<p style='color:red;'>Released harus diisi dan lebih besar dari 0.</p>";
+        exit;
+    }
 
     // Insert data into database
     $stmt = $conn->prepare("INSERT INTO post (tanggal_post, tanggal_jatuh_tempo, tahapan_post, jenis_post, released, ket) VALUES (?, ?, ?, ?, ?, ?)");
@@ -121,8 +116,11 @@ foreach ($entries as $entry) {
             WHERE jenis_prepost = ? AND tahapan = ?
         ");
     $update_stmt->bind_param("dss", $nominal, $jenis_pre, $tahapan);
+    
+    $add_tutuppre_stmt = $conn->prepare("INSERT INTO tutup_pre (tanggal_post, jenis_post, tahapan_post, jenis_pre, tahapan_pre, nominal) VALUES (?, ?, ?, ?, ?, ?)");
+    $add_tutuppre_stmt->bind_param("sssssd", $tanggal_post, $jenis_post, $tahapan_post, $jenis_pre, $tahapan, $nominal);
 
-    if ($update_stmt->execute()) {
+    if ($update_stmt->execute() && $add_tutuppre_stmt->execute()) {
         echo "<p style='color:green;'>Successfully updated Tahapan {$tahapan} with additional value {$nominal}</p>";
     } else {
         echo "<p style='color:red;'>Error updating record for Tahapan {$tahapan}: " . $update_stmt->error . "</p>";
@@ -159,16 +157,8 @@ mysqli_close($conn);
                             <label for="jenis_post">Jenis Post Financing :</label>
                             <select class="form-control" id="jenis_post" name="jenis_post">
                                 <option value="">-- Select Jenis Post Financing --</option>
-                                <!-- <option value="BNI - Prefinancing">BNI - Prefinancing</option> -->
                                 <option value="BNI - Post Invoice Sinarmas">BNI - Post Invoice Sinarmas</option>
                                 <option value="BNI - SCF Post PLN">BNI - SCF Post PLN</option>
-                                <!-- <option value="BRI - KMK WA">BRI - KMK WA</option> -->
-                                <!-- <option value="BRI - KMK CO TETAP">BRI - KMK CO TETAP</option> -->
-                                <!-- <option value="BRI -  SCF QIN IKPP">BRI - SCF QIN IKPP</option> -->
-                                <!-- <option value="Pre Mandiri GEL - PLN">Pre Mandiri GEL - PLN"</option> -->
-                                <!-- <option value="-">-</option> -->
-                                <!-- <option value="Mandiri - SCF KKS - IKPP">Mandiri - SCF KKS - IKPP</option> -->
-                                <!-- <option value="BCA - Time Loan Revolving 1">BCA - Time Loan Revolving 1</option> -->
                                 <option value="BCA - Time Loan Revolving 2">BCA - Time Loan Revolving 2</option>
                                 <option value="BCA - Kredit Lokal">BCA - Kredit Lokal</option>
                             </select>
@@ -244,8 +234,6 @@ mysqli_close($conn);
 
                                 <option value="" style="font-style:italic;">-- Pilih jenis Prefinancing --</option>
                                 <option value="BNI - Prefinancing">BNI - Prefinancing</option>
-                                <!-- <option value="BNI - Post Invoice Sinarmas">BNI - Post Invoice Sinarmas</option>
-                                    <option value="BNI - SCF Post PLN">BNI - SCF Post PLN</option> -->
                                 <option value="BRI - KMK WA">BRI - KMK WA</option>
                                 <option value="BRI - KMK CO TETAP">BRI - KMK CO TETAP</option>
                                 <option value="BRI -  SCF QIN IKPP">BRI - SCF QIN IKPP</option>
@@ -253,15 +241,13 @@ mysqli_close($conn);
                                 <option value="-">-</option>
                                 <option value="Mandiri - SCF KKS - IKPP">Mandiri - SCF KKS - IKPP</option>
                                 <option value="BCA - Time Loan Revolving 1">BCA - Time Loan Revolving 1</option>
-                                <!-- <option value="BCA - Time Loan Revolving 2">BCA - Time Loan Revolving 2</option> -->
-                                <!-- <option value="BCA - Kredit Lokal">BCA - Kredit Lokal</option> -->
+
                             </select>
                         </div>
                         <div class="form-row">
                             <div class="form-group col-md-6">
                                 <label for="tahapan">Tahap :</label>
                                 <select class="form-control tahapan-select" name="entries[0][tahapan]">
-                                    <!-- Options will be loaded dynamically -->
                                 </select>
                             </div>
                             <div class="form-group col-md-6">
@@ -361,11 +347,15 @@ mysqli_close($conn);
                     });
                 </script>
             </div>
-
-            <button type="submit" class="btn btn-primary mt-3">Submit</button>
+            <br>
+            <div>
+                <button type="submit" class="btn btn-primary">Submit</button>
+                <span>&nbsp;</span>
+                <a class="btn btn-danger" href="prepost.php#post_financing"><i class="bi bi-backspace"></i></a>
+            </div>
+            <br>
         </form>
-        <p id="total-nominal-feedback" style="font-weight: bold; color: red;">Total Nominal: 0</p>
-
+        <p id="total-nominal-feedback" style="font-weight: bold; color: red;">Total Nominal: 0</p>  
     </div>
     <script>
         //number format
@@ -470,62 +460,59 @@ mysqli_close($conn);
         });
 
         function validateForm() {
-    // Ambil nilai dari input
-    const releasedValue = parseFloat(document.getElementById('released').value || 0); // Nilai released (hidden)
-    const nominalInputs = document.querySelectorAll('input[name$="[nominal]"]'); // Semua nominal
-    const feedback = document.getElementById('total-nominal-feedback');
-    const submitButton = document.querySelector('button[type="submit"]');
+            // Ambil nilai dari input
+            const releasedValue = parseFloat(document.getElementById('released').value || 0); // Nilai released (hidden)
+            const nominalInputs = document.querySelectorAll('input[name$="[nominal]"]'); // Semua nominal
+            const feedback = document.getElementById('total-nominal-feedback');
+            const submitButton = document.querySelector('button[type="submit"]');
 
-    let totalNominal = 0;
+            let totalNominal = 0;
 
-    // Hitung total nominal
-    nominalInputs.forEach(input => {
-        totalNominal += parseFloat(input.value || 0);
-    });
+            // Hitung total nominal
+            nominalInputs.forEach(input => {
+                totalNominal += parseFloat(input.value || 0);
+            });
 
-    // Perbarui feedback
-    feedback.textContent = `Total Nominal: ${totalNominal.toLocaleString()} / Released: ${releasedValue.toLocaleString()}`;
+            // Perbarui feedback
+            feedback.textContent = `Total Nominal: ${totalNominal.toLocaleString()} / Released: ${releasedValue.toLocaleString()}`;
 
-    // Logika validasi
-    if (releasedValue > 0 && totalNominal > 0) {
-        if (totalNominal === releasedValue) {
-            feedback.style.color = 'green';
-            submitButton.disabled = false; // Aktifkan tombol submit
-        } else {
-            feedback.style.color = 'red';
-            submitButton.disabled = true; // Nonaktifkan tombol submit
+            // Logika validasi
+            if (releasedValue > 0 && totalNominal > 0) {
+                if (totalNominal === releasedValue) {
+                    feedback.style.color = 'green';
+                    submitButton.disabled = false; // Aktifkan tombol submit
+                } else {
+                    feedback.style.color = 'red';
+                    submitButton.disabled = true; // Nonaktifkan tombol submit
+                }
+            } else {
+                feedback.textContent = `Pastikan nilai Released dan semua Nominal diisi dengan benar.`;
+                feedback.style.color = 'red';
+                submitButton.disabled = true; // Nonaktifkan tombol submit
+            }
         }
-    } else {
-        feedback.textContent = `Pastikan nilai Released dan semua Nominal diisi dengan benar.`;
-        feedback.style.color = 'red';
-        submitButton.disabled = true; // Nonaktifkan tombol submit
-    }
-}
 
-// Tambahkan event listener untuk validasi real-time
-document.getElementById('released_show').addEventListener('input', function () {
-    syncReleasedValue(this); // Pastikan hidden input diperbarui
-    validateForm(); // Panggil validasi
-});
+        // Tambahkan event listener untuk validasi real-time
+        document.getElementById('released_show').addEventListener('input', function() {
+            syncReleasedValue(this); // Pastikan hidden input diperbarui
+            validateForm(); // Panggil validasi
+        });
 
-document.getElementById('entries-container').addEventListener('input', function (e) {
-    if (e.target.name && e.target.name.includes('[nominal_show]')) {
-        validateForm(); // Panggil validasi saat ada perubahan pada nominal
-    }
-});
+        document.getElementById('entries-container').addEventListener('input', function(e) {
+            if (e.target.name && e.target.name.includes('[nominal_show]')) {
+                validateForm(); // Panggil validasi saat ada perubahan pada nominal
+            }
+        });
 
-// Validasi awal saat halaman dimuat
-document.addEventListener('DOMContentLoaded', validateForm);
+        // Validasi awal saat halaman dimuat
+        document.addEventListener('DOMContentLoaded', validateForm);
 
 
-document.getElementById('entries-container').addEventListener('input', function (e) {
-    if (e.target.name && e.target.name.includes('[nominal]')) {
-        validateForm();
-    }
-});
-
-
-
+        document.getElementById('entries-container').addEventListener('input', function(e) {
+            if (e.target.name && e.target.name.includes('[nominal]')) {
+                validateForm();
+            }
+        });
     </script>
 </body>
 

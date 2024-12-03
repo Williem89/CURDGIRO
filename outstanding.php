@@ -605,7 +605,7 @@ $grand_total = array_reduce($report_data, function ($carry, $banks) {
                         </button>
                     </div>
                 </div>
-                
+
             </form>
         </div>
 
@@ -619,14 +619,14 @@ $grand_total = array_reduce($report_data, function ($carry, $banks) {
                 <div class="col">
                 </div>
                 <div class="col">
-                    <table class="table table-striped" style="border: 1px solid; width: 600px;">
+                    <table class="table table-striped" style="border: 1px solid black; width: 600px; border-radius: 10px; overflow: hidden; box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.3);">
                         <thead>
                             <tr>
-                                <th style="text-align: center;">Nama Entitas</th>
-                                <th style="text-align: center;">Bank</th>
-                                <th style="text-align: center;">AC Number</th>
-                                <th style="text-align: center;">Jumlah</th>
-                                <th style="text-align: center;">Nominal</th>
+                                <th style="text-align: center; width: 100px ">Nama Entitas</th>
+                                <th style="text-align: center; width: 100px">Bank</th>
+                                <th style="text-align: center; width: 100px">AC Number</th>
+                                <th style="text-align: center; width: 20px">Jumlah</th>
+                                <th style="text-align: center; width: 170px">Nominal</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -646,11 +646,11 @@ $grand_total = array_reduce($report_data, function ($carry, $banks) {
                                         }
                                         ?>
                                         <tr class="ac-header" style="text-align: center;" onclick="toggleGiroList('<?php echo htmlspecialchars($nama_entitas) . '-' . htmlspecialchars($bank) . '-' . htmlspecialchars($ac_number); ?>')">
-                                            <td><?php echo htmlspecialchars($nama_entitas); ?></td>
-                                            <td><?php echo htmlspecialchars($bank); ?></td>
-                                            <td><?php echo htmlspecialchars($ac_number); ?></td>
-                                            <td><?php echo count($giroList); ?></td>
-                                            <td><?php echo 'Rp. ' . number_format($totalNominal, 2, ',', '.'); ?></td>
+                                            <td style="font-size: 11pt;"><?php echo htmlspecialchars($nama_entitas); ?></td>
+                                            <td style="font-size: 11pt;"><?php echo htmlspecialchars($bank); ?></td>
+                                            <td style="font-size: 11pt;"><?php echo htmlspecialchars($ac_number); ?></td>
+                                            <td style="font-size: 11pt;"><?php echo count($giroList); ?></td>
+                                            <td style="font-size: 11pt;"><?php echo 'Rp. ' . number_format($totalNominal, 2, ',', '.'); ?></td>
                                         </tr>
 
 
@@ -1016,16 +1016,17 @@ $grand_total = array_reduce($report_data, function ($carry, $banks) {
         <br>
         <?php
 
-        echo "<h1>Overdue List</h1>";
+        echo "<h1 style='text-shadow: 2px 2px black;'>Overdue List</h1>";
         echo "per tanggal : " . date('d-M-Y');
 
         include 'OverDueList.php';
         ?>
+        <br><br>
     </div>
 
     <div class="d-flex">
         <?php
-        echo "<h1>Oustanding List</h1>";
+        echo "<h1 style='text-shadow: 2px 2px black;color: green'>Oustanding List</h1>";
         ?>
 
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.0/font/bootstrap-icons.min.css">
@@ -1038,7 +1039,7 @@ $grand_total = array_reduce($report_data, function ($carry, $banks) {
         <p style="text-align: center;">Tidak ada data giro.</p>
     <?php else: ?>
 
-        <table class="table table-striped">
+        <table class="table table-striped" style="border-radius: 10px; overflow: hidden; box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.3);">
             <thead>
                 <tr>
                     <th style="text-align: center;">Nama Entitas</th>
@@ -1072,9 +1073,9 @@ $grand_total = array_reduce($report_data, function ($carry, $banks) {
 
                             $totalNominal = array_sum(array_column($giroList, 'total_nominal'));
                             if ($totalNominal > $saldo) {
-                                $warning = 'Saldo tidak cukup!';
+                                $warning = '<span style="text-shadow: 1px 1px black;color: red">Saldo tidak cukup !</span>';
                             } else {
-                                $warning = '<span style="color: green;">Saldo cukup</span>';
+                                $warning = '<span style="text-shadow: 1px 1px black;color: green">Saldo cukup</span>';
                             }
                             ?>
                             <tr class="ac-header" style="text-align: center;" onclick="toggleGiroList('<?php echo htmlspecialchars($nama_entitas) . '-' . htmlspecialchars($bank) . '-' . htmlspecialchars($ac_number); ?>')">
@@ -1110,15 +1111,20 @@ $grand_total = array_reduce($report_data, function ($carry, $banks) {
                                                 <th style="width:150px;text-align:center;">Keterangan</th>
                                                 <th style="width:150px;text-align:center;">Nominal</th>
                                                 <th style="width:150px;text-align:center;">No Surat</th>
-
                                             </tr>
                                         </thead>
                                         <tbody>
                                             <?php $rowIndex = 1; ?>
-                                            <?php usort($giroList, function ($a, $b) {
+                                            <?php
+                                            $giroListWithoutSaldo = array_filter($giroList, function($key) {
+                                                return $key !== 'saldo';
+                                            }, ARRAY_FILTER_USE_KEY);
+
+                                            usort($giroListWithoutSaldo, function ($a, $b) {
                                                 return strtotime($a['tanggal_jatuh_tempo']) - strtotime($b['tanggal_jatuh_tempo']);
-                                            }); ?>
-                                            <?php foreach ($giroList as $index => &$giro): ?>
+                                            });
+                                            ?>
+                                            <?php foreach ($giroListWithoutSaldo as $index => &$giro): ?>
                                                 <?php if ($index === 'saldo') continue; ?>
                                                 <?php if ($giro['tanggal_jatuh_tempo'] < $start_date || $giro['tanggal_jatuh_tempo'] > $end_date) continue; ?>
                                                 <tr>

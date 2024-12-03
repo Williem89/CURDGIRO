@@ -43,10 +43,10 @@ $result->data_seek(0);
 
 
 
-// Function to format numbers as Rupiah
+// Function to format numbers as Rupiah with two decimal places
 function formatRupiah($value)
 {
-    return 'Rp ' . number_format($value, 0, ',', '.');
+    return 'Rp ' . number_format($value, 2, ',', '.');
 }
 
 
@@ -54,12 +54,12 @@ function formatRupiah($value)
 function updateSaldo($conn, $nominal_update)
 {
     foreach ($nominal_update as $no_akun => $nominal) {
-        $nominal = str_replace('.', '', $nominal); // Remove dots
-        $nominal = (float)$nominal; // Convert to float
-        if ($nominal < 0) {
-            echo "Saldo tidak valid untuk Nomor Akun: $no_akun<br>";
-            continue; // Skip invalid entries
-        }
+        // $nominal = str_replace('.', '', $nominal); // Remove dots
+        // $nominal = (float)$nominal; // Convert to float
+        // if ($nominal < 0) {
+        //     echo "Saldo tidak valid untuk Nomor Akun: $no_akun<br>";
+        //     continue; // Skip invalid entries
+        // }
         $verified = '0';
         // Update saldo in the database
         $stmt = $conn->prepare("UPDATE list_rekening SET saldo = ?, Verified = ?, updtgl = NOW() WHERE no_akun = ?");
@@ -78,12 +78,12 @@ function updateSaldo($conn, $nominal_update)
 function updateSisaPlafond($conn, $nominal_update)
 {
     foreach ($nominal_update as $id => $nominal) {
-        $nominal = str_replace('.', '', $nominal); // Remove dots
-        $nominal = (float)$nominal; // Convert to float
-        if ($nominal < 0) {
-            echo "Sisa plafond tidak valid untuk ID: $id<br>";
-            continue; // Skip invalid entries
-        }
+        // $nominal = str_replace('.', '', $nominal); // Remove dots
+        // $nominal = (float)$nominal; // Convert to float
+        // if ($nominal < 0) {
+        //     echo "Sisa plafond tidak valid untuk ID: $id<br>";
+        //     continue; // Skip invalid entries
+        // }
         $verified = '0';
         // Update sisa plafond in the database
         $stmt = $conn->prepare("UPDATE bnl SET sisa_plafond = ?, Verified = ?, updtgl = NOW() WHERE id = ?");
@@ -103,6 +103,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (isset($_POST['update_saldo'])) {  // If 'update_saldo' field is submitted
         updateSaldo($conn, $_POST['nominal_update']);
     } elseif (isset($_POST['update_sisa_plafond'])) {  // If 'update_sisa_plafond' field is submitted
+        // var_dump($_POST['nominal_update']);
         updateSisaPlafond($conn, $_POST['nominal_update']);
     }
 
@@ -141,7 +142,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             // Update the hidden input with the integer value
             let nominalInput = document.getElementById('nominal_' + element.dataset.id);
-            nominalInput.value = value.replace(/\./g, '');
+            nominalInput.value = parseFloat(value.replace(/\./g, '').replace(',', '.')).toFixed(2);
         }
 
         function exportToExcel() {
@@ -247,6 +248,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <div id="saldoleasing" class="tab-pane fade">
         <br>
         <h2 style="text-align: center;">Bunga Leasing & Bank</h2>
+        <p style="color: red;">Under Repair</p>
 
         <form action="dashboard.php" method="get" style="display: inline;">
             <button type="submit" class="btn-back">Kembali</button>

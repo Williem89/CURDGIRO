@@ -201,7 +201,7 @@
 
     <head>
         <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>Aplikasi Giro</title>
         <link rel="icon" type="image/x-icon" href="img/icon.png">
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
@@ -215,6 +215,7 @@
                 flex-direction: column;
                 min-height: 100vh;
             }
+            
 
             header {
                 background: linear-gradient(90deg, #007bff, #6a11cb);
@@ -347,6 +348,7 @@
                 text-align: center;
                 position: fixed;
                 bottom: 0;
+                margin-left: -30px;
                 width: 100%;
                 box-shadow: 0 0 20px rgba(135, 206, 235, 0.7), 0 0 20px rgba(135, 206, 235, 0.7);
             }
@@ -517,7 +519,7 @@
                     <br>
                     <button class="btn btn-danger" title="export to pdf" onclick="generatePDF()" style="font-size: 28px;"><i class="bi bi-file-pdf"></i></button>
                     <a onclick="exportToWhatsapp()" class="btn btn-success" style="margin-left:10px;font-size:28px;"><i class="bi bi-whatsapp"></i> </a>
-                    <h2 class="mt-5">Outstanding Vs Saldo</h2>
+                    <h1 class="mt-5" style="text-shadow: 2px 2px black;color: #007bff">Outstanding Vs Saldo</h1>
                     <form method="post" class="mb-4">
                         <?php include 'outstanding.php'; ?>
                 </div>
@@ -581,6 +583,7 @@
                         include 'prepost_show.php';
                         ?>
                 </div>
+                
                 <div id="giro" class="tab-pane fade">
                     <div class="stats-card">
                         <div class="card">
@@ -742,7 +745,9 @@
         </section>
 
         <footer>
+            <div>
             © 2024 Aplikasi Giro. Powered By IT AVENGER.
+            </div>
         </footer>
 
         <script>

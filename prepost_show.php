@@ -1,7 +1,6 @@
 <?php
 // Koneksi ke database
 include 'koneksi.php';
-
 // Ambil data dari tabel bnl
 $sql_plafon = "SELECT * FROM pfb";
 $result = $conn->query($sql_plafon);
@@ -10,7 +9,6 @@ if (!$result) {
 }
 $plafonData = $result->fetch_all(MYSQLI_ASSOC);
 $result->data_seek(0);
-
 $sql_bank = "SELECT * FROM pfb  where jenis = 'POST'";
 $result2 = $conn->query($sql_bank);
 if (!$result2) {
@@ -18,54 +16,43 @@ if (!$result2) {
 }
 $bankData = $result2->fetch_all(MYSQLI_ASSOC);
 $result2->data_seek(0);
-
 $groupedData = [];
 if ($result->num_rows > 0) {
     while ($row = $result->fetch_assoc()) {
         $groupedData[$row['bank']][] = $row; // Kelompokkan data berdasarkan nama bank
     }
 }
-
-
-
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Plafon Fasilitas Perbankan</title>
     <style>
     </style>
-    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-  
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet"> 
 </head>
-
 <body>
-    <h1 style="text-align: center;">Plafon Fasilitas Perbankan</h1>
+    <h1 style="text-align: center;text-shadow:  2px 2px black; color: cyan">Plafon Fasilitas Perbankan</h1>
     <br>
-
-    <table style="margin: 0 auto; border: 1px solid black; box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);">
+    <table style="margin: 0 auto; border-radius: 10px; border: 1px solid black; box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1); overflow: hidden;">
         <p style="text-align: left;"><strong>PT. GLOBAL ENERGI LESTARI DAN GROUP</strong> </P>
-        <thead style="background-color: orange">
-            <tr style="text-align:center; border: 1px solid black;">
-                <th style="width: 50px; border: 1px solid black;" rowspan="2">NO</th>
-                <th style="width: 300px; border: 1px solid black;" rowspan="2">Bank</th>
-                <th style="width: 100px; border: 1px solid black;" rowspan="2">Entitas</th>
-                <th style="width: 350px; border: 1px solid black;" rowspan="2">Keterangan</th>
-                <th style="border: 1px solid black;" colspan="2">PRE</th>
-                <th style="border: 1px solid black;" colspan="2">POST</th>
-                <th style="width: 250px; border: 1px solid black; " rowspan="2">Kelonggaran Tarik</th>
+        <thead>
+            <tr style="text-align:center; box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);">
+                <th style="width: 50px; box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);background-color: #3498eb;" rowspan="2">NO</th>
+                <th style="width: 300px; box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);background-color: #3498eb;" rowspan="2">Bank</th>
+                <th style="width: 100px; box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);background-color: #3498eb;" rowspan="2">Entitas</th>
+                <th style="width: 350px; box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);background-color: #3498eb;" rowspan="2">Keterangan</th>
+                <th style="box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);background-color: #3498eb;" colspan="2">PRE</th>
+                <th style="box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);background-color: #3498eb;" colspan="2">POST</th>
+                <th style="width: 250px; box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);background-color: #3498eb;" rowspan="2">Kelonggaran Tarik</th>
             </tr>
-            <tr style="text-align:center; border: 1px solid black;">
-
-                <th style="width: 250px; border: 1px solid black;">Plafon</th>
-                <th style="width: 250px; border: 1px solid black;">Outstanding</th>
-                <th style="width: 250px; border: 1px solid black;">Plafon</th>
-                <th style="width: 250px; border: 1px solid black;">Outstanding</th>
-
+            <tr style="text-align:center; box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);">
+                <th style="width: 250px; box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);background-color: #3498eb;">Plafon</th>
+                <th style="width: 250px; box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);background-color: #3498eb;">Outstanding</th>
+                <th style="width: 250px; box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);background-color: #3498eb;">Plafon</th>
+                <th style="width: 250px; box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);background-color: #3498eb;">Outstanding</th>
             </tr>
         </thead>
         <tbody>
@@ -98,7 +85,6 @@ if ($result->num_rows > 0) {
             </tr>
         <?php endforeach; ?>
         <tr style="background-color: #ccdeb6;">
-               
                 <td colspan="4" style="text-align:center; border: 1px solid black;"><strong>Subtotal :</strong></td>
                 <td style="text-align:right; border: 1px solid black;">
                     Rp. <span style=" margin-right:10px"><?= htmlspecialchars(number_format(array_sum(array_column(array_filter($rows, function($row) { return $row['jenis'] == 'PRE'; }), 'plafond')), 0, ',', '.')); ?></span>
@@ -116,11 +102,8 @@ if ($result->num_rows > 0) {
                     Rp. <span style=" margin-right:10px"><?= htmlspecialchars(number_format(array_sum(array_column($rows, 'plafond')) - array_sum(array_column($rows, 'outstanding')), 0, ',', '.')); ?></span>
                 </td>
             </tr>
-            
     <?php endforeach; ?>
 <?php endif; ?>
-
-            
             <tr>
                 <td colspan="4" style="text-align:center; border: 1px solid black;background-color:orange;"><strong>Total Plafon</strong></td>
                
@@ -253,7 +236,6 @@ if ($result->num_rows > 0) {
             totalAllPlafon = totalPrePlafon + totalPostPlafon;
             totalAllOutstanding = totalPreOutstanding + totalPostOutstanding;
         }
-
         // Add overall totals
         body.push(
             [
@@ -272,7 +254,6 @@ if ($result->num_rows > 0) {
                 { content: `Rp. ${totalKelonggaran.toLocaleString()}`, styles: { halign: 'right', fillColor: [255, 153, 0] } },
             ]
         );
-
         // Generate the PDF table
         doc.autoTable({
             head: head,
@@ -302,9 +283,7 @@ if ($result->num_rows > 0) {
             .reduce((sum, row) => sum + parseFloat(row[field]), 0);
     }
 </script>
-
 </html>
-
 <?php
 // Tutup koneksi
 $conn->close();

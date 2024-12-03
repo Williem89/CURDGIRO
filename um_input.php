@@ -1,88 +1,29 @@
 <?php
 include 'koneksi.php';
 
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $tanggal_post = $_POST['tanggal_post'];
-    $tanggal_jatuh_tempo = $_POST['tanggal_jatuh_tempo'];
-    $jenis_post = $_POST['jenis_post'];
-    $tahapan_post = $_POST['tahapan_post'];
-    $entries = $_POST['entries']; // Array of entries
-    $released = $_POST['released'];
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $tgl = $_POST['tgl'];
+    $sumber_dana = $_POST['sumber_dana'];
+    $nominal_terima = $_POST['nominal_terima'];
+    $entries = $_POST['entries'];
     $ket = $_POST['ket'];
-    $errors = [];
-    $jenis_pre = $_POST['jenis_pre'];
 
-    if (empty($tanggal_post)) {
-        $errors[] = 'Tanggal Prepost is required';
-    }
-
-    if (empty($tanggal_jatuh_tempo)) {
-        $errors[] = 'Tanggal Jatuh Tempo is required';
-    }
-
-    if (empty($entries) || !is_array($entries)) {
-        $errors[] = 'At least one entry is required';
+    // Validate and process the form data
+    if (empty($tgl) || empty($sumber_dana) || empty($nominal_terima) || empty($entries)) {
+        echo "<p style='color:red;'>Please fill in all required fields.</p>";
     } else {
-        foreach ($entries as $entry) {
-            if (empty($entry['tahapan'])) {
-                $errors[] = 'Tahapan is required for each entry';
-                break;
-            }
-            if (empty($entry['nominal']) || !is_numeric($entry['nominal'])) {
-                $errors[] = 'Nominal is required and must be a number for each entry';
-                break;
-            }
+        // Insert the data into the database
+        $stmt = $conn->prepare("INSERT INTO um (tgl, sumber_dana, nominal_terima, ket) VALUES (?, ?, ?, ?)");
+        $stmt->bind_param("ssds", $tgl, $sumber_dana, $nominal_terima, $ket);
+
+        if ($stmt->execute()) {
+            echo "<p style='color:green;'>Data successfully inserted.</p>";
+        } else {
+            echo "<p style='color:red;'>Error inserting data: " . $stmt->error . "</p>";
         }
+        $stmt->close();
     }
-
-    if (empty($jenis_post)) {
-        $errors[] = 'Jenis Prepost is required';
-    }
-
-    if (empty($released) || !is_numeric($released)) {
-        $errors[] = 'Nilai Pencairan is required and must be a number';
-    }
-
-    if (!empty($errors)) {
-        foreach ($errors as $error) {
-            echo "<p style='color:red;'>$error</p>";
-        }
-        exit;
-    }
-
-    $total_nominal = 0;
-foreach ($entries as $entry) {
-    $total_nominal += (float) $entry['nominal']; // Hitung total nominal
 }
-
-if ($total_nominal != (float) $released) {
-    echo "<p style='color:red;'>Total nominal (Rp. " . number_format($total_nominal, 2, ',', '.') . ") tidak sesuai dengan nilai released (Rp. " . number_format($released, 2, ',', '.') . ").</p>";
-    exit;
-}
-
-if ((float)$released <= 0) {
-    echo "<p style='color:red;'>Released harus diisi dan lebih besar dari 0.</p>";
-    exit;
-}
-
-
-
-    // // Convert entries to JSON
-    // $entries_json = json_encode($entries);
-
-    // Insert data into database
-    $stmt = $conn->prepare("INSERT INTO post (tanggal_post, tanggal_jatuh_tempo, tahapan_post, jenis_post, released, ket) VALUES (?, ?, ?, ?, ?, ?)");
-    $stmt->bind_param("ssssss", $tanggal_post, $tanggal_jatuh_tempo, $tahapan_post,  $jenis_post, $released, $ket);
-
-    if ($stmt->execute()) {
-        echo "<p style='color:green;'>Record added successfully</p>";
-    } else {
-        echo "<p style='color:red;'>Error: " . $stmt->error . "</p>";
-    }
-
-    $stmt->close();
-}
-
 // Handle AJAX request to get 'tahapan' options
 if (isset($_GET['action']) && $_GET['action'] == 'getTahapan' && isset($_GET['jenis_post'])) {
     $jenis_post = $_GET['jenis_post'];
@@ -100,9 +41,6 @@ if (isset($_GET['action']) && $_GET['action'] == 'getTahapan' && isset($_GET['je
     exit;
 }
 
-// echo "<pre>";
-// print_r($entries);
-// echo "</pre>";
 
 
 foreach ($entries as $entry) {
@@ -150,30 +88,38 @@ mysqli_close($conn);
 
     <div class="container mt-5">
         <form method="POST" action="">
-            <H2>Proses Pengajuan Penutupan Post Financing</H2>
+            <H2>Uang Masuk</H2>
             <br>
             <div style="border: 1px solid; padding: 30px;">
-         
+
                 <div class="row">
                     <div class="col">
                         <div class="form-group">
-                            <label for="tgl">Tanggal Penutupan Post :</label>
+                            <label for="tgl"><strong>Tanggal Uang Masuk :</strong></label>
                             <input type="date" class="form-control" id="tgl" name="tgl">
                         </div>
                     </div>
                     <div class="col">
-                     
+
                     </div>
                 </div>
+                <div class="form-group">
+                    <label for="sumber_dana"><strong>Sumber Dana : <strong>:</label>
+                    <select class="form-control sumber_dana" name="sumber_dana">
+                        <option value="">-- Sumber Dana --</option>
+                        <option value="PLN">PLN</option>
+                        <option value="Sinarmas ">Sinarmas</option>
+                    </select>
+                </div>
                 <div>
-                    <label for="porsi_penutupan_show">Porsi Untuk Penutupan Post :</label>
-                    <input type="text" class="form-control" id="porsi_penutupan_show" name="porsi_penutupan_show" oninput="formatNumber(this); syncReleasedValue(this)">
-                    <input type="number" class="form-control" id="porsi_penutupan" name="porsi_penutupan" hidden>
+                    <label for="nominal_terima_show">Nominal_terima :</label>
+                    <input type="text" class="form-control" id="nominal_terima_show" name="nominal_terima_show" oninput="formatNumber(this); syncnominal_terimaValue(this)">
+                    <input type="number" class="form-control" id="nominal_terima" name="nominal_terima" hidden>
                 </div>
                 <script>
-                    function syncporsi_penutupanValue(input) {
+                    function syncnominal_terimaValue(input) {
                         const numericValue = input.value.replace(/[^0-9.]/g, '');
-                        document.getElementById('porsi_penutupan').value = numericValue;
+                        document.getElementById('nominal_terima').value = numericValue;
                     }
                 </script>
             </div>
@@ -185,9 +131,9 @@ mysqli_close($conn);
                     <div class="entry">
 
                         <div class="form-group">
-                            <label for="jenis_post"><strong>Untuk Penututpan Post : <strong>:</label>
+                            <label for="jenis_post"><strong>Untuk Penututpan Post : </strong></label>
                             <select class="form-control jenis_post" name="jenis_post">
-                            <option value="">-- Select Jenis Post Financing --</option>
+                                <option value="">-- Select Jenis Post Financing --</option>
                                 <option value="BNI - Post Invoice Sinarmas">BNI - Post Invoice Sinarmas</option>
                                 <option value="BNI - SCF Post PLN">BNI - SCF Post PLN</option>
                                 <option value="BCA - Time Loan Revolving 2">BCA - Time Loan Revolving 2</option>
@@ -298,8 +244,14 @@ mysqli_close($conn);
                     });
                 </script>
             </div>
+            <br>
+            <div>
+                <button type="submit" class="btn btn-primary">Submit</button>
+                <span>&nbsp;</span>
+                <a class="btn btn-danger" href="prepost.php#uang_masuk"><i class="bi bi-backspace"></i></a>
 
-            <button type="submit" class="btn btn-primary mt-3">Submit</button>
+            </div>
+            <br>
         </form>
         <p id="total-nominal-feedback" style="font-weight: bold; color: red;">Total Nominal: 0</p>
 
@@ -407,63 +359,59 @@ mysqli_close($conn);
         });
 
         function validateForm() {
-    // Ambil nilai dari input
-    const releasedValue = parseFloat(document.getElementById('released').value || 0); // Nilai released (hidden)
-    const nominalInputs = document.querySelectorAll('input[name$="[nominal]"]'); // Semua nominal
-    const feedback = document.getElementById('total-nominal-feedback');
-    const submitButton = document.querySelector('button[type="submit"]');
+            // Ambil nilai dari input
+            const releasedValue = parseFloat(document.getElementById('released').value || 0); // Nilai released (hidden)
+            const nominalInputs = document.querySelectorAll('input[name$="[nominal]"]'); // Semua nominal
+            const feedback = document.getElementById('total-nominal-feedback');
+            const submitButton = document.querySelector('button[type="submit"]');
 
-    let totalNominal = 0;
+            let totalNominal = 0;
 
-    // Hitung total nominal
-    nominalInputs.forEach(input => {
-        totalNominal += parseFloat(input.value || 0);
-    });
+            // Hitung total nominal
+            nominalInputs.forEach(input => {
+                totalNominal += parseFloat(input.value || 0);
+            });
 
-    // Perbarui feedback
-    feedback.textContent = `Total Nominal: ${totalNominal.toLocaleString()} / Released: ${releasedValue.toLocaleString()}`;
+            // Perbarui feedback
+            feedback.textContent = `Total Nominal: ${totalNominal.toLocaleString()} / Released: ${releasedValue.toLocaleString()}`;
 
-    // Logika validasi
-    if (releasedValue > 0 && totalNominal > 0) {
-        if (totalNominal === releasedValue) {
-            feedback.style.color = 'green';
-            submitButton.disabled = false; // Aktifkan tombol submit
-        } else {
-            feedback.style.color = 'red';
-            submitButton.disabled = true; // Nonaktifkan tombol submit
+            // Logika validasi
+            if (releasedValue > 0 && totalNominal > 0) {
+                if (totalNominal === releasedValue) {
+                    feedback.style.color = 'green';
+                    submitButton.disabled = false; // Aktifkan tombol submit
+                } else {
+                    feedback.style.color = 'red';
+                    submitButton.disabled = true; // Nonaktifkan tombol submit
+                }
+            } else {
+                feedback.textContent = `Pastikan nilai Released dan semua Nominal diisi dengan benar.`;
+                feedback.style.color = 'red';
+                submitButton.disabled = true; // Nonaktifkan tombol submit
+            }
         }
-    } else {
-        feedback.textContent = `Pastikan nilai Released dan semua Nominal diisi dengan benar.`;
-        feedback.style.color = 'red';
-        submitButton.disabled = true; // Nonaktifkan tombol submit
-    }
-}
 
-// Tambahkan event listener untuk validasi real-time
-document.getElementById('released_show').addEventListener('input', function () {
-    syncReleasedValue(this); // Pastikan hidden input diperbarui
-    validateForm(); // Panggil validasi
-});
+        // Tambahkan event listener untuk validasi real-time
+        document.getElementById('released_show').addEventListener('input', function() {
+            syncReleasedValue(this); // Pastikan hidden input diperbarui
+            validateForm(); // Panggil validasi
+        });
 
-document.getElementById('entries-container').addEventListener('input', function (e) {
-    if (e.target.name && e.target.name.includes('[nominal_show]')) {
-        validateForm(); // Panggil validasi saat ada perubahan pada nominal
-    }
-});
+        document.getElementById('entries-container').addEventListener('input', function(e) {
+            if (e.target.name && e.target.name.includes('[nominal_show]')) {
+                validateForm(); // Panggil validasi saat ada perubahan pada nominal
+            }
+        });
 
-// Validasi awal saat halaman dimuat
-document.addEventListener('DOMContentLoaded', validateForm);
+        // Validasi awal saat halaman dimuat
+        document.addEventListener('DOMContentLoaded', validateForm);
 
 
-document.getElementById('entries-container').addEventListener('input', function (e) {
-    if (e.target.name && e.target.name.includes('[nominal]')) {
-        validateForm();
-    }
-});
-
-
-
+        document.getElementById('entries-container').addEventListener('input', function(e) {
+            if (e.target.name && e.target.name.includes('[nominal]')) {
+                validateForm();
+            }
+        });
     </script>
 </body>
-
 </html>

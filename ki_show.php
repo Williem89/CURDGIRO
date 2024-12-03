@@ -69,12 +69,89 @@ function formatRupiah($value)
         table {
             border-collapse: collapse;
             width: 100%;
+            
         }
 
-        th,
+        thead {
+            padding: 8px;
+            font-size: 12pt;
+            text-align: center;
+        }
+
+
         td {
             border: 1px solid #ddd;
             padding: 8px;
+            font-size: 12pt;
+        }
+
+        @media only screen and (max-width: 600px) {
+
+            th,
+            td {
+                padding: 4px;
+                font-size: 7pt;
+            }
+
+            h1,
+            h2 {
+                font-size: 18px;
+            }
+
+            p {
+                font-size: 14px;
+            }
+
+            button,
+            a {
+                font-size: 20px;
+            }
+        }
+
+        @media only screen and (max-width: 440px) {
+
+            th,
+            td {
+                padding: 4px;
+                font-size: 5pt;
+            }
+
+            h1,
+            h2 {
+                font-size: 18px;
+            }
+
+            p {
+                font-size: 14px;
+            }
+
+            button,
+            a {
+                font-size: 20px;
+            }
+        }
+
+        @media only screen and (max-width: 350px) {
+
+            th,
+            td {
+                padding: 3px;
+                font-size: 4pt;
+            }
+
+            h1,
+            h2 {
+                font-size: 8pt !important;
+            }
+
+            p {
+                font-size: 14px;
+            }
+
+            button,
+            a {
+                font-size: 20px;
+            }
         }
     </style>
 </head>
@@ -133,78 +210,87 @@ function formatRupiah($value)
                 ?>
             </p>
         </div>
-            <table  style="margin: 0 auto; border: 1px solid black; box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);">
-                <br>
-                <p sstyle="margin: 0 auto; border: 1px solid black;"><strong>Leasing</strong> </P>
-                <thead>
-                    <tr style="text-align:center;">
-                        <th style="width: 50px; ">ID</th>
-                        <th style="width: 300px;">Keterangan</th>
-                        <th style="width: 100px;">Suku Bunga</th>
-                        <th style="width: 100px;">DP</th>
-                        <th style="width: 150px;">Plafond</th>
-                        <th style="width: 150px;">Sisa Plafond</th>
-                        <th style="width: 300px;">Tujuan</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php if ($result->num_rows > 0): ?>
-                        <?php while ($row = $result->fetch_assoc()): ?>
-                            <tr>
-                                <td style="text-align:center; font-family: 'Times New Roman', serif; font-size: 16px;"><?= htmlspecialchars($row['id']); ?></td>
-                                <td style="text-align:left; font-family: 'Times New Roman', serif; font-size: 16px;"><?= htmlspecialchars($row['Ket']); ?></td>
-                                <td style="text-align:center; font-family: 'Times New Roman', serif; font-size: 16px;"><?= htmlspecialchars($row['suku_bunga']); ?> %</td>
-                                <td style="text-align:center; font-family: 'Times New Roman', serif; font-size: 16px;"><?= htmlspecialchars($row['dp']); ?> %</td>
-                                <td style="text-align:right; font-family: 'Times New Roman', serif; font-size: 16px;">Rp. <?= htmlspecialchars(number_format($row['Plafond'], 0, ',', '.')); ?></td>
-                                <td style="text-align:right; font-family: 'Times New Roman', serif; font-size: 16px;">Rp. <?= htmlspecialchars(number_format($row['sisa_plafond'], 0, ',', '.')); ?></td>
-                                <td style="text-align:left; font-family: 'Times New Roman', serif; font-size: 16px;"><?= htmlspecialchars($row['tujuan']); ?></td>
-                            </tr>
-                        <?php endwhile; ?>
-                    <?php else: ?>
-                        <tr>
-                            <p style="text-align: justify;"><strong>Bank</strong> </p>
-                        </tr>
-                    <?php endif; ?>
-                </tbody>
-            </table>
+
+        <table style="margin: 0 auto; box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.1); border-radius: 10px; overflow: hidden;">
             <br>
-            <table style="margin: 0 auto; border: 1px solid black; box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);">
-                <p style="margin: 0 auto;"><strong>Bank</strong> </p>
-                <br>
-                <thead>
-                    <tr>
-                        <th style="width: 50px; ">ID</th>
-                        <th style="width: 300px;">Keterangan</th>
-                        <th style="width: 100px;">Suku Bunga</th>
-                        <th style="width: 100px;">DP</th>
-                        <th style="width: 150px;">Plafond</th>
-                        <th style="width: 150px;">Sisa Plafond</th>
-                        <th style="width: 300px;">Tujuan</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php if ($result2->num_rows > 0): ?>
-                        <?php while ($row = $result2->fetch_assoc()): ?>
-                            <tr>
-                                <td style="text-align:center; font-family: 'Times New Roman', serif; font-size: 16px;"><?= htmlspecialchars($row['id']); ?></td>
-                                <td style="text-align:left; font-family: 'Times New Roman', serif; font-size: 16px;"><?= htmlspecialchars($row['Ket']); ?></td>
-                                <td style="text-align:center; font-family: 'Times New Roman', serif; font-size: 16px;"><?= htmlspecialchars($row['suku_bunga']); ?> %</td>
-                                <td style="text-align:center; font-family: 'Times New Roman', serif; font-size: 16px;"><?= htmlspecialchars($row['dp']); ?> %</td>
-                                <td style="text-align:right; font-family: 'Times New Roman', serif; font-size: 16px;">Rp. <?= htmlspecialchars(number_format($row['Plafond'], 0, ',', '.')); ?></td>
-                                <td style="text-align:right; font-family: 'Times New Roman', serif; font-size: 16px;">Rp. <?= htmlspecialchars(number_format($row['sisa_plafond'], 0, ',', '.')); ?></td>
-                                <td style="text-align:left; font-family: 'Times New Roman', serif; font-size: 16px;"><?= htmlspecialchars($row['tujuan']); ?></td>
-                            </tr>
-                        <?php endwhile; ?>
-                    <?php else: ?>  
+            <p style="margin: 0 auto;"><strong>Leasing</strong> </P>
+            <thead>
+                <tr style="text-align:center;">
+                    <th style="width: 50px; ">ID</th>
+                    <th style="width: 300px;">Keterangan</th>
+                    <th style="width: 100px;">Suku Bunga</th>
+                    <th style="width: 100px;">DP</th>
+                    <th style="width: 150px;">Plafond</th>
+                    <th style="width: 150px;">Plafond Terpakai</th>
+                    <th style="width: 150px;">Sisa Plafond</th>
+                    <th style="width: 300px;">Tujuan</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php if ($result->num_rows > 0): ?>
+                    <?php while ($row = $result->fetch_assoc()): ?>
                         <tr>
-                            <td colspan="7">Tidak ada data yang ditemukan.</td>
+                            <td style="text-align:center; font-family: 'Times New Roman', serif;"><?= htmlspecialchars($row['id']); ?></td>
+                            <td style="text-align:left; font-family: 'Times New Roman', serif;"><?= htmlspecialchars($row['Ket']); ?></td>
+                            <td style="text-align:center; font-family: 'Times New Roman', serif;"><?= htmlspecialchars($row['suku_bunga']); ?> %</td>
+                            <td style="text-align:center; font-family: 'Times New Roman', serif;"><?= htmlspecialchars($row['dp']); ?> %</td>
+                            <td style="text-align:right; font-family: 'Times New Roman', serif;">Rp. <?= htmlspecialchars(number_format($row['Plafond'], 0, ',', '.')); ?></td>
+                            <td style="text-align:right; font-family: 'Times New Roman', serif;">Rp. <?= htmlspecialchars(number_format($row['Plafond'] - $row['sisa_plafond'], 0, ',', '.')); ?></td>
+                            <td style="text-align:right; font-family: 'Times New Roman', serif;">Rp. <?= htmlspecialchars(number_format($row['sisa_plafond'], 0, ',', '.')); ?></td>
+                            <td style="text-align:left; font-family: 'Times New Roman', serif;"><?= htmlspecialchars($row['tujuan']); ?></td>
                         </tr>
-                    <?php endif; ?>
-                </tbody>
-            </table>
+                    <?php endwhile; ?>
+                <?php else: ?>
+                    <tr>
+                        <p style="text-align: justify;"><strong>Bank</strong> </p>
+                    </tr>
+                <?php endif; ?>
+            </tbody>
+        </table>
         <br>
+
+        <table style="margin: 0 auto; box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.1); border-radius: 10px; overflow: hidden;">
+            <p style="margin: 0 auto;"><strong>Bank</strong> </p>
+            
+            <thead>
+                <tr>
+                    <th style="width: 50px; ">ID</th>
+                    <th style="width: 300px;">Keterangan</th>
+                    <th style="width: 100px;">Suku Bunga</th>
+                    <th style="width: 100px;">DP</th>
+                    <th style="width: 150px;">Plafond</th>
+                    <th style="width: 150px;">Plafond Terpakai</th>
+                    <th style="width: 150px;">Sisa Plafond</th>
+                    <th style="width: 300px;">Tujuan</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php if ($result2->num_rows > 0): ?>
+                    <?php while ($row = $result2->fetch_assoc()): ?>
+                        <tr>
+                            <td style="text-align:center; font-family: 'Times New Roman', serif;"><?= htmlspecialchars($row['id']); ?></td>
+                            <td style="text-align:left; font-family: 'Times New Roman', serif;"><?= htmlspecialchars($row['Ket']); ?></td>
+                            <td style="text-align:center; font-family: 'Times New Roman', serif;"><?= htmlspecialchars($row['suku_bunga']); ?> %</td>
+                            <td style="text-align:center; font-family: 'Times New Roman', serif;"><?= htmlspecialchars($row['dp']); ?> %</td>
+                            <td style="text-align:right; font-family: 'Times New Roman', serif;">Rp. <?= htmlspecialchars(number_format($row['Plafond'], 0, ',', '.')); ?></td>
+                            <td style="text-align:right; font-family: 'Times New Roman', serif;">Rp. <?= htmlspecialchars(number_format($row['Plafond'] - $row['sisa_plafond'], 0, ',', '.')); ?></td>
+                            <td style="text-align:right; font-family: 'Times New Roman', serif;">Rp. <?= htmlspecialchars(number_format($row['sisa_plafond'], 0, ',', '.')); ?></td>
+                            <td style="text-align:left; font-family: 'Times New Roman', serif;"><?= htmlspecialchars($row['tujuan']); ?></td>
+                        </tr>
+                    <?php endwhile; ?>
+                <?php else: ?>
+                    <tr>
+                        <td colspan="7">Tidak ada data yang ditemukan.</td>
+                    </tr>
+                <?php endif; ?>
+            </tbody>
+        </table>
+        <br>
+        <br>
+        <hr style="border: 1px solid black;">
+
         <h2 style="margin: 0 auto;">Saldo Bank</h2>
-        <br>
+
         <?php if ($_SESSION['username'] == 'financeview'): ?>
             <a id="verifiedButton" onclick="updateVerifiedStatus()" class="btn btn-success" style="margin: 0 auto;font-size:28px;">
                 <i class="bi bi-patch-check"></i>
@@ -254,33 +340,35 @@ function formatRupiah($value)
                 ?>
             </p>
         </div>
-        <form action="" method="post">
-            <table style="margin: 0 auto; border: 1px solid black; box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);">
-                <tr>
-                    <th>No.</th>
-                    <th>Nomor Akun</th>
-                    <th>Nama Bank</th>
-                    <th>Nama Akun</th>
-                    <th style="text-align:center;">Saldo</th>
-                </tr>
-                <?php
-                if ($result_saldo->num_rows > 0) {
-                    $counter = 1; // Initialize counter for serial number
-                    while ($row2 = $result_saldo->fetch_assoc()) {
-                        echo "<tr>";
-                        echo "<td style='font-family: Times New Roman, serif; font-size: 16px;'>" . $counter++ . "</td>"; // Display the serial number
-                        echo "<td style='font-family: Times New Roman, serif; font-size: 16px;'>" . htmlspecialchars($row2["no_akun"]) . "</td>";
-                        echo "<td style='font-family: Times New Roman, serif; font-size: 16px;'>" . htmlspecialchars($row2["nama_bank"]) . "</td>";
-                        echo "<td style='font-family: Times New Roman, serif; font-size: 16px;'>" . htmlspecialchars($row2["nama_akun"]) . "</td>";
-                        echo "<td style='text-align:justify; font-family: Times New Roman, serif; font-size: 16px;'>" . formatRupiah($row2["saldo"]) . "</td>";
-                        echo "</tr>";
-                    }
-                } else {
-                    echo "<tr><td colspan='7' style='font-family: Times New Roman, serif; font-size: 14px;'>Tidak ada data rekening ditemukan.</td></tr>";
+        <table style="margin: 0 auto; box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.1); border-radius: 10px; overflow: hidden;">
+            <thead>
+            <tr>
+                <th>No.</th>
+                <th>Nomor Akun</th>
+                <th>Nama Bank</th>
+                <th>Nama Akun</th>
+                <th style="text-align:center;">Saldo</th>
+            </tr>
+            </thead>
+            <?php
+            if ($result_saldo->num_rows > 0) {
+                $counter = 1; // Initialize counter for serial number
+                while ($row2 = $result_saldo->fetch_assoc()) {
+                    echo "<tr>";
+                    echo "<td style='font-family: Times New Roman, serif;text-align:center;'>" . $counter++ . "</td>"; // Display the serial number
+                    echo "<td style='font-family: Times New Roman, serif;'>" . htmlspecialchars($row2["no_akun"]) . "</td>";
+                    echo "<td style='font-family: Times New Roman, serif;'>" . htmlspecialchars($row2["nama_bank"]) . "</td>";
+                    echo "<td style='font-family: Times New Roman, serif;'>" . htmlspecialchars($row2["nama_akun"]) . "</td>";
+                    echo "<td style='text-align:justify; font-family: Times New Roman, serif;'>" . formatRupiah($row2["saldo"]) . "</td>";
+                    echo "</tr>";
                 }
-                
-                ?>
-            </table>
+            } else {
+                echo "<tr><td colspan='7' style='font-family: Times New Roman, serif; font-size: 14px;'>Tidak ada data rekening ditemukan.</td></tr>";
+            }
+
+            ?>
+        </table>
+        <br><br>
 </body>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.13/jspdf.plugin.autotable.min.js"></script>
@@ -300,7 +388,7 @@ function formatRupiah($value)
         doc.text("Leasing", 14, 10);
         doc.autoTable({
             head: [
-                ['ID', 'Keterangan', 'Suku Bunga', 'DP', 'Plafond', 'Sisa Plafond', 'Tujuan']
+                ['ID', 'Keterangan', 'Suku Bunga', 'DP', 'Plafond', 'Plafond Terpakai', 'Sisa Plafond', 'Tujuan']
             ],
             body: leasingData.map(row => [
                 row.id,
@@ -308,6 +396,7 @@ function formatRupiah($value)
                 row.suku_bunga + ' %',
                 row.dp + ' %',
                 'Rp. ' + new Intl.NumberFormat('id-ID').format(row.Plafond),
+                'Rp. ' + new Intl.NumberFormat('id-ID').format(row.Plafond - row.sisa_plafond),
                 'Rp. ' + new Intl.NumberFormat('id-ID').format(row.sisa_plafond),
                 row.tujuan
             ]),
@@ -321,21 +410,24 @@ function formatRupiah($value)
                     cellWidth: 10
                 },
                 1: {
-                    cellWidth: 60
+                    cellWidth: 50
                 },
                 2: {
-                    cellWidth: 30
+                    cellWidth: 20
                 },
                 3: {
-                    cellWidth: 30
+                    cellWidth: 20
                 },
                 4: {
-                    cellWidth: 40
+                    cellWidth: 35
                 },
                 5: {
-                    cellWidth: 40
+                    cellWidth: 35
                 },
                 6: {
+                    cellWidth: 35
+                },
+                7: {
                     cellWidth: 60
                 }
             },
@@ -345,7 +437,7 @@ function formatRupiah($value)
         doc.text("Bank", 14, doc.lastAutoTable.finalY + 10);
         doc.autoTable({
             head: [
-                ['ID', 'Keterangan', 'Suku Bunga', 'DP', 'Plafond', 'Sisa Plafond', 'Tujuan']
+                ['ID', 'Keterangan', 'Suku Bunga', 'DP', 'Plafond', 'Plafond Terpakai', 'Sisa Plafond', 'Tujuan']
             ],
             body: bankData.map(row => [
                 row.id,
@@ -353,6 +445,7 @@ function formatRupiah($value)
                 row.suku_bunga + ' %',
                 row.dp + ' %',
                 'Rp. ' + new Intl.NumberFormat('id-ID').format(row.Plafond),
+                'Rp. ' + new Intl.NumberFormat('id-ID').format(row.Plafond - row.sisa_plafond),
                 'Rp. ' + new Intl.NumberFormat('id-ID').format(row.sisa_plafond),
                 row.tujuan
             ]),
@@ -366,21 +459,24 @@ function formatRupiah($value)
                     cellWidth: 10
                 },
                 1: {
-                    cellWidth: 60
+                    cellWidth: 50
                 },
                 2: {
-                    cellWidth: 30
+                    cellWidth: 20
                 },
                 3: {
-                    cellWidth: 30
+                    cellWidth: 20
                 },
                 4: {
-                    cellWidth: 40
+                    cellWidth: 35
                 },
                 5: {
-                    cellWidth: 40
+                    cellWidth: 35
                 },
                 6: {
+                    cellWidth: 35
+                },
+                7: {
                     cellWidth: 60
                 }
             },

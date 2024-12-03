@@ -507,7 +507,7 @@ $grand_total2 = array_reduce($report_data2, function ($carry, $banks) {
         <p style="text-align: center;">Tidak ada data giro.</p>
     <?php else: ?>
 
-        <table class="table table-danger">
+        <table class="table table-danger" style="border-radius: 10px; overflow: hidden; box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.3);">
             <thead>
                 <tr>
                     <th style="text-align: center;">Nama Entitas</th>
