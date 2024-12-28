@@ -52,9 +52,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES["file"])) {
 
 // Check if required parameters are set
 
-error_log("POST data: " . htmlspecialchars(json_encode($_POST), ENT_QUOTES, 'UTF-8'));
-
 if (isset($_POST['nogiro'], $_POST["action"], $_POST["jenis"])) {
+    // Dump all POST data for debugging
+    error_log("POST data: " . print_r($_POST, true));
     $data = $_POST;
     $nogiro = $data['nogiro'];
     $grno = isset($data['grNo']) ? $data['grNo'] : null;
@@ -64,14 +64,14 @@ if (isset($_POST['nogiro'], $_POST["action"], $_POST["jenis"])) {
     $action = $data['action'];
     
     // $alasan = $data['alasan'];
-    $jenis = $data['jenis'];
+    $jenis = strtolower($data['jenis']);
 
     // // Log the 'jenis' data
     // error_log("Jenis: " . htmlspecialchars($jenis, ENT_QUOTES, 'UTF-8'));
 
     // Prepare the SQL statement based on action
     switch ($jenis) {
-        case "Giro":
+        case "giro":
             switch ($action) {
                 case "cair":
                     $sql = "UPDATE detail_giro SET StatGiro = 'Posted', tanggal_Cair_giro = ?, SeatleBy = ? WHERE nogiro = ?";
@@ -105,7 +105,7 @@ if (isset($_POST['nogiro'], $_POST["action"], $_POST["jenis"])) {
                     exit;
             }
             break;
-        case "Cek":
+        case "cek":
             switch ($action) {
                 case "cair":
                     $sql = "UPDATE detail_cek SET StatCek = 'Posted', tanggal_Cair_cek = ?, SeatleBy = ? WHERE nocek = ?";
@@ -171,7 +171,7 @@ if (isset($_POST['nogiro'], $_POST["action"], $_POST["jenis"])) {
                     exit;
             }
             break;
-            case 'AutoDebit':
+            case 'autodebit':
                 switch ($action) {
                     case "cair":
                         $sql = "UPDATE detail_autodebit SET Statautodebit = 'Posted', tanggal_Cair_autodebit = ?, SeatleBy = ? WHERE noautodebit = ?";

@@ -108,14 +108,6 @@ foreach ($entries as $entry) {
         echo "<p style='color:red;'>Invalid data for entry: Tahapan {$tahapan}</p>";
         continue;
     }
-
-    // Proses SQL untuk memperbarui data
-    $update_stmt = $conn->prepare("
-            UPDATE pre 
-            SET os = COALESCE(os, 0) + ? 
-            WHERE jenis_prepost = ? AND tahapan = ?
-        ");
-    $update_stmt->bind_param("dss", $nominal, $jenis_pre, $tahapan);
     
     $add_tutuppre_stmt = $conn->prepare("INSERT INTO tutup_pre (tanggal_post, jenis_post, tahapan_post, jenis_pre, tahapan_pre, nominal) VALUES (?, ?, ?, ?, ?, ?)");
     $add_tutuppre_stmt->bind_param("sssssd", $tanggal_post, $jenis_post, $tahapan_post, $jenis_pre, $tahapan, $nominal);

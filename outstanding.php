@@ -9,6 +9,7 @@ $namapenerima = isset($_POST['nama_penerima']) ? $_POST['nama_penerima'] : 'all'
 
 $unusedGiroQuery = "
     SELECT 
+        'Giro' AS jenis,
         e.nama_entitas, 
         d.namabank, 
         d.ac_number, 
@@ -47,6 +48,7 @@ $unusedGiroQuery = "
     UNION ALL 
 
     SELECT 
+        'Cek' AS jenis,
         e.nama_entitas, 
         d.namabank, 
         d.ac_number, 
@@ -84,6 +86,7 @@ $unusedGiroQuery = "
     UNION ALL
 
     SELECT 
+        d.jenis_autodebit AS jenis,
         e.nama_entitas, 
         d.namabank, 
         d.ac_number, 
@@ -121,6 +124,7 @@ $unusedGiroQuery = "
 
 $alloutstandingGiroQuery = "
     SELECT 
+        'Giro' AS jenis,
         e.nama_entitas, 
         d.namabank, 
         d.ac_number, 
@@ -157,6 +161,7 @@ $alloutstandingGiroQuery = "
     UNION ALL 
 
     SELECT 
+        'Cek' AS jenis,
         e.nama_entitas, 
         d.namabank, 
         d.ac_number, 
@@ -193,6 +198,7 @@ $alloutstandingGiroQuery = "
     UNION ALL
 
     SELECT 
+        d.jenis_autodebit AS jenis,
         e.nama_entitas, 
         d.namabank, 
         d.ac_number, 
@@ -260,8 +266,13 @@ while ($row = $alloutstanding_result->fetch_assoc()) {
         'PVRNo' => $row['PVRNo'] ?? '',
         'keterangan' => $row['keterangan'] ?? 'No Description',
         'nosurat' => $row['nosurat'] ?? '-',
+        'jenis' => $row['jenis']
     ];
 }
+
+// echo "<pre>";
+// print_r($report_data2); 
+// echo "</pre>";
 
 $alloutstanding_stmt->close();
 
@@ -356,6 +367,7 @@ while ($row = $result->fetch_assoc()) {
         'PVRNo' => $row['PVRNo'] ?? '',
         'keterangan' => $row['keterangan'] ?? 'No Description',
         'nosurat' => $row['nosurat'] ?? '-',
+        'jenis' => $row['jenis'] ?? 'Unknown Type'
     ];
 }
 
@@ -485,8 +497,10 @@ $grand_total = array_reduce($report_data, function ($carry, $banks) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/x-icon" href="img/icon.png">
     <title>GIRO ISSUED</title>
+    
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
     <style>
         body {
             background-color: #f8f9fa;
@@ -553,8 +567,6 @@ $grand_total = array_reduce($report_data, function ($carry, $banks) {
 </head>
 
 <body>
-
-
     <div class="row">
         <div class="col">
             <form method="POST" class="mb-4" style="box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); border-radius: 12px; z-index: 1; background-color: white;">
@@ -622,11 +634,13 @@ $grand_total = array_reduce($report_data, function ($carry, $banks) {
                     <table class="table table-striped" style="border: 1px solid black; width: 600px; border-radius: 10px; overflow: hidden; box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.3);">
                         <thead>
                             <tr>
-                                <th style="text-align: center; width: 100px ">Nama Entitas</th>
+                                <th style="text-align: center; width: 100px">Nama Entitas</th>
                                 <th style="text-align: center; width: 100px">Bank</th>
                                 <th style="text-align: center; width: 100px">AC Number</th>
                                 <th style="text-align: center; width: 20px">Jumlah</th>
                                 <th style="text-align: center; width: 170px">Nominal</th>
+                                <th style="text-align: center; width: 170px">Saldo</th>
+                                <th style="text-align: center; width: 50px">Status</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -640,7 +654,7 @@ $grand_total = array_reduce($report_data, function ($carry, $banks) {
 
                                         $totalNominal = array_sum(array_column($giroList, 'total_nominal'));
                                         if ($totalNominal > $saldo) {
-                                            $warning = 'Saldo tidak cukup!';
+                                            $warning = '<span style="color: red;">Saldo tidak cukup!</span>';
                                         } else {
                                             $warning = '<span style="color: green;">Saldo cukup</span>';
                                         }
@@ -651,8 +665,9 @@ $grand_total = array_reduce($report_data, function ($carry, $banks) {
                                             <td style="font-size: 11pt;"><?php echo htmlspecialchars($ac_number); ?></td>
                                             <td style="font-size: 11pt;"><?php echo count($giroList); ?></td>
                                             <td style="font-size: 11pt;"><?php echo 'Rp. ' . number_format($totalNominal, 2, ',', '.'); ?></td>
+                                            <td style="font-size: 11pt;"><?php echo 'Rp. ' . number_format($saldo, 2, ',', '.'); ?></td>
+                                            <td style="font-size: 11pt;"><?php echo $warning; ?></td>
                                         </tr>
-
 
                                     <?php endforeach; ?>
                                 <?php endforeach; ?>
@@ -688,10 +703,10 @@ $grand_total = array_reduce($report_data, function ($carry, $banks) {
         'Friday' => 'Jumat',
         'Saturday' => 'Sabtu'
     ];
-    $today = $daysOfWeek[date('l')] . ', ' . date('d/m/Y H:i'); // e.g., 'Kamis, 31/10/2024 14:30'
+    $today = $daysOfWeek[date('l', strtotime($end_date))] . ', ' . date('d/m/Y', strtotime($end_date)); // e.g., 'Kamis, 31/10/2024'
 
     // Initialize the WhatsApp message
-    $whatsappMessage = "$greeting, \n\nBerikut cicilan jatuh tempo sampai dengan hari $today yang belum di bayar :\n\n";
+    $whatsappMessage = "$greeting, \n\nBerikut cicilan jatuh tempo sampai dengan  $today yang belum di bayar :\n\n";
 
     // Loop through the report data
 
@@ -731,7 +746,7 @@ $grand_total = array_reduce($report_data, function ($carry, $banks) {
 
                         // Build the item message
                         $whatsappMessage .= "- " . $giro['PVRNo'] . ", " . $giro['nama_penerima'] . ", " . $giro['keterangan'] . "\n";
-                        $whatsappMessage .= "MENGGUNAKAN GIRO " . $giro['namabank'] . " NO " . $giro['ac_number'] . " " . $giro['nogiro'] . " " . $giro['nosurat'] . " " . $giro['PVRno'] . " " . $nominalrupiahf . "\n\n";
+                        $whatsappMessage .= "MENGGUNAKAN " . $giro['jenis'] . " " . $giro['namabank'] . " NO " . $giro['ac_number'] . " " . $giro['nogiro'] . " " . $giro['nosurat'] . " " . $giro['PVRNo'] . " " . $nominalrupiahf . "\n\n";
                     }
                 }
                 // Add saldo and total cicilan information
@@ -741,8 +756,6 @@ $grand_total = array_reduce($report_data, function ($carry, $banks) {
                 $total_cicilan = array_sum(array_column($giroList, 'total_nominal'));
                 $saldo_formatted = 'Rp. ' . number_format($saldo, 0, ',', '.') . ',-';
                 $total_cicilan_formatted = 'Rp. ' . number_format($total_cicilan, 0, ',', '.') . ',-';
-
-
 
                 if ($saldo < $total_cicilan) {
                     $difference = $total_cicilan - $saldo;
@@ -802,6 +815,11 @@ $grand_total = array_reduce($report_data, function ($carry, $banks) {
                         <input class="form-check-input" type="checkbox" id="6282123349666" >
                         <label class="form-check-label text-start" for="6282123349666">Ibu Putri</label>
                     </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="120363300421047276@g.us" >
+                        <label class="form-check-label text-start" for="120363300421047276@g.us">Grup Finance</label>
+                    </div>
+
                 `,
                 confirmButtonText: `
                     Continue&nbsp;<i class="fa fa-arrow-right"></i>
@@ -818,9 +836,7 @@ $grand_total = array_reduce($report_data, function ($carry, $banks) {
                 }
             });
             const message = `<?php echo $whatsappMessage; ?>`;
-
             const maxMessageLength = 4096; // WhatsApp message length limit
-
             function splitMessage(message, maxLength) {
                 const parts = [];
                 let currentPart = '';
@@ -836,12 +852,9 @@ $grand_total = array_reduce($report_data, function ($carry, $banks) {
                 if (currentPart) {
                     parts.push(currentPart);
                 }
-
                 return parts;
             }
-
             const messageParts = splitMessage(message, maxMessageLength);
-
             messageParts.forEach((part, index) => {
                 setTimeout(() => {
                     const url = 'http://115.85.74.82:5678/send-message';
@@ -874,8 +887,6 @@ $grand_total = array_reduce($report_data, function ($carry, $banks) {
             });
         }
     </script>
-
-
     <script>
         function selectAllNumbers(select) {
             const checkboxes = document.querySelectorAll('input[type="checkbox"]')
@@ -890,9 +901,7 @@ $grand_total = array_reduce($report_data, function ($carry, $banks) {
                 jsPDF
             } = window.jspdf;
             const doc = new jsPDF('landscape');
-
             // Add Overdue List table
-
             const today = new Date();
             const options = {
                 weekday: 'long',
@@ -956,7 +965,6 @@ $grand_total = array_reduce($report_data, function ($carry, $banks) {
                     } // Set fixed width for the "Nominal" column
                 }
             });
-
             // Add Outstanding List table
             doc.addPage('landscape');
             doc.text('Outstanding List', 14, 22);
@@ -1111,12 +1119,13 @@ $grand_total = array_reduce($report_data, function ($carry, $banks) {
                                                 <th style="width:150px;text-align:center;">Keterangan</th>
                                                 <th style="width:150px;text-align:center;">Nominal</th>
                                                 <th style="width:150px;text-align:center;">No Surat</th>
+                                                <th style="width:150px;text-align:center;">Action</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             <?php $rowIndex = 1; ?>
                                             <?php
-                                            $giroListWithoutSaldo = array_filter($giroList, function($key) {
+                                            $giroListWithoutSaldo = array_filter($giroList, function ($key) {
                                                 return $key !== 'saldo';
                                             }, ARRAY_FILTER_USE_KEY);
 
@@ -1140,6 +1149,34 @@ $grand_total = array_reduce($report_data, function ($carry, $banks) {
                                                     <td><?php echo htmlspecialchars($giro['keterangan']); ?></td>
                                                     <td><?php echo 'Rp. ' . number_format($giro['total_nominal'], 2, ',', '.'); ?></td>
                                                     <td><?php echo htmlspecialchars($giro['nosurat']); ?></td>
+                                                    <td>
+                                                        <button class="btn btn-sm btn-primary cair-btn"
+
+                                                            data-toggle="tooltip" title="Post"
+                                                            data-nogiro="<?php echo htmlspecialchars($giro['nogiro']); ?>"
+                                                            data-type="<?php echo htmlspecialchars($giro['jenis']); ?>"
+                                                            data-entitas="<?php echo htmlspecialchars($giro['nama_entitas']); ?>">
+                                                            <i class="bi bi-send-check"></i>
+                                                        </button>
+
+                                                        <button class="btn btn-sm btn-danger void-btn"
+
+                                                            data-toggle="tooltip" title="Void"
+                                                            data-nogiro="<?php echo htmlspecialchars($giro['nogiro']); ?>"
+                                                            data-type="<?php echo htmlspecialchars($giro['jenis']); ?>"
+                                                            data-entitas="<?php echo htmlspecialchars($giro['nama_entitas']); ?>">
+                                                            <i class="bi bi-x-circle"></i>
+                                                        </button>
+
+                                                        <button class="btn btn-sm btn-secondary view-attachment-btn"
+                                                            data-toggle="tooltip" title="Tampilkan Lampiran"
+                                                            data-nogiro="<?php echo htmlspecialchars($giro['nogiro']); ?>"
+                                                            data-image="<?php echo htmlspecialchars($giro['image_giro']); ?>"
+                                                            data-entitas="<?php echo htmlspecialchars($giro['nama_entitas']); ?>">
+                                                            <i class="bi bi-paperclip"></i>
+                                                        </button>
+
+                                                    </td>
                                                 </tr>
                                             <?php endforeach; ?>
                                         </tbody>
@@ -1153,19 +1190,139 @@ $grand_total = array_reduce($report_data, function ($carry, $banks) {
         </table>
     <?php endif; ?>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
         function toggleGiroList(uniqueId) {
             const giroList = document.getElementById(uniqueId);
             giroList.style.display = giroList.style.display === "none" || giroList.style.display === "" ? "table-row" : "none";
         }
+        const options = {
+            timeZone: 'Asia/Bangkok', // GMT+7
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false // 24-hour format
+        };
+
+        const tanggal = new Date().toLocaleString('sv-SE', options).replace(' ', 'T');
+
+
+
+        $(function() {
+            $('[data-toggle="tooltip"]').tooltip()
+        })
+
+        document.querySelectorAll('.view-attachment-btn').forEach(button => {
+            const imageGiro = button.getAttribute('data-image');
+            const entitas = button.getAttribute('data-entitas'); // Correctly get the entitas value
+
+            button.addEventListener('click', () => {
+                console.log(imageGiro);
+                console.log(entitas); // Now you have the entitas value for use
+                $(button).magnificPopup({
+                    items: {
+                        src: "imggiro/" + imageGiro,
+                    },
+                    type: 'iframe'
+                }).magnificPopup('open');
+            });
+        });
+
+
+        function handleButtonClick(selector, action) {
+            document.querySelectorAll(selector).forEach(button => {
+                button.addEventListener('click', async () => {
+                    const nogiro = button.getAttribute('data-nogiro');
+                    const entitas = button.getAttribute('data-entitas'); // Correctly capture entitas for use
+                    const jenis = button.getAttribute('data-type');
+
+                    console.log(nogiro);
+                    console.log(action);
+
+                    const {
+                        value: formValues
+                    } = await Swal.fire({
+                        title: action === 'cair' ? "Tanggal Cair" : action === 'void' ? "Tanggal Void" : "Are You Sure?",
+                        html: (action === 'cair' ? `<div class="form-group">
+                    <label for="swal-input1" class="form-label">Tanggal</label>
+                    <input id="swal-input1" class="form-control" type="date" max="<?php echo date('Y-m-d'); ?>">
+                    </div>` : '') +
+                            (action === 'void' ? `<div class="form-group mt-3">
+                    <input hidden id="swal-input1" class="form-control" type="text" value="<?php echo date('Y-m-d'); ?>" readonly>
+                    </div>
+                    <div class="form-group mt-3">
+                        <label for="swal-input2" class="form-label">Alasan</label>
+                        <textarea id="swal-input2" class="form-control" placeholder="Masukkan alasan Void" rows="3"></textarea>
+                    </div>` : ''),
+                        focusConfirm: false,
+                        showCancelButton: true,
+                        confirmButtonText: 'Yes',
+                        cancelButtonText: 'No',
+                        preConfirm: () => {
+                            const date = action === 'cair' ? document.getElementById('swal-input1').value : '<?php echo date('Y-m-d'); ?>';
+                            if (action !== 'cair' && !date) {
+                                Swal.showValidationMessage('Fields are required');
+                            }
+                            return {
+                                date: date,
+                                reason: (action === 'void' ? document.getElementById('swal-input2').value : '')
+                            };
+                        }
+                    });
+
+                    if (formValues) {
+                        const formData = new FormData();
+                        formData.append('nogiro', nogiro);
+                        formData.append('tanggal', formValues.date);
+                        formData.append('alasan', action === 'void' ? formValues.reason : '');
+                        formData.append('statgiro', action === 'cair' ? 'Posted' : action === 'void' ? 'Void' : '');
+                        formData.append('action', action);
+                        formData.append('jenis', jenis);
+
+                        fetch('update_statgiro.php', {
+                                method: 'POST',
+                                body: formData
+                            })
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.success) {
+                                    Swal.fire({
+                                        title: "Data berhasil diproses",
+                                        icon: 'success'
+                                    }).then(() => {
+                                        location.reload();
+                                    });
+                                } else {
+                                    Swal.fire({
+                                        title: "Error",
+                                        text: data.message,
+                                        icon: "error"
+                                    });
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Error:', error);
+                                Swal.fire({
+                                    title: "Error",
+                                    text: "An error occurred while updating.",
+                                    icon: "error"
+                                });
+                            });
+                    }
+                });
+            });
+        }
+
+        handleButtonClick('.cair-btn', 'cair');
+        handleButtonClick('.void-btn', 'void');
     </script>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- Include jsPDF library -->
-
-    <!-- Add the JavaScript function to generate PDF -->
 
 </body>
 

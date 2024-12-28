@@ -6,6 +6,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $sumber_dana = $_POST['sumber_dana'];
     $nominal_terima = $_POST['nominal_terima'];
     $entries = $_POST['entries'];
+    $jenis_post = $_POST['jenis_post'];
     $ket = $_POST['ket'];
 
     // Validate and process the form data
@@ -22,6 +23,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             echo "<p style='color:red;'>Error inserting data: " . $stmt->error . "</p>";
         }
         $stmt->close();
+    }
+
+    $jenis_post = $_POST['jenis_post'];
+    $entries = isset($_POST['entries']) ? $_POST['entries'] : [];
+    foreach ($entries as $entry) {
+        $tahapan = $entry['tahapan'];
+        $nominal = $entry['nominal'];
+
+        if (empty($tahapan) || !is_numeric($nominal)) {
+            echo "<p style='color:red;'>Invalid data for entry: Tahapan {$tahapan}</p>";
+            continue;
+        }
+
+        // Proses SQL untuk memperbarui data
+        $update_stmt = $conn->prepare("
+            UPDATE post 
+            SET os = COALESCE(os, 0) + ? 
+            WHERE jenis_post = ? AND tahapan_post = ?
+        ");
+        $update_stmt->bind_param("dss", $nominal, $jenis_post, $tahapan);
+
+        $add_tutuppost_stmt = $conn->prepare("INSERT INTO tutup_post (tanggal, sumber_dana, jenis_post, tahapan_post, nominal) VALUES (?, ?, ?, ?, ?)");
+        $add_tutuppost_stmt->bind_param("ssssd", $tgl, $sumber_dana, $jenis_post, $tahapan, $nominal);
+
+        if ($update_stmt->execute() && $add_tutuppost_stmt->execute()) {
+            echo "<p style='color:green;'>Successfully updated Tahapan {$tahapan} with additional value {$nominal}</p>";
+        } else {
+            echo "<p style='color:red;'>Error updating record for Tahapan {$tahapan}: " . $update_stmt->error . "</p>";
+        }
+
+
+        $update_stmt->close();
     }
 }
 // Handle AJAX request to get 'tahapan' options
@@ -43,30 +76,7 @@ if (isset($_GET['action']) && $_GET['action'] == 'getTahapan' && isset($_GET['je
 
 
 
-foreach ($entries as $entry) {
-    $tahapan = $entry['tahapan'];
-    $nominal = $entry['nominal'];
 
-    if (empty($tahapan) || !is_numeric($nominal)) {
-        echo "<p style='color:red;'>Invalid data for entry: Tahapan {$tahapan}</p>";
-        continue;
-    }
-
-    // Proses SQL untuk memperbarui data
-    $update_stmt = $conn->prepare("
-            UPDATE post 
-            SET os = COALESCE(os, 0) + ? 
-            WHERE jenis_post = ? AND tahapan_post = ?
-        ");
-    $update_stmt->bind_param("dss", $nominal, $jenis_post, $tahapan);
-
-    if ($update_stmt->execute()) {
-        echo "<p style='color:green;'>Successfully updated Tahapan {$tahapan} with additional value {$nominal}</p>";
-    } else {
-        echo "<p style='color:red;'>Error updating record for Tahapan {$tahapan}: " . $update_stmt->error . "</p>";
-    }
-    $update_stmt->close();
-}
 
 mysqli_close($conn);
 ?>
@@ -340,12 +350,12 @@ mysqli_close($conn);
         // // Ensure tahapan options are loaded on page load
         // document.getElementById('jenis_pre').dispatchEvent(new Event('change'));
 
-        document.getElementById('tanggal_post').addEventListener('change', function() {
-            var tanggalPrepost = new Date(this.value);
-            var tanggalJatuhTempo = new Date(tanggalPrepost);
-            tanggalJatuhTempo.setDate(tanggalPrepost.getDate() + 120);
-            document.getElementById('tanggal_jatuh_tempo').valueAsDate = tanggalJatuhTempo;
-        });
+        // document.getElementById('tanggal_post').addEventListener('change', function() {
+        //     var tanggalPrepost = new Date(this.value);
+        //     var tanggalJatuhTempo = new Date(tanggalPrepost);
+        //     tanggalJatuhTempo.setDate(tanggalPrepost.getDate() + 120);
+        //     document.getElementById('tanggal_jatuh_tempo').valueAsDate = tanggalJatuhTempo;
+        // });
     </script>
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.1/dist/umd/popper.min.js"></script>
@@ -414,4 +424,5 @@ mysqli_close($conn);
         });
     </script>
 </body>
+
 </html>

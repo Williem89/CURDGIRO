@@ -11,11 +11,29 @@ if (isset($_GET['id'])) {
     $stmt->execute();
     $result = $stmt->get_result();
 
+    // Proses SQL untuk memperbarui data
+    $update_stmt = $conn->prepare("
+            UPDATE pre 
+            SET os = COALESCE(os, 0) + ? 
+            WHERE jenis_prepost = ? AND tahapan = ?
+        ");
+
     if ($result->num_rows > 0) {
         // Lakukan pembaruan jika ID valid
         $update_sql = "UPDATE post SET post = '1' WHERE id = ?";
         $stmt = $conn->prepare($update_sql);
         $stmt->bind_param("i", $id);
+
+        $tutupsql = "SELECT * FROM tutup_pre WHERE jenis_post = ? AND tahapan_post = ?";
+        $tutupstmt = $conn->prepare($tutupsql);
+        $tutupstmt->bind_param("ss", $result['jenis_post'], $result['tahapan_post']);
+        $tutupstmt->execute();
+        $tutupresult = $tutupstmt->get_result();
+
+        foreach ($tutupresult as $row) {
+            $update_stmt->bind_param("iss", $row['nominal'], $row['jenis_pre'], $row['tahapan_pre']);
+            $update_stmt->execute();
+        }
 
         if ($stmt->execute()) {
             echo "<script>alert('Data updated successfully'); window.location.href='prepost.php';</script>";

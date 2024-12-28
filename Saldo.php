@@ -23,6 +23,8 @@ INNER JOIN
     list_entitas AS le 
 ON 
     lr.id_entitas = le.id_entitas
+ORDER BY
+    lr.id_entitas, lr.nama_bank, lr.no_akun
 ";
 $result_saldo = $conn->query($sql_saldo);
 

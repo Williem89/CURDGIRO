@@ -350,6 +350,7 @@ $conn->close();
                     <option value="Cek" <?php echo ($selected_type == 'Cek') ? 'selected' : ''; ?>>Cek</option>
                     <option value="loa" <?php echo ($selected_type == 'loa') ? 'selected' : ''; ?>>Loa</option>
                     <option value="AutoDebit" <?php echo ($selected_type == 'AutoDebit') ? 'selected' : ''; ?>>AutoDebit</option>
+                    <option value="Transfer" <?php echo ($selected_type == 'Transfer') ? 'selected' : ''; ?>>Transfer</option>
                 </select>
                 <select name="status" class="form-select">
                     <option value="">Pilih Status</option>

@@ -3,6 +3,7 @@ include 'koneksi.php';
 
 $overduequary = "
     SELECT 
+        'Giro' AS jenis,
         e.nama_entitas, 
         d.namabank, 
         d.ac_number, 
@@ -40,6 +41,7 @@ $overduequary = "
     UNION ALL 
 
     SELECT 
+        'Cek' AS jenis,
         e.nama_entitas, 
         d.namabank, 
         d.ac_number, 
@@ -77,6 +79,7 @@ $overduequary = "
     UNION ALL
 
     SELECT 
+        'AutoDebit' AS jenis,
         e.nama_entitas, 
         d.namabank, 
         d.ac_number, 
@@ -209,7 +212,8 @@ while ($row = $result->fetch_assoc()) {
         'bank_penerima' => $row['bank_penerima'] ?? 'Unknown Bank',
         'PVRNo' => $row['PVRNo'] ?? '',
         'keterangan' => $row['keterangan'] ?? 'No Description',
-        'nosurat' => $row['nosurat'] ?? ''
+        'nosurat' => $row['nosurat'] ?? '',
+        'jenis' => $row['jenis'] ?? 'Unknown Type'
     ];
 }
 
@@ -574,6 +578,7 @@ $grand_total2 = array_reduce($report_data2, function ($carry, $banks) {
                                                 <th style="width:150px;text-align:center;">Keterangan</th>
                                                 <th style="width:150px;text-align:center;">Nominal</th>
                                                 <th style="width:150px;text-align:center;">No Surat</th>
+                                                <th style="width:150px;text-align:center;">Action</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -604,6 +609,34 @@ $grand_total2 = array_reduce($report_data2, function ($carry, $banks) {
                                                     <td><?php echo htmlspecialchars($giro['keterangan']); ?></td>
                                                     <td><?php echo 'Rp. ' . number_format($giro['total_nominal'], 2, ',', '.'); ?></td>
                                                     <td><?php echo htmlspecialchars($giro['nosurat']); ?></td>
+                                                    <td>
+                                                        <button class="btn btn-sm btn-primary cair-btn"
+
+                                                            data-toggle="tooltip" title="Post"
+                                                            data-nogiro="<?php echo htmlspecialchars($giro['nogiro']); ?>"
+                                                            data-type="<?php echo htmlspecialchars($giro['jenis']); ?>"
+                                                            data-entitas="<?php echo htmlspecialchars($giro['nama_entitas']); ?>">
+                                                            <i class="bi bi-send-check"></i>
+                                                        </button>
+
+                                                        <button class="btn btn-sm btn-danger void-btn"
+
+                                                            data-toggle="tooltip" title="Void"
+                                                            data-nogiro="<?php echo htmlspecialchars($giro['nogiro']); ?>"
+                                                            data-type="<?php echo htmlspecialchars($giro['jenis']); ?>"
+                                                            data-entitas="<?php echo htmlspecialchars($giro['nama_entitas']); ?>">
+                                                            <i class="bi bi-x-circle"></i>
+                                                        </button>
+
+                                                        <button class="btn btn-sm btn-secondary view-attachment-btn"
+                                                            data-toggle="tooltip" title="Tampilkan Lampiran"
+                                                            data-nogiro="<?php echo htmlspecialchars($giro['nogiro']); ?>"
+                                                            data-image="<?php echo htmlspecialchars($giro['image_giro']); ?>"
+                                                            data-entitas="<?php echo htmlspecialchars($giro['nama_entitas']); ?>">
+                                                            <i class="bi bi-paperclip"></i>
+                                                        </button>
+
+                                                    </td>
                                                 </tr>
                                             <?php 
                                         endforeach; ?>

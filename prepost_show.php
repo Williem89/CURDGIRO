@@ -46,9 +46,12 @@ if ($result->num_rows > 0) {
                 <th style="width: 350px; box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);background-color: #3498eb;" rowspan="2">Keterangan</th>
                 <th style="box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);background-color: #3498eb;" colspan="2">PRE</th>
                 <th style="box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);background-color: #3498eb;" colspan="2">POST</th>
+                <th style="box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);background-color: #3498eb;" colspan="2">REVOLVING</th>
                 <th style="width: 250px; box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);background-color: #3498eb;" rowspan="2">Kelonggaran Tarik</th>
             </tr>
             <tr style="text-align:center; box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);">
+                <th style="width: 250px; box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);background-color: #3498eb;">Plafon</th>
+                <th style="width: 250px; box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);background-color: #3498eb;">Outstanding</th>
                 <th style="width: 250px; box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);background-color: #3498eb;">Plafon</th>
                 <th style="width: 250px; box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);background-color: #3498eb;">Outstanding</th>
                 <th style="width: 250px; box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);background-color: #3498eb;">Plafon</th>
@@ -59,7 +62,7 @@ if ($result->num_rows > 0) {
         <?php if (!empty($groupedData)): ?>
     <?php foreach ($groupedData as $bankName => $rows): ?>
         <tr>
-            <td colspan="9" style="font-weight: bold; text-align: left; background-color: #f0f0f0;border:1px solid black">
+            <td colspan="11" style="font-weight: bold; text-align: left; background-color: #f0f0f0;border:1px solid black">
                 <span style=" margin-left:10px"><?= htmlspecialchars( $bankName); ?> <!-- Nama Bank --></span>
             </td>
         </tr>
@@ -74,8 +77,20 @@ if ($result->num_rows > 0) {
                     <td style="text-align:right; border: 1px solid black;">Rp. <span style=" margin-right:10px"><?= htmlspecialchars(number_format($row['outstanding'], 0, ',', '.')); ?></span></td>
                     <td style="border: 1px solid black;"></td>
                     <td style="border: 1px solid black;"></td>
+                    <td style="border: 1px solid black;"></td>
+                    <td style="border: 1px solid black;"></td>
                 <?php endif; ?>
                 <?php if ($row['jenis'] == 'POST'): ?>
+                    <td style="border: 1px solid black;"></td>
+                    <td style="border: 1px solid black;"></td>
+                    <td style="text-align:right; border: 1px solid black;">Rp. <span style=" margin-right:10px"><?= htmlspecialchars(number_format($row['plafond'], 0, ',', '.')); ?></span></td>
+                    <td style="text-align:right; border: 1px solid black;">Rp. <span style=" margin-right:10px"><?= htmlspecialchars(number_format($row['outstanding'], 0, ',', '.')); ?></span></td>
+                    <td style="border: 1px solid black;"></td>
+                    <td style="border: 1px solid black;"></td>
+                <?php endif; ?>
+                <?php if ($row['jenis'] == 'REVOLVING'): ?>
+                    <td style="border: 1px solid black;"></td>
+                    <td style="border: 1px solid black;"></td>
                     <td style="border: 1px solid black;"></td>
                     <td style="border: 1px solid black;"></td>
                     <td style="text-align:right; border: 1px solid black;">Rp. <span style=" margin-right:10px"><?= htmlspecialchars(number_format($row['plafond'], 0, ',', '.')); ?></span></td>
@@ -99,6 +114,12 @@ if ($result->num_rows > 0) {
                     Rp. <span style=" margin-right:10px"><?= htmlspecialchars(number_format(array_sum(array_column(array_filter($rows, function($row) { return $row['jenis'] == 'POST'; }), 'outstanding')), 0, ',', '.')); ?></span>
                 </td>
                 <td style="text-align:right; border: 1px solid black;">
+                    Rp. <span style=" margin-right:10px"><?= htmlspecialchars(number_format(array_sum(array_column(array_filter($rows, function($row) { return $row['jenis'] == 'REVOLVING'; }), 'plafond')), 0, ',', '.')); ?></span>
+                </td>
+                <td style="text-align:right; border: 1px solid black;">
+                    Rp. <span style=" margin-right:10px"><?= htmlspecialchars(number_format(array_sum(array_column(array_filter($rows, function($row) { return $row['jenis'] == 'REVOLVING'; }), 'outstanding')), 0, ',', '.')); ?></span>
+                </td>
+                <td style="text-align:right; border: 1px solid black;">
                     Rp. <span style=" margin-right:10px"><?= htmlspecialchars(number_format(array_sum(array_column($rows, 'plafond')) - array_sum(array_column($rows, 'outstanding')), 0, ',', '.')); ?></span>
                 </td>
             </tr>
@@ -107,7 +128,7 @@ if ($result->num_rows > 0) {
             <tr>
                 <td colspan="4" style="text-align:center; border: 1px solid black;background-color:orange;"><strong>Total Plafon</strong></td>
                
-                <td colspan="4" style="text-align:right; border: 1px solid black; background-color:orange;">
+                <td colspan="6" style="text-align:right; border: 1px solid black; background-color:orange;">
                     Rp. <?= htmlspecialchars(number_format(array_sum(array_column($plafonData, 'plafond')), 0, ',', '.')); ?>
                 </td>
                 <td style="border:1px solid black; background-color:orange;"></td>
@@ -115,7 +136,7 @@ if ($result->num_rows > 0) {
             <tr>
                 <td colspan="4" style="text-align:center; border: 1px solid black;background-color:orange;"><strong>Total Outstanding</strong></td>
                
-                <td colspan="4" style="text-align:right; border: 1px solid black; background-color:orange;">
+                <td colspan="6" style="text-align:right; border: 1px solid black; background-color:orange;">
                     Rp. <?= htmlspecialchars(number_format(array_sum(array_column($plafonData, 'outstanding')), 0, ',', '.')); ?>
                 </td>
                 <td style="border:1px solid black; background-color:orange;"></td>
@@ -123,7 +144,7 @@ if ($result->num_rows > 0) {
             <tr>
                 <td colspan="4" style="text-align:center; border: 1px solid black;background-color:orange;"><strong>Total Kelonggaran Tarik</strong></td>
                
-                <td colspan="4" style="text-align:right; border: 1px solid black; background-color:orange;">
+                <td colspan="6" style="text-align:right; border: 1px solid black; background-color:orange;">
                    
                 </td>
                 <td style="text-align:right; border: 1px solid black; background-color:orange;" >
@@ -158,9 +179,12 @@ if ($result->num_rows > 0) {
                 { content: "Keterangan", rowSpan: 2 },
                 { content: "PRE", colSpan: 2 },
                 { content: "POST", colSpan: 2 },
+                { content: "REVOLVING", colSpan: 2 },
                 { content: "Kelonggaran Tarik", rowSpan: 2 },
             ],
             [
+                { content: "Plafon" },
+                { content: "Outstanding" },
                 { content: "Plafon" },
                 { content: "Outstanding" },
                 { content: "Plafon" },
@@ -174,7 +198,11 @@ if ($result->num_rows > 0) {
         let totalPreOutstanding = 0;
         let totalPostPlafon = 0;
         let totalPostOutstanding = 0;
+        let totalRevolvingPlafon = 0;
+        let totalRevolvingOutstanding = 0;
         let totalKelonggaran = 0;
+        let totalAllPlafon = 0;
+        let totalAllOutstanding = 0;
         let no = 1;
 
         // Process each bank group
@@ -182,12 +210,14 @@ if ($result->num_rows > 0) {
             const bankRows = groupedData[bankName];
 
             // Add group header
-            body.push([{ content: bankName, colSpan: 9, styles: { fontStyle: "bold", halign: "left", fillColor: [230, 230, 230] } }]);
+            body.push([{ content: bankName, colSpan: 11, styles: { fontStyle: "bold", halign: "left", fillColor: [230, 230, 230] } }]);
 
             let groupPrePlafon = 0;
             let groupPreOutstanding = 0;
             let groupPostPlafon = 0;
             let groupPostOutstanding = 0;
+            let groupRevolvingPlafon = 0;
+            let groupRevolvingOutstanding = 0;
             let groupKelonggaran = 0;
 
             // Process rows within the group
@@ -202,6 +232,8 @@ if ($result->num_rows > 0) {
                     row.jenis === "PRE" ? `Rp. ${parseFloat(row.outstanding).toLocaleString()}` : "",
                     row.jenis === "POST" ? `Rp. ${parseFloat(row.plafond).toLocaleString()}` : "",
                     row.jenis === "POST" ? `Rp. ${parseFloat(row.outstanding).toLocaleString()}` : "",
+                    row.jenis === "REVOLVING" ? `Rp. ${parseFloat(row.plafond).toLocaleString()}` : "",
+                    row.jenis === "REVOLVING" ? `Rp. ${parseFloat(row.outstanding).toLocaleString()}` : "",
                     `Rp. ${kelonggaran.toLocaleString()}`,
                 ]);
 
@@ -212,6 +244,9 @@ if ($result->num_rows > 0) {
                 } else if (row.jenis === "POST") {
                     groupPostPlafon += parseFloat(row.plafond);
                     groupPostOutstanding += parseFloat(row.outstanding);
+                } else if (row.jenis === "REVOLVING") {
+                    groupRevolvingPlafon += parseFloat(row.plafond);
+                    groupRevolvingOutstanding += parseFloat(row.outstanding);
                 }
                 groupKelonggaran += kelonggaran;
             });
@@ -223,6 +258,8 @@ if ($result->num_rows > 0) {
                 `Rp. ${groupPreOutstanding.toLocaleString()}`,
                 `Rp. ${groupPostPlafon.toLocaleString()}`,
                 `Rp. ${groupPostOutstanding.toLocaleString()}`,
+                `Rp. ${groupRevolvingPlafon.toLocaleString()}`,
+                `Rp. ${groupRevolvingOutstanding.toLocaleString()}`,
                 `Rp. ${groupKelonggaran.toLocaleString()}`,
             ]);
 
@@ -231,36 +268,40 @@ if ($result->num_rows > 0) {
             totalPreOutstanding += groupPreOutstanding;
             totalPostPlafon += groupPostPlafon;
             totalPostOutstanding += groupPostOutstanding;
+            totalRevolvingPlafon += groupRevolvingPlafon;
+            totalRevolvingOutstanding += groupRevolvingOutstanding;
             totalKelonggaran += groupKelonggaran;
 
-            totalAllPlafon = totalPrePlafon + totalPostPlafon;
-            totalAllOutstanding = totalPreOutstanding + totalPostOutstanding;
+            totalAllPlafon = totalPrePlafon + totalPostPlafon + totalRevolvingPlafon;
+            totalAllOutstanding = totalPreOutstanding + totalPostOutstanding + totalRevolvingOutstanding;
         }
+
         // Add overall totals
         body.push(
             [
                 { content: "Total Plafon", colSpan: 4, styles: { fontStyle: "bold", fillColor: [255, 153, 0] } },
-                { content: `Rp. ${totalAllPlafon.toLocaleString()}`, colSpan: 4, styles: { halign: 'right', fillColor: [255, 153, 0] } },
+                { content: `Rp. ${totalAllPlafon.toLocaleString()}`, colSpan: 6, styles: { halign: 'right', fillColor: [255, 153, 0] } },
                 { content: "", styles: { fillColor: [255, 153, 0] } },
             ],
             [
                 { content: "Total Outstanding", colSpan: 4, styles: { fontStyle: "bold", fillColor: [255, 153, 0] } },
-                { content: `Rp. ${totalAllOutstanding.toLocaleString()}`, colSpan: 4, styles: { halign: 'right', fillColor: [255, 153, 0] } },
+                { content: `Rp. ${totalAllOutstanding.toLocaleString()}`, colSpan: 6, styles: { halign: 'right', fillColor: [255, 153, 0] } },
                 { content: "", styles: { fillColor: [255, 153, 0] } },
             ],
             [
                 { content: "Total Kelonggaran Tarik", colSpan: 4, styles: { fontStyle: "bold", fillColor: [255, 153, 0] } },
-                { content: "", colSpan: 4, styles: { fontStyle: "bold", fillColor: [255, 153, 0] } },
+                { content: "", colSpan: 6, styles: { fontStyle: "bold", fillColor: [255, 153, 0] } },
                 { content: `Rp. ${totalKelonggaran.toLocaleString()}`, styles: { halign: 'right', fillColor: [255, 153, 0] } },
             ]
         );
+
         // Generate the PDF table
         doc.autoTable({
             head: head,
             body: body,
             startY: 10,
             theme: 'grid',
-            styles: { fontSize: 8, halign: 'center', valign: 'middle' },
+            styles: { fontSize: 6, halign: 'center', valign: 'middle' },
             headStyles: { fillColor: [52, 152, 219], textColor: [255, 255, 255], lineColor: [0, 0, 0], lineWidth: 0.1, }, // Header styling
             bodyStyles: { fillColor: [245, 245, 245], lineColor: [0, 0, 0], lineWidth: 0.1, }, // Body styling
             alternateRowStyles: { fillColor: [255, 255, 255], lineColor: [0, 0, 0], lineWidth: 0.1, }, // Alternating row colors

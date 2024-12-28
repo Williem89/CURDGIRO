@@ -66,6 +66,10 @@ $result_um = $sql_um->get_result();
             font-family: 'Poppins', sans-serif;
         }
     </style>
+
+</head>
+
+<body>
     <div class="tabs">
         <ul class="nav nav-tabs">
             <li class="nav-item">
@@ -79,9 +83,6 @@ $result_um = $sql_um->get_result();
             </li>
         </ul>
     </div>
-</head>
-
-<body>
     <div class="tab-content">
         <div id="pre_financing" class="tab-pane fade show active">
             <div class="container mt-5">
@@ -189,7 +190,7 @@ $result_um = $sql_um->get_result();
                                     echo "<td>" . number_format($row['total'], 2, ',', '.') . "</td>";
                                     echo "<td>" . number_format($row['os'], 2, ',', '.') . "</td>";
                                     echo "<td>" . number_format(($row['total'] - $row['os']), 2, ',', '.') . "</td>";
-                                    echo "<td class='text-center'><a class='btn btn-warning' href='pre_proses.php?id=" . htmlspecialchars($row['id']) . "' onclick=\"return confirm('Are you sure to update this record?');\"><i class=\"bi bi-send-check\"></i></a></td>";
+                                    echo "<td class='text-center'><a class='btn btn-warning' onclick=\"showEditModal('pre', " . htmlspecialchars($row['id']) . ")\"><i class=\"bi bi-send-check\"></i></a></td>";
 
                                     $subtotal_total += $row['total'];
                                     $subtotal_os += $row['os'];
@@ -325,7 +326,7 @@ $result_um = $sql_um->get_result();
                                     echo "<td>" . number_format($row['released'], 2, ',', '.') . "</td>";
                                     echo "<td>" . number_format($row['os'], 2, ',', '.') . "</td>";
                                     echo "<td>" . number_format(($row['released'] - $row['os']), 2, ',', '.') . "</td>";
-                                    echo "<td class='text-center'><a class='btn btn-warning' href='post_proses.php?id=" . htmlspecialchars($row['id']) . "' onclick=\"return confirm('Are you sure to update this record?');\"><i class=\"bi bi-send-check\"></i></a></td>";
+                                    echo "<td class='text-center'><a class='btn btn-warning' onclick=\"showEditModal('post', " . htmlspecialchars($row['id']) . ")\"><i class=\"bi bi-send-check\"></i></a></td>";
                                     $subtotal_total += $row['released'];
                                     $subtotal_os += $row['os'];
                                     $subtotal_difference += ($row['released'] - $row['os']);
@@ -356,7 +357,7 @@ $result_um = $sql_um->get_result();
         </div>
         <div id="uang_masuk" class="tab-pane fade show active">
             <div class="container mt-5">
-                
+
                 <h1 class="text-Left mb-4">Uang Masuk</h1>
                 <div class="form-group">
                     <select class="form-control" id="sumber_dana" name="sumber_dana">
@@ -376,7 +377,7 @@ $result_um = $sql_um->get_result();
                         window.location.href = currentURL.toString(); // Redirect ke URL baru
                     });
                 </script>
-                 <a class="btn btn-info" href="pre_input.php"><i class="bi bi-plus-circle"></i></a>
+                <a class="btn btn-info" href="pre_input.php"><i class="bi bi-plus-circle"></i></a>
                 <span>&nbsp;</span>
                 <a class="btn btn-danger" href="dashboard.php"><i class="bi bi-backspace"></i></a>
                 <br><br>
@@ -400,7 +401,7 @@ $result_um = $sql_um->get_result();
                                 echo "<td>" . $row['sumber_dana'] . "</td>";
                                 echo "<td>" . number_format($row['nominal_terima'], 2, ',', '.') . "</td>";
                                 echo "<td>" . $row['ket'] . "</td>";
-          
+
                                 echo "<td>" . $row['tanggal_jatuh_tempo'] . "</td>";
 
                                 echo "<td class='text-center'><a class='btn btn-success' onclick=\"showPostRowInfo(" . htmlspecialchars($row['id']) . ")\"><i class=\"bi bi-info\"></i></a></td>";
@@ -480,7 +481,7 @@ $result_um = $sql_um->get_result();
                         `,
                         icon: 'info'
                     });
-                    
+
                 } else {
                     Swal.fire({
                         title: 'Error',
@@ -506,7 +507,8 @@ $result_um = $sql_um->get_result();
             .then(data => {
                 if (data.success) {
                     Swal.fire({
-                        title: 'Pre-Financing Information',
+                        title: 'Post-Financing Information',
+                        width: '80%',
                         html: `
                             <p style="text-align: justify; font-size: 0.9em;"><strong>Hutang:</strong> ${data.row.jenis_post}</p>
                             <p style="text-align: justify; font-size: 0.9em;"><strong>Tanggal Cair:</strong> ${data.row.tanggal_post}</p>
@@ -516,7 +518,27 @@ $result_um = $sql_um->get_result();
                             <p style="text-align: justify; font-size: 0.9em;"><strong>Penutupan:</strong> ${parseFloat(data.row.os).toLocaleString()}</p>
                             <p style="text-align: justify; font-size: 0.9em;"><strong>Sisa OS:</strong> ${(parseFloat(data.row.released) - parseFloat(data.row.os)).toLocaleString()}</p>
                             <p style="text-align: justify; font-size: 0.9em;"><strong>Keterangan:</strong> ${data.row.ket}</p>
-                        `,
+                            
+                            <p style="text-align: justify; font-size: 0.9em;"><strong>Penutupan:</strong></p>
+                                    <table class="table table-bordered table-striped table-hover" style="font-size: 0.8em;">
+                                        <thead class="table-dark">
+                                            <tr class="text-center">
+                                                <th>Tanggal</th>
+                                                <th>sumber_dana</th>
+                                                <th>Nominal</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${data.rowtutupost.map(row => `
+                                                <tr>
+                                                    <td>${row.tanggal}</td>
+                                                    <td>${row.sumber_dana}</td>
+                                                    <td>${parseFloat(row.nominal).toLocaleString()}</td>
+                                                </tr>
+                                            `).join('')}
+                                        </tbody>
+                                    </table>
+                                `,
                         icon: 'info'
                     });
                 } else {
@@ -562,7 +584,168 @@ $result_um = $sql_um->get_result();
             }
         }
     });
+
+    function showEditModal(type, id) {
+        // Fetch current data
+        fetch(`get_row_info_${type}.php?id=${id}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const row = data.row;
+                    const penutupanData = type === 'pre' ? data.rowtutuppost : data.rowtutupre;
+                    
+                    // Create penutupan HTML
+                    let penutupanHtml = '';
+                    if (type === 'pre') {
+                        penutupanHtml = `
+                            <div class="penutupan-container">
+                                ${penutupanData.map((item, index) => `
+                                    <div class="row mb-2">
+                                        <div class="col">
+                                            <input type="text" class="form-control" name="penutupan[jenis_post][]" placeholder="Jenis Post" value="${item.jenis_post || ''}">
+                                        </div>
+                                        <div class="col">
+                                            <input type="text" class="form-control" name="penutupan[tahapan_post][]" placeholder="Tahapan" value="${item.tahapan_post || ''}">
+                                        </div>
+                                        <div class="col">
+                                            <input type="number" class="form-control penutupan-nominal" name="penutupan[nominal][]" placeholder="Nominal" value="${item.nominal || ''}" oninput="checkBalance()">
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>`;
+                    } else {
+                        penutupanHtml = `
+                            <div class="penutupan-container">
+                                ${penutupanData.map((item, index) => `
+                                    <div class="row mb-2">
+                                        <div class="col">
+                                            Tahap : ${item.tahapan_pre || ''}
+                                            <input type="hidden" class="form-control" name="penutupan[tahapan_pre][]" value="${item.tahapan_pre || ''}">
+                                        </div>
+                                        <div class="col">
+                                            <input type="number" class="form-control penutupan-nominal" name="penutupan[nominal][]" placeholder="Nominal" value="${item.nominal || ''}" oninput="checkBalance()">
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>`;
+                    }
+
+                    Swal.fire({
+                        title: 'Edit Data',
+                        width: '800px',
+                        html: `
+                            <form id="editForm">
+                                <input type="hidden" name="id" value="${id}">
+                                <input type="hidden" name="type" value="${type}">
+                                <input type="hidden" name="tahapan_post" value="${row.tahapan_post}">
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">Nominal</label>
+                                    <input type="number" class="form-control" name="nominal" value="${type === 'pre' ? row.total : row.released}" step="0.01" id="main-nominal" oninput="checkBalance()">
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">Penutupan</label>
+                                    ${penutupanHtml}
+                                    ${type === 'pre' ? `
+                                    <button type="button" class="btn btn-sm btn-primary mt-2" onclick="addPenutupanRow('${type}')">
+                                        Add Penutupan
+                                    </button>
+                                    ` : ''}
+                                </div>
+                                <div id="balance-status" class="mt-2"></div>
+                            </form>
+                        `,
+                        showCancelButton: true,
+                        confirmButtonText: 'Save',
+                        cancelButtonText: 'Cancel',
+                        didOpen: () => {
+                            // Initialize any necessary elements
+                            checkBalance();
+                        },
+                        preConfirm: () => {
+                            // Collect form data
+                            const formData = new FormData(document.getElementById('editForm'));
+                            
+                            // Send update request
+                            return fetch(`${type}_update.php`, {
+                                method: 'POST',
+                                body: formData
+                            })
+                            .then(response => response.json())
+                            .then(result => {
+                                if (!result.success) {
+                                    throw new Error(result.message || 'Update failed');
+                                }
+                                return result;
+                            });
+                        }
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            Swal.fire({
+                                title: 'Success',
+                                text: 'Data has been updated',
+                                icon: 'success'
+                            }).then(() => {
+                                location.reload();
+                            });
+                        }
+                    }).catch(error => {
+                        Swal.showValidationMessage(`Request failed: ${error}`);
+                    });
+                }
+            });
+    }
+
+    function checkBalance() {
+        const mainNominal = parseFloat(document.getElementById('main-nominal').value) || 0;
+        const penutupanNominals = Array.from(document.querySelectorAll('.penutupan-nominal')).map(input => parseFloat(input.value) || 0);
+        const penutupanTotal = penutupanNominals.reduce((sum, value) => sum + value, 0);
+
+        const balanceStatus = document.getElementById('balance-status');
+        const confirmButton = Swal.getConfirmButton();
+        if (mainNominal === penutupanTotal) {
+            balanceStatus.innerHTML = '<span class="text-success">Balanced</span>';
+            confirmButton.disabled = false;
+        } else {
+            balanceStatus.innerHTML = '<span class="text-danger">Not Balanced</span>';
+            confirmButton.disabled = true;
+        }
+    }
+
+    function addPenutupanRow(type) {
+        const container = document.querySelector('.penutupan-container');
+        const newRow = document.createElement('div');
+        newRow.className = 'row mb-2';
+        
+        if (type === 'pre') {
+            newRow.innerHTML = `
+                <div class="col">
+                    <input type="text" class="form-control" name="penutupan[jenis_post][]" placeholder="Jenis Post">
+                </div>
+                <div class="col">
+                    <input type="text" class="form-control" name="penutupan[tahapan_post][]" placeholder="Tahapan">
+                </div>
+                <div class="col">
+                    <input type="number" class="form-control penutupan-nominal" name="penutupan[nominal][]" placeholder="Nominal" oninput="checkBalance()">
+                </div>
+            `;
+        }
+        
+        const removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.className = 'btn btn-sm btn-danger col-auto';
+        removeBtn.innerHTML = '×';
+        removeBtn.onclick = function() {
+            newRow.remove();
+            checkBalance();
+        };
+        newRow.appendChild(removeBtn);
+        
+        container.appendChild(newRow);
+    }
 </script>
+
 <?php
 // Tutup koneksi
 $conn->close();
